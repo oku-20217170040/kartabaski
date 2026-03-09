@@ -3,26 +3,39 @@
 import { useState } from 'react';
 import { FilterState, CATEGORIES } from '@/types';
 
+export type SortOption = 'featured' | 'newest' | 'price_asc' | 'price_desc';
+
 interface Props {
   filters: FilterState;
   onChange: (f: FilterState) => void;
+  sort: SortOption;
+  onSortChange: (s: SortOption) => void;
+  minPrice: string;
+  maxPrice: string;
+  onMinPrice: (v: string) => void;
+  onMaxPrice: (v: string) => void;
   total: number;
 }
 
-const activeCount = (f: FilterState) =>
-  [f.search, f.category, f.condition, f.inStock !== null].filter(Boolean).length;
+const activeCount = (f: FilterState, minPrice: string, maxPrice: string) =>
+  [f.search, f.category, f.condition, f.inStock !== null, minPrice, maxPrice].filter(Boolean).length;
 
-export default function FilterBar({ filters, onChange, total }: Props) {
+export default function FilterBar({ filters, onChange, sort, onSortChange, minPrice, maxPrice, onMinPrice, onMaxPrice, total }: Props) {
   const [open, setOpen] = useState(false);
   const set = (patch: Partial<FilterState>) => onChange({ ...filters, ...patch });
-  const reset = () => onChange({ search: '', category: '', condition: '', inStock: null });
-  const active = activeCount(filters);
+  const reset = () => {
+    onChange({ search: '', category: '', condition: '', inStock: null });
+    onSortChange('featured');
+    onMinPrice('');
+    onMaxPrice('');
+  };
+  const active = activeCount(filters, minPrice, maxPrice);
 
   return (
     <>
       {/* ── DESKTOP: yatay bar ── */}
       <div className="filter-bar filter-bar-desktop">
-        <div className="filter-group" style={{ flex: 1, minWidth: 200 }}>
+        <div className="filter-group" style={{ flex: 1, minWidth: 180 }}>
           <label>Ara</label>
           <input
             className="form-input"
@@ -57,6 +70,35 @@ export default function FilterBar({ filters, onChange, total }: Props) {
             <option value="true">Stokta</option>
             <option value="false">Satıldı</option>
           </select>
+        </div>
+        <div className="filter-group">
+          <label>Sırala</label>
+          <select className="form-select" value={sort} onChange={(e) => onSortChange(e.target.value as SortOption)}>
+            <option value="featured">Önerilen</option>
+            <option value="newest">En Yeni</option>
+            <option value="price_asc">Fiyat ↑</option>
+            <option value="price_desc">Fiyat ↓</option>
+          </select>
+        </div>
+        <div className="filter-group">
+          <label>Fiyat (₺)</label>
+          <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
+            <input
+              className="form-input"
+              placeholder="Min"
+              value={minPrice}
+              onChange={(e) => onMinPrice(e.target.value.replace(/\D/g, ''))}
+              style={{ width: 72, fontSize: 13 }}
+            />
+            <span style={{ color: 'var(--muted)', fontSize: 12 }}>–</span>
+            <input
+              className="form-input"
+              placeholder="Max"
+              value={maxPrice}
+              onChange={(e) => onMaxPrice(e.target.value.replace(/\D/g, ''))}
+              style={{ width: 72, fontSize: 13 }}
+            />
+          </div>
         </div>
         <div className="filter-group" style={{ justifyContent: 'flex-end' }}>
           <label style={{ visibility: 'hidden' }}>_</label>
@@ -142,6 +184,37 @@ export default function FilterBar({ filters, onChange, total }: Props) {
                 </select>
               </div>
             </div>
+            <div className="filter-mobile-row">
+              <div className="filter-group" style={{ flex: 1 }}>
+                <label>Sırala</label>
+                <select className="form-select" value={sort} onChange={(e) => onSortChange(e.target.value as SortOption)}>
+                  <option value="featured">Önerilen</option>
+                  <option value="newest">En Yeni</option>
+                  <option value="price_asc">Fiyat ↑</option>
+                  <option value="price_desc">Fiyat ↓</option>
+                </select>
+              </div>
+              <div className="filter-group" style={{ flex: 1 }}>
+                <label>Min Fiyat (₺)</label>
+                <input
+                  className="form-input"
+                  placeholder="0"
+                  value={minPrice}
+                  onChange={(e) => onMinPrice(e.target.value.replace(/\D/g, ''))}
+                  style={{ fontSize: 13 }}
+                />
+              </div>
+              <div className="filter-group" style={{ flex: 1 }}>
+                <label>Max Fiyat (₺)</label>
+                <input
+                  className="form-input"
+                  placeholder="∞"
+                  value={maxPrice}
+                  onChange={(e) => onMaxPrice(e.target.value.replace(/\D/g, ''))}
+                  style={{ fontSize: 13 }}
+                />
+              </div>
+            </div>
             <button className="btn btn-primary btn-sm" style={{ marginTop: 4, alignSelf: 'flex-end' }}
               onClick={() => setOpen(false)}>
               Uygula ({total} ürün)
@@ -186,10 +259,10 @@ export default function FilterBar({ filters, onChange, total }: Props) {
 
         .filter-mobile-drawer {
           overflow: hidden; max-height: 0;
-          transition: max-height 0.3s ease, opacity 0.2s ease;
+          transition: max-height 0.35s ease, opacity 0.25s ease;
           opacity: 0;
         }
-        .filter-mobile-drawer.open { max-height: 300px; opacity: 1; }
+        .filter-mobile-drawer.open { max-height: 400px; opacity: 1; }
 
         .filter-mobile-drawer-inner {
           padding: 14px;

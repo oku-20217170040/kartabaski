@@ -4,10 +4,9 @@ import { useState, useEffect, useMemo } from 'react';
 import { getProducts } from '@/lib/products';
 import { Product, FilterState } from '@/types';
 import ProductCard from '@/components/ProductCard';
-import FilterBar from '@/components/FilterBar';
+import FilterBar, { SortOption } from '@/components/FilterBar';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
-import Link from 'next/link';
 
 export default function HomePage() {
   const [products, setProducts] = useState<Product[]>([]);
@@ -15,30 +14,54 @@ export default function HomePage() {
   const [filters, setFilters] = useState<FilterState>({
     search: '', category: '', condition: '', inStock: null,
   });
+  const [sort, setSort] = useState<SortOption>('featured');
+  const [minPrice, setMinPrice] = useState('');
+  const [maxPrice, setMaxPrice] = useState('');
 
   useEffect(() => {
-    getProducts()
-      .then(setProducts)
-      .finally(() => setLoading(false));
+    getProducts().then(setProducts).finally(() => setLoading(false));
   }, []);
 
   const filtered = useMemo(() => {
-    return products.filter((p) => {
+    let list = products.filter((p) => {
       const raw = p as any;
       const title = (raw.title || raw.baslik || raw.name || '').toLowerCase();
       const tags: string[] = raw.tags || raw.etiketler || [];
       const category = raw.category || raw.kategori || '';
       const condition = raw.condition || raw.durum || '';
       const inStock = raw.inStock ?? raw.stok ?? true;
+      const price = raw.priceTRY ?? raw.price ?? raw.fiyat ?? 0;
 
       const q = filters.search.toLowerCase();
       if (q && !title.includes(q) && !tags.some((t) => t.toLowerCase().includes(q))) return false;
       if (filters.category && category !== filters.category) return false;
       if (filters.condition && condition !== filters.condition) return false;
       if (filters.inStock !== null && inStock !== filters.inStock) return false;
+      if (minPrice && price < Number(minPrice)) return false;
+      if (maxPrice && price > Number(maxPrice)) return false;
       return true;
     });
-  }, [products, filters]);
+
+    // Sıralama
+    list = [...list].sort((a, b) => {
+      const ra = a as any;
+      const rb = b as any;
+      if (sort === 'featured') {
+        // Öne çıkanlar üste, sonra en yeni
+        if (ra.featured && !rb.featured) return -1;
+        if (!ra.featured && rb.featured) return 1;
+        return (rb.createdAt ?? 0) - (ra.createdAt ?? 0);
+      }
+      if (sort === 'newest') return (rb.createdAt ?? 0) - (ra.createdAt ?? 0);
+      const pa = ra.priceTRY ?? ra.price ?? 0;
+      const pb = rb.priceTRY ?? rb.price ?? 0;
+      if (sort === 'price_asc') return pa - pb;
+      if (sort === 'price_desc') return pb - pa;
+      return 0;
+    });
+
+    return list;
+  }, [products, filters, sort, minPrice, maxPrice]);
 
   return (
     <>
@@ -55,7 +78,17 @@ export default function HomePage() {
             </p>
           </div>
 
-          <FilterBar filters={filters} onChange={setFilters} total={filtered.length} />
+          <FilterBar
+            filters={filters}
+            onChange={setFilters}
+            sort={sort}
+            onSortChange={setSort}
+            minPrice={minPrice}
+            maxPrice={maxPrice}
+            onMinPrice={setMinPrice}
+            onMaxPrice={setMaxPrice}
+            total={filtered.length}
+          />
 
           {loading ? (
             <div style={{ display: 'flex', justifyContent: 'center', padding: '80px 0' }}>

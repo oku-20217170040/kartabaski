@@ -76,6 +76,12 @@ export async function deleteProduct(id: string): Promise<void> {
   invalidateCache();
 }
 
+export async function toggleFeatured(id: string, featured: boolean): Promise<void> {
+  const ref = doc(db, COL, id);
+  await updateDoc(ref, { featured, updatedAt: Date.now() });
+  invalidateCache();
+}
+
 export function cloudinaryUrl(publicId: string, opts = 'f_auto,q_auto,w_900,h_700,c_fill'): string {
   return `https://res.cloudinary.com/dshbqbtpb/image/upload/${opts}/${publicId}`;
 }

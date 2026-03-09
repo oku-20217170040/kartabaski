@@ -6,6 +6,7 @@ export interface Product {
   category: Category;
   condition: 'Sıfır' | '2. El';
   inStock: boolean;
+  featured?: boolean;
   tags: string[];
   shortDesc: string;
   description: string;

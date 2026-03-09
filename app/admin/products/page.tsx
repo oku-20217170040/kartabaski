@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { getProducts, deleteProduct, cloudinaryThumb } from '@/lib/products';
+import { getProducts, deleteProduct, toggleFeatured, cloudinaryThumb } from '@/lib/products';
 import { Product } from '@/types';
 import Link from 'next/link';
 
@@ -10,10 +10,11 @@ export default function AdminProductsPage() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [deleting, setDeleting] = useState<string | null>(null);
+  const [togglingFeatured, setTogglingFeatured] = useState<string | null>(null);
 
   const load = () => {
     setLoading(true);
-    getProducts().then(setProducts).finally(() => setLoading(false));
+    getProducts(true).then(setProducts).finally(() => setLoading(false));
   };
 
   useEffect(() => { load(); }, []);
@@ -31,12 +32,26 @@ export default function AdminProductsPage() {
     setDeleting(null);
   };
 
+  const handleToggleFeatured = async (p: Product) => {
+    setTogglingFeatured(p.id);
+    await toggleFeatured(p.id, !p.featured);
+    setProducts((prev) => prev.map((x) => x.id === p.id ? { ...x, featured: !p.featured } : x));
+    setTogglingFeatured(null);
+  };
+
+  const featuredCount = products.filter((p) => p.featured).length;
+
   return (
     <div>
       <div className="admin-header">
         <div>
           <h1 style={{ fontFamily: 'var(--font-display)', fontSize: '1.8rem' }}>Ürünler</h1>
-          <p style={{ color: 'var(--muted)', fontSize: 14, marginTop: 4 }}>{products.length} ürün</p>
+          <p style={{ color: 'var(--muted)', fontSize: 14, marginTop: 4 }}>
+            {products.length} ürün
+            {featuredCount > 0 && (
+              <span style={{ marginLeft: 10, color: '#f59e0b' }}>⭐ {featuredCount} öne çıkan</span>
+            )}
+          </p>
         </div>
         <Link href="/admin/products/new" className="btn btn-primary">+ Yeni Ürün</Link>
       </div>
@@ -73,6 +88,7 @@ export default function AdminProductsPage() {
                 <th>Kategori</th>
                 <th>Durum</th>
                 <th>Stok</th>
+                <th style={{ textAlign: 'center' }}>Öne Çıkar</th>
                 <th>İşlemler</th>
               </tr>
             </thead>
@@ -81,7 +97,7 @@ export default function AdminProductsPage() {
                 const thumb = p.images?.[0] ? cloudinaryThumb(p.images[0]) : null;
                 const price = new Intl.NumberFormat('tr-TR').format(p.priceTRY);
                 return (
-                  <tr key={p.id}>
+                  <tr key={p.id} style={p.featured ? { background: 'rgba(245,158,11,0.06)' } : {}}>
                     <td>
                       {thumb ? (
                         <img src={thumb} alt={p.title} className="admin-table-img" />
@@ -92,7 +108,10 @@ export default function AdminProductsPage() {
                       )}
                     </td>
                     <td style={{ maxWidth: 200 }}>
-                      <div style={{ fontWeight: 600, fontSize: 14 }}>{p.title}</div>
+                      <div style={{ fontWeight: 600, fontSize: 14, display: 'flex', alignItems: 'center', gap: 6 }}>
+                        {p.featured && <span title="Öne Çıkan">⭐</span>}
+                        {p.title}
+                      </div>
                       <div style={{ fontSize: 12, color: 'var(--muted)' }}>{p.slug}</div>
                     </td>
                     <td style={{ fontWeight: 700, color: 'var(--accent)' }}>₺{price}</td>
@@ -106,6 +125,24 @@ export default function AdminProductsPage() {
                       <span className={`badge ${p.inStock ? 'badge-green' : 'badge-red'}`}>
                         {p.inStock ? 'Stokta' : 'Satıldı'}
                       </span>
+                    </td>
+                    <td style={{ textAlign: 'center' }}>
+                      <button
+                        onClick={() => handleToggleFeatured(p)}
+                        disabled={togglingFeatured === p.id}
+                        title={p.featured ? 'Öne çıkarmayı kaldır' : 'Öne çıkar'}
+                        style={{
+                          background: 'none',
+                          border: 'none',
+                          cursor: 'pointer',
+                          fontSize: '1.4rem',
+                          opacity: togglingFeatured === p.id ? 0.4 : 1,
+                          transition: 'transform 0.15s',
+                          filter: p.featured ? 'none' : 'grayscale(1)',
+                        }}
+                      >
+                        ⭐
+                      </button>
                     </td>
                     <td>
                       <div style={{ display: 'flex', gap: 6 }}>
