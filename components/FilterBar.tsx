@@ -55,7 +55,7 @@ export default function FilterBar({ filters, onChange, total }: Props) {
             onChange={(e) => set({ inStock: e.target.value === '' ? null : e.target.value === 'true' })}>
             <option value="">Tümü</option>
             <option value="true">Stokta</option>
-            <option value="false">Stok Sor</option>
+            <option value="false">Satıldı</option>
           </select>
         </div>
         <div className="filter-group" style={{ justifyContent: 'flex-end' }}>
@@ -138,7 +138,7 @@ export default function FilterBar({ filters, onChange, total }: Props) {
                   onChange={(e) => set({ inStock: e.target.value === '' ? null : e.target.value === 'true' })}>
                   <option value="">Tümü</option>
                   <option value="true">Stokta</option>
-                  <option value="false">Stok Sor</option>
+                  <option value="false">Satıldı</option>
                 </select>
               </div>
             </div>

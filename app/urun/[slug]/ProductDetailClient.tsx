@@ -116,7 +116,7 @@ export default function ProductDetailClient({ slug }: { slug: string }) {
               <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                 {condition && <span className={`badge ${condition === 'Sıfır' ? 'badge-green' : 'badge-orange'}`}>{condition}</span>}
                 {category && <span className="badge badge-muted">{category}</span>}
-                {inStock ? <span className="badge badge-green">✓ Stokta</span> : <span className="badge badge-red">Stok Sor</span>}
+                {inStock ? <span className="badge badge-green">✓ Stokta</span> : <span className="badge badge-red">Satıldı</span>}
               </div>
 
               <h1 className="product-title">{title}</h1>

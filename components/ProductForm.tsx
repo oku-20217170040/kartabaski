@@ -233,7 +233,7 @@ export default function ProductForm({ initial, onSubmit, submitLabel }: Props) {
             <label className="form-label">Stok Durumu</label>
             <select className="form-select" value={String(inStock)} onChange={(e) => setInStock(e.target.value === 'true')}>
               <option value="true">Stokta</option>
-              <option value="false">Stok Sor</option>
+              <option value="false">Satıldı</option>
             </select>
           </div>
         </div>

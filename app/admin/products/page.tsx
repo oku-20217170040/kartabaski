@@ -104,7 +104,7 @@ export default function AdminProductsPage() {
                     </td>
                     <td>
                       <span className={`badge ${p.inStock ? 'badge-green' : 'badge-red'}`}>
-                        {p.inStock ? 'Stokta' : 'Stok Sor'}
+                        {p.inStock ? 'Stokta' : 'Satıldı'}
                       </span>
                     </td>
                     <td>

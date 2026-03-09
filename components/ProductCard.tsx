@@ -54,7 +54,7 @@ export default function ProductCard({ product }: Props) {
         )}
         <div className="product-card-badges">
           {!inStock && (
-            <span className="badge badge-red">Stok Sor</span>
+            <span className="badge badge-red">Satıldı</span>
           )}
           {condition && (
             <span className={`badge ${condition === 'Sıfır' ? 'badge-green' : 'badge-orange'}`}>
