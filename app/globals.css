@@ -265,6 +265,13 @@ input, select, textarea { font-family: var(--font-body); }
   display: flex; flex-direction: column; gap: 4px;
 }
 
+@media (max-width: 760px) {
+  .product-card-badges .badge {
+    font-size: 9px;
+    padding: 2px 6px;
+  }
+}
+
 .product-card-body {
   padding: 16px;
   flex: 1;

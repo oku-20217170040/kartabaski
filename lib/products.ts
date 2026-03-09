@@ -85,7 +85,8 @@ export function cloudinaryThumb(publicId: string): string {
 }
 
 export function whatsappLink(productTitle: string, slug: string): string {
-  const productUrl = `https://umitspot.com/urun/${slug}`;
+  const base = process.env.NEXT_PUBLIC_SITE_URL || 'https://umit-spot.vercel.app';
+  const productUrl = `${base}/urun/${slug}`;
   const text = encodeURIComponent(
     `Merhaba, "${productTitle}" ürünü ile ilgileniyorum.\n\nÜrün linki: ${productUrl}`
   );
