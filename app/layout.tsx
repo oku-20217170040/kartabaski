@@ -3,8 +3,8 @@ import './globals.css';
 import { AuthProvider } from '@/lib/auth-context';
 
 const SITE_NAME = 'Ümit Spot';
-const SITE_URL = 'https://umitspot.com';
-const DESCRIPTION = 'Esenyurt\'un en yakın spotçusu. İkinci el ve sıfır spot mobilya, beyaz eşya alım satım. Aynı gün teslimat. 0542 644 72 96';
+const SITE_URL = 'https://umit-spot.vercel.app';
+const DESCRIPTION = 'Esenyurt\'un en yakın spotçusu. İkinci el ve sıfır spot mobilya, beyaz eşya alım satım. Esenyurt, Beylikdüzü, Avcılar, Büyükçekmece bölgelerine aynı gün teslimat. 0542 644 72 96';
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
@@ -14,9 +14,13 @@ export const metadata: Metadata = {
   },
   description: DESCRIPTION,
   keywords: [
-    'ikinci el mobilya', 'spot mobilya', 'esenyurt spot', 'ikinci el beyaz eşya',
-    'spot eşya', 'ikinci el koltuk', 'ikinci el buzdolabı', 'ikinci el çamaşır makinesi',
-    'esenyurt ikinci el', 'ümit spot', 'spot istanbul', 'ucuz mobilya esenyurt',
+    'ikinci el mobilya esenyurt', 'spot mobilya esenyurt', 'esenyurt spot',
+    'ikinci el beyaz eşya esenyurt', 'spot eşya istanbul', 'ikinci el koltuk esenyurt',
+    'ikinci el buzdolabı esenyurt', 'ikinci el çamaşır makinesi esenyurt',
+    'beylikdüzü ikinci el mobilya', 'avcılar ikinci el eşya',
+    'büyükçekmece spot mobilya', 'ümit spot esenyurt',
+    'ucuz mobilya esenyurt', 'sıfır spot mobilya istanbul',
+    'ikinci el eşya alan yerler esenyurt', 'spot alım satım esenyurt',
   ],
   authors: [{ name: 'Ümit Spot', url: SITE_URL }],
   robots: { index: true, follow: true },
@@ -35,6 +39,109 @@ export const metadata: Metadata = {
   },
 };
 
+const localBusinessSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'FurnitureStore',
+  name: 'Ümit Spot',
+  alternateName: ['Ümit Spot Esenyurt', 'Esenyurt Spot', 'Ümit İkinci El'],
+  description: DESCRIPTION,
+  url: SITE_URL,
+  telephone: '+905426447296',
+  priceRange: '₺₺',
+  currenciesAccepted: 'TRY',
+  paymentAccepted: 'Cash, Credit Card',
+  address: {
+    '@type': 'PostalAddress',
+    streetAddress: 'Mehmet Akif Ersoy Mahallesi 1824 Sokak 11A',
+    addressLocality: 'Esenyurt',
+    addressRegion: 'İstanbul',
+    postalCode: '34515',
+    addressCountry: 'TR',
+  },
+  geo: {
+    '@type': 'GeoCoordinates',
+    latitude: 41.0082,
+    longitude: 28.6726,
+  },
+  openingHoursSpecification: [
+    {
+      '@type': 'OpeningHoursSpecification',
+      dayOfWeek: ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'],
+      opens: '09:00',
+      closes: '00:00',
+    },
+  ],
+  areaServed: [
+    { '@type': 'City', name: 'Esenyurt' },
+    { '@type': 'City', name: 'Beylikdüzü' },
+    { '@type': 'City', name: 'Avcılar' },
+    { '@type': 'City', name: 'Büyükçekmece' },
+    { '@type': 'City', name: 'Bahçeşehir' },
+    { '@type': 'City', name: 'Başakşehir' },
+  ],
+  hasOfferCatalog: {
+    '@type': 'OfferCatalog',
+    name: 'İkinci El & Sıfır Spot Ürünler',
+    itemListElement: [
+      { '@type': 'Offer', itemOffered: { '@type': 'Product', name: 'İkinci El Koltuk Takımı' } },
+      { '@type': 'Offer', itemOffered: { '@type': 'Product', name: 'İkinci El Yatak Odası' } },
+      { '@type': 'Offer', itemOffered: { '@type': 'Product', name: 'İkinci El Buzdolabı' } },
+      { '@type': 'Offer', itemOffered: { '@type': 'Product', name: 'İkinci El Çamaşır Makinesi' } },
+      { '@type': 'Offer', itemOffered: { '@type': 'Product', name: 'Sıfır Spot Mobilya' } },
+    ],
+  },
+  sameAs: [
+    'https://www.google.com/maps?cid=esenyurt-spot',
+  ],
+};
+
+const faqSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: [
+    {
+      '@type': 'Question',
+      name: 'Esenyurt\'ta ikinci el mobilya nereden alınır?',
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: 'Esenyurt\'ta Ümit Spot\'tan ikinci el ve sıfır spot mobilya satın alabilirsiniz. Mehmet Akif Ersoy Mahallesi 1824 Sokak 11A adresinde hizmet vermekteyiz. 0542 644 72 96 numaralı telefondan veya WhatsApp üzerinden ulaşabilirsiniz.',
+      },
+    },
+    {
+      '@type': 'Question',
+      name: 'Aynı gün mobilya teslimatı yapıyor musunuz?',
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: 'Evet, Esenyurt ve çevre ilçelere (Beylikdüzü, Avcılar, Büyükçekmece) aynı gün teslimat ve nakliye hizmeti sunuyoruz.',
+      },
+    },
+    {
+      '@type': 'Question',
+      name: 'İkinci el eşyalarınızı nasıl satın alabilirim?',
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: 'Sitemizdeki ürünleri inceleyip WhatsApp üzerinden bizimle iletişime geçebilirsiniz. Her ürün sayfasında WhatsApp butonu bulunmaktadır.',
+      },
+    },
+    {
+      '@type': 'Question',
+      name: 'İkinci el eşya alıyor musunuz?',
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: 'Evet, kullanılmış mobilya ve beyaz eşya alımı yapıyoruz. Fiyat teklifi için 0542 644 72 96 numaralı telefondan bize ulaşabilirsiniz.',
+      },
+    },
+    {
+      '@type': 'Question',
+      name: 'Hangi bölgelere teslimat yapıyorsunuz?',
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: 'Esenyurt, Beylikdüzü, Avcılar, Büyükçekmece, Bahçeşehir ve Başakşehir bölgelerine teslimat yapıyoruz.',
+      },
+    },
+  ],
+};
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="tr" suppressHydrationWarning>
@@ -42,6 +149,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <AuthProvider>
           {children}
         </AuthProvider>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(localBusinessSchema) }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
+        />
       </body>
     </html>
   );
