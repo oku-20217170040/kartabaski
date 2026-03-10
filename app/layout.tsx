@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import './globals.css';
 import { AuthProvider } from '@/lib/auth-context';
+import WhatsAppFloat from '@/components/WhatsAppFloat';
 
 const SITE_NAME = 'Ümit Spot';
 const SITE_URL = 'https://umit-spot.vercel.app';
@@ -148,6 +149,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body suppressHydrationWarning>
         <AuthProvider>
           {children}
+          <WhatsAppFloat />
         </AuthProvider>
         <script
           type="application/ld+json"

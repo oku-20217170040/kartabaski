@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { getProductBySlug, getProductById, cloudinaryUrl, whatsappLink } from '@/lib/products';
+import { getProductBySlug, getProductById, getProducts, cloudinaryUrl, cloudinaryThumb, whatsappLink } from '@/lib/products';
 import { Product } from '@/types';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
@@ -9,6 +9,7 @@ import Link from 'next/link';
 
 export default function ProductDetailClient({ slug }: { slug: string }) {
   const [product, setProduct] = useState<Product | null>(null);
+  const [similar, setSimilar] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeImg, setActiveImg] = useState(0);
 
@@ -16,7 +17,17 @@ export default function ProductDetailClient({ slug }: { slug: string }) {
     if (!slug || slug === 'undefined') { setLoading(false); return; }
     getProductBySlug(slug)
       .then(async (p) => p || getProductById(slug))
-      .then(setProduct)
+      .then(async (p) => {
+        setProduct(p);
+        if (p) {
+          const cat = (p as any).category || (p as any).kategori;
+          const all = await getProducts();
+          const sim = all
+            .filter((x) => x.id !== p.id && ((x as any).category || (x as any).kategori) === cat && (x as any).inStock !== false)
+            .slice(0, 4);
+          setSimilar(sim);
+        }
+      })
       .finally(() => setLoading(false));
   }, [slug]);
 
@@ -85,14 +96,17 @@ export default function ProductDetailClient({ slug }: { slug: string }) {
       <Navbar />
       <main className="product-detail">
         <div className="container">
+          {/* Breadcrumb */}
           <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 32, fontSize: 13, color: 'var(--muted)' }}>
             <Link href="/" style={{ color: 'var(--muted)' }}>Ürünler</Link>
-            {category && <><span>›</span><span style={{ color: 'var(--muted)' }}>{category}</span></>}
+            {category && <><span>›</span><Link href={`/kategoriler`} style={{ color: 'var(--muted)' }}>{category}</Link></>}
             <span>›</span>
             <span style={{ color: 'var(--text)' }}>{title}</span>
           </div>
 
+          {/* Ana ürün grid */}
           <div className="product-detail-grid">
+            {/* Galeri */}
             <div>
               <div className="product-gallery-main">
                 {images ? (
@@ -112,6 +126,7 @@ export default function ProductDetailClient({ slug }: { slug: string }) {
               )}
             </div>
 
+            {/* Bilgiler */}
             <div className="product-info">
               <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                 {condition && <span className={`badge ${condition === 'Sıfır' ? 'badge-green' : 'badge-orange'}`}>{condition}</span>}
@@ -158,6 +173,52 @@ export default function ProductDetailClient({ slug }: { slug: string }) {
               )}
             </div>
           </div>
+
+          {/* Benzer Ürünler */}
+          {similar.length > 0 && (
+            <section style={{ marginTop: 72, marginBottom: 60 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
+                <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '1.3rem', margin: 0 }}>
+                  Bunlara da bak
+                </h2>
+                <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
+                <Link href={`/?category=${encodeURIComponent(category)}`} className="btn btn-ghost btn-sm">
+                  Tümünü gör →
+                </Link>
+              </div>
+              <div className="products-grid">
+                {similar.map((p) => {
+                  const r = p as any;
+                  const t = r.title || r.baslik || r.name || 'Ürün';
+                  const pr = r.priceTRY ?? r.price ?? r.fiyat;
+                  const cond = r.condition || r.durum || '2. El';
+                  const imgId = r.images?.[0];
+                  const thumb = imgId ? (imgId.startsWith('http') ? imgId : cloudinaryThumb(imgId)) : null;
+                  const stok = r.inStock ?? r.stok ?? true;
+                  return (
+                    <Link key={p.id} href={`/urun/${r.slug || p.id}`} className="product-card">
+                      <div className="product-card-img">
+                        {thumb
+                          ? <img src={thumb} alt={t} loading="lazy" />
+                          : <div className="product-card-no-img">🛋️</div>
+                        }
+                        <div className="product-card-badges">
+                          <span className={`badge ${cond === 'Sıfır' ? 'badge-blue' : 'badge-orange'}`}>{cond}</span>
+                          <span className={`badge ${stok ? 'badge-green' : 'badge-red'}`}>{stok ? 'Stokta' : 'Satıldı'}</span>
+                        </div>
+                      </div>
+                      <div className="product-card-body">
+                        <div className="product-card-title">{t}</div>
+                        {pr != null && (
+                          <div className="product-card-price">₺{new Intl.NumberFormat('tr-TR').format(pr)}</div>
+                        )}
+                      </div>
+                    </Link>
+                  );
+                })}
+              </div>
+            </section>
+          )}
         </div>
       </main>
       <Footer />

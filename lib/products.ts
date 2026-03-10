@@ -98,3 +98,38 @@ export function whatsappLink(productTitle: string, slug: string): string {
   );
   return `https://wa.me/905426447296?text=${text}`;
 }
+
+// ── SATIŞ TALEPLERİ ──
+const REQUESTS_COL = 'satis_talepleri';
+
+export interface SatisTalebi {
+  id?: string;
+  name: string;
+  phone: string;
+  category: string;
+  itemName: string;
+  condition: string;
+  price?: string;
+  description?: string;
+  createdAt: number;
+  status: 'yeni' | 'incelendi' | 'reddedildi';
+}
+
+export async function saveSatisTalebi(data: Omit<SatisTalebi, 'id' | 'createdAt' | 'status'>): Promise<string> {
+  const ref = await addDoc(collection(db, REQUESTS_COL), {
+    ...data,
+    createdAt: Date.now(),
+    status: 'yeni',
+  });
+  return ref.id;
+}
+
+export async function getSatisTalepleri(): Promise<SatisTalebi[]> {
+  const q = query(collection(db, REQUESTS_COL), orderBy('createdAt', 'desc'));
+  const snap = await getDocs(q);
+  return snap.docs.map((d) => ({ id: d.id, ...d.data() } as SatisTalebi));
+}
+
+export async function updateSatisTalebiStatus(id: string, status: SatisTalebi['status']): Promise<void> {
+  await updateDoc(doc(db, REQUESTS_COL, id), { status });
+}

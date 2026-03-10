@@ -31,6 +31,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     { href: '/admin', label: 'Dashboard', icon: '📊' },
     { href: '/admin/products', label: 'Ürünler', icon: '📦' },
     { href: '/admin/products/new', label: 'Yeni Ürün', icon: '➕' },
+    { href: '/admin/satis-talepleri', label: 'Satış Talepleri', icon: '🏷️' },
   ];
 
   return (

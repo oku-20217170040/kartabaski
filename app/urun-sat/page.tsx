@@ -4,6 +4,7 @@ import { useState } from 'react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { CATEGORIES } from '@/types';
+import { saveSatisTalebi } from '@/lib/products';
 
 const ITEM_CONDITIONS = ['Sıfır (Hiç Kullanılmamış)', '2. El – İyi Durumda', '2. El – Normal Durumda', '2. El – Hasarlı/Onarım Gerekli'];
 
@@ -23,8 +24,24 @@ export default function UrunSatPage() {
 
   const isValid = form.name && form.phone && form.category && form.itemName && form.condition;
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!isValid) return;
+
+    // Firestore'a kaydet (admin görebilsin)
+    try {
+      await saveSatisTalebi({
+        name: form.name,
+        phone: form.phone,
+        category: form.category,
+        itemName: form.itemName,
+        condition: form.condition,
+        price: form.price || undefined,
+        description: form.description || undefined,
+      });
+    } catch (e) {
+      // Firestore hatası WhatsApp'ı engellemesin
+      console.error('Firestore save error:', e);
+    }
 
     const lines = [
       `🛒 *ÜRÜN SATIŞ TALEBİ*`,
