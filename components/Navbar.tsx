@@ -1,10 +1,10 @@
 'use client';
 
 import Link from 'next/link';
-import { useState } from 'react';
+import { usePathname } from 'next/navigation';
 
 export default function Navbar() {
-  const [mobileOpen, setMobileOpen] = useState(false);
+  const path = usePathname();
 
   return (
     <nav className="nav">
@@ -14,9 +14,20 @@ export default function Navbar() {
         </Link>
 
         <ul className="nav-links">
-          <li><Link href="/">Ürünler</Link></li>
-          <li><Link href="/#kategoriler">Kategoriler</Link></li>
-          <li><Link href="/#iletisim">İletişim</Link></li>
+          <li>
+            <Link href="/" className={path === '/' ? 'active' : ''}>Ürünler</Link>
+          </li>
+          <li>
+            <Link href="/kategoriler" className={path === '/kategoriler' ? 'active' : ''}>Kategoriler</Link>
+          </li>
+          <li>
+            <Link href="/urun-sat" className={path === '/urun-sat' ? 'active' : ''} style={{ color: '#f59e0b' }}>
+              Eşya Sat
+            </Link>
+          </li>
+          <li>
+            <Link href="/#iletisim">İletişim</Link>
+          </li>
         </ul>
 
         <a
@@ -32,6 +43,13 @@ export default function Navbar() {
           WhatsApp
         </a>
       </div>
+
+      <style>{`
+        .nav-links a.active {
+          color: var(--text);
+          background: var(--surface);
+        }
+      `}</style>
     </nav>
   );
 }
