@@ -58,6 +58,7 @@ export default function ProductDetailClient({ slug }: { slug: string }) {
   const [similar, setSimilar] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeImg, setActiveImg] = useState(0);
+  const [lightbox, setLightbox] = useState<number | null>(null);
 
   useEffect(() => {
     if (!slug || slug === 'undefined') { setLoading(false); return; }
@@ -76,6 +77,18 @@ export default function ProductDetailClient({ slug }: { slug: string }) {
       })
       .finally(() => setLoading(false));
   }, [slug]);
+
+  useEffect(() => {
+    if (lightbox === null) return;
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setLightbox(null);
+      if (e.key === 'ArrowRight') setLightbox(i => i !== null ? (i + 1) : null);
+      if (e.key === 'ArrowLeft') setLightbox(i => i !== null ? (i - 1) : null);
+    };
+    window.addEventListener('keydown', handler);
+    document.body.style.overflow = 'hidden';
+    return () => { window.removeEventListener('keydown', handler); document.body.style.overflow = ''; };
+  }, [lightbox]);
 
   if (!slug || slug === 'undefined') {
     return (
@@ -154,9 +167,27 @@ export default function ProductDetailClient({ slug }: { slug: string }) {
           <div className="product-detail-grid">
             {/* Galeri */}
             <div>
-              <div className="product-gallery-main">
+              <div
+                className="product-gallery-main"
+                onClick={() => images && setLightbox(activeImg)}
+                style={{ cursor: images ? 'zoom-in' : 'default', position: 'relative' }}
+              >
                 {images ? (
-                  <img src={images[activeImg]} alt={title} />
+                  <>
+                    <img src={images[activeImg]} alt={title} />
+                    <div style={{
+                      position: 'absolute', bottom: 10, right: 10,
+                      background: 'rgba(0,0,0,0.5)', borderRadius: 6,
+                      padding: '4px 8px', fontSize: 12, color: '#fff',
+                      display: 'flex', alignItems: 'center', gap: 4, pointerEvents: 'none'
+                    }}>
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                        <line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/>
+                      </svg>
+                      Büyüt
+                    </div>
+                  </>
                 ) : (
                   <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '5rem', opacity: 0.15 }}>🛋️</div>
                 )}
@@ -171,6 +202,69 @@ export default function ProductDetailClient({ slug }: { slug: string }) {
                 </div>
               )}
             </div>
+
+            {/* Lightbox */}
+            {lightbox !== null && images && (
+              <div
+                onClick={() => setLightbox(null)}
+                style={{
+                  position: 'fixed', inset: 0, zIndex: 1000,
+                  background: 'rgba(0,0,0,0.92)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  padding: 16,
+                }}
+              >
+                {/* Kapat */}
+                <button onClick={() => setLightbox(null)} style={{
+                  position: 'absolute', top: 16, right: 16,
+                  background: 'rgba(255,255,255,0.1)', border: 'none',
+                  color: '#fff', width: 40, height: 40, borderRadius: '50%',
+                  fontSize: 20, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center'
+                }}>✕</button>
+
+                {/* Önceki */}
+                {images.length > 1 && (
+                  <button
+                    onClick={(e) => { e.stopPropagation(); setLightbox((lightbox - 1 + images.length) % images.length); }}
+                    style={{
+                      position: 'absolute', left: 16, top: '50%', transform: 'translateY(-50%)',
+                      background: 'rgba(255,255,255,0.1)', border: 'none', color: '#fff',
+                      width: 44, height: 44, borderRadius: '50%', fontSize: 20, cursor: 'pointer',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center'
+                    }}
+                  >‹</button>
+                )}
+
+                {/* Görsel */}
+                <img
+                  src={images[lightbox]}
+                  alt={title}
+                  onClick={e => e.stopPropagation()}
+                  style={{ maxWidth: '90vw', maxHeight: '90vh', objectFit: 'contain', borderRadius: 8 }}
+                />
+
+                {/* Sonraki */}
+                {images.length > 1 && (
+                  <button
+                    onClick={(e) => { e.stopPropagation(); setLightbox((lightbox + 1) % images.length); }}
+                    style={{
+                      position: 'absolute', right: 16, top: '50%', transform: 'translateY(-50%)',
+                      background: 'rgba(255,255,255,0.1)', border: 'none', color: '#fff',
+                      width: 44, height: 44, borderRadius: '50%', fontSize: 20, cursor: 'pointer',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center'
+                    }}
+                  >›</button>
+                )}
+
+                {/* Sayaç */}
+                {images.length > 1 && (
+                  <div style={{
+                    position: 'absolute', bottom: 20, left: '50%', transform: 'translateX(-50%)',
+                    color: 'rgba(255,255,255,0.6)', fontSize: 13
+                  }}>{lightbox + 1} / {images.length}</div>
+                )}
+              </div>
+            )}
 
             {/* Bilgiler */}
             <div className="product-info">
