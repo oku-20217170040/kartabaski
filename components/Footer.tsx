@@ -12,10 +12,19 @@ export default function Footer() {
             </p>
           </div>
           <div>
+            <div className="footer-col-title">Sayfalar</div>
+            <ul className="footer-links">
+              <li><Link href="/">Tüm Ürünler</Link></li>
+              <li><Link href="/kategoriler">Kategoriler</Link></li>
+              <li><Link href="/urun-sat" style={{ color: '#f59e0b' }}>🏷️ Eşyanı Sat</Link></li>
+              <li><Link href="/#iletisim">İletişim</Link></li>
+            </ul>
+          </div>
+          <div>
             <div className="footer-col-title">Kategoriler</div>
             <ul className="footer-links">
               <li><Link href="/?category=Mobilya">Mobilya</Link></li>
-              <li><Link href="/?category=Beyaz Eşya">Beyaz Eşya</Link></li>
+              <li><Link href="/?category=Beyaz%20E%C5%9Fya">Beyaz Eşya</Link></li>
               <li><Link href="/?category=Elektronik">Elektronik</Link></li>
               <li><Link href="/?category=Yatak">Yatak</Link></li>
             </ul>

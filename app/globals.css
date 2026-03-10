@@ -583,8 +583,8 @@ input, select, textarea { font-family: var(--font-body); }
 }
 .footer-grid {
   display: grid;
-  grid-template-columns: 2fr 1fr 1fr;
-  gap: 48px;
+  grid-template-columns: 2fr 1fr 1fr 1fr;
+  gap: 40px;
   margin-bottom: 40px;
 }
 .footer-logo { font-family: var(--font-display); font-size: 1.5rem; font-weight: 800; margin-bottom: 12px; }
@@ -600,7 +600,7 @@ input, select, textarea { font-family: var(--font-body); }
 /* ── RESPONSIVE ── */
 @media (max-width: 1200px) {
   .products-grid { grid-template-columns: repeat(3, 1fr); }
-  .footer-grid { grid-template-columns: 1fr 1fr; }
+  .footer-grid { grid-template-columns: 1fr 1fr 1fr; }
 }
 
 @media (max-width: 1020px) {

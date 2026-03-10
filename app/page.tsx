@@ -76,6 +76,14 @@ export default function HomePage() {
             <p className="page-hero-sub">
               Esenyurt'un en yakın spotçusu — Mobilya, beyaz eşya ve daha fazlası
             </p>
+            <div style={{ display: 'flex', gap: 12, marginTop: 20, flexWrap: 'wrap' }}>
+              <a href="/kategoriler" className="btn btn-secondary btn-sm">
+                🗂️ Kategorilere Göz At
+              </a>
+              <a href="/urun-sat" className="btn btn-sm" style={{ background: 'rgba(245,158,11,0.12)', color: '#f59e0b', border: '1px solid rgba(245,158,11,0.25)' }}>
+                🏷️ Eşyanı Sat
+              </a>
+            </div>
           </div>
 
           <FilterBar
