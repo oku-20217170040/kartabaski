@@ -18,6 +18,7 @@ export default function Footer() {
               <li><Link href="/kategoriler">Kategoriler</Link></li>
               <li><Link href="/urun-sat" style={{ color: '#f59e0b' }}>🏷️ Eşyanı Sat</Link></li>
               <li><Link href="/#iletisim">İletişim</Link></li>
+              <li><Link href="/hakkimizda">Hakkımızda</Link></li>
             </ul>
           </div>
           <div>
