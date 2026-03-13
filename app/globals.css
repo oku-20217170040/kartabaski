@@ -627,7 +627,8 @@ input, select, textarea { font-family: var(--font-body); }
 }
 
 @media (max-width: 760px) {
-  .products-grid { grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  /* 2 sütun → kartlar okunabilir boyutta */
+  .products-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
   .filter-bar { flex-direction: column; align-items: stretch; }
   .filter-search, .filter-select { min-width: unset; width: 100%; }
   .footer-grid { grid-template-columns: 1fr; gap: 28px; }
@@ -638,18 +639,33 @@ input, select, textarea { font-family: var(--font-body); }
   .product-price { font-size: 1.8rem; }
   .product-card-title { font-size: 0.82rem; }
   .product-card-price { font-size: 1.1rem; }
+  /* Pro-card mobil optimizasyonu */
+  .pro-card-img-wrap { height: 150px; }
+  .pro-card-body { padding: 12px; gap: 6px; }
+  .pro-card-title { font-size: 13px; }
+  .pro-card-price { font-size: 15px; }
+  .pro-card-tags { display: none; }
+  .pro-card-cat { font-size: 9px; }
 }
 
 @media (max-width: 520px) {
-  .products-grid { grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  /* Hâlâ 2 sütun ama daha küçük boşluk */
+  .products-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
   .container { padding: 0 12px; }
   .product-card-title { font-size: 0.75rem; }
   .product-card-price { font-size: 1rem; }
   .product-card-body { padding: 10px; gap: 5px; }
+  .pro-card-img-wrap { height: 130px; }
+  .pro-card-body { padding: 10px; gap: 5px; }
+  .pro-card-title { font-size: 12px; }
+  .pro-card-price { font-size: 14px; }
+  .pro-card-in-stock { display: none; }
 }
 
 @media (max-width: 360px) {
-  .products-grid { grid-template-columns: repeat(2, 1fr); }
+  /* Çok küçük ekran — tek sütun */
+  .products-grid { grid-template-columns: 1fr; }
+  .pro-card-img-wrap { height: 180px; }
 }
 
 /* ── CONTACT SECTION ── */

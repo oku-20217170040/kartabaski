@@ -95,7 +95,7 @@ export default function Footer() {
             <ul className="footer-contact-list">
               <li>
                 <span className="fc-icon">{PHONE_ICON}</span>
-                <a href="https://wa.me/905426447296" target="_blank" rel="noopener noreferrer">
+                <a href="tel:+905426447296">
                   0542 644 72 96
                 </a>
               </li>
