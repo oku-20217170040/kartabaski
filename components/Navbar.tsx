@@ -55,13 +55,7 @@ export default function Navbar() {
         <div className="container nav-inner">
 
           {/* Logo */}
-          <Link href="/" className="nav-logo" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <span style={{
-              width: 28, height: 28, borderRadius: 8,
-              background: 'linear-gradient(135deg, var(--accent), #16a34a)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: 14, flexShrink: 0, boxShadow: '0 0 16px rgba(37,211,102,0.3)',
-            }}>Ü</span>
+          <Link href="/" className="nav-logo" style={{ display: 'flex', alignItems: 'center' }}>
             Ümit<span style={{ color: 'var(--accent)' }}>Spot</span>
           </Link>
 
@@ -188,13 +182,7 @@ export default function Navbar() {
               display: 'flex', alignItems: 'center', justifyContent: 'space-between',
               padding: '18px 20px', borderBottom: '1px solid var(--border)',
             }}>
-              <span className="nav-logo" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <span style={{
-                  width: 24, height: 24, borderRadius: 6,
-                  background: 'linear-gradient(135deg, var(--accent), #16a34a)',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontSize: 12,
-                }}>Ü</span>
+              <span className="nav-logo" style={{ display: 'flex', alignItems: 'center' }}>
                 Ümit<span style={{ color: 'var(--accent)' }}>Spot</span>
               </span>
               <motion.button

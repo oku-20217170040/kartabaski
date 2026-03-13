@@ -13,7 +13,7 @@ export default async function HomePage() {
     <>
       <Navbar />
       <main>
-        <HeroSection />
+        <HeroSection productCount={products.length} />
 
         <section className="products-page" style={{ paddingTop: 48 }}>
           <div className="container">
@@ -71,7 +71,7 @@ export default async function HomePage() {
                       </svg>
                       WhatsApp ile Yaz
                     </a>
-                    <p className="contact-pro-phone">📞 0542 644 72 96</p>
+                    <a href="tel:+905426447296" className="contact-pro-phone">📞 0542 644 72 96</a>
                   </div>
                 </div>
               </div>
