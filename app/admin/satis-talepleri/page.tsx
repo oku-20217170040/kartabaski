@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { getSatisTalepleri, updateSatisTalebiStatus, SatisTalebi } from '@/lib/products';
+import { getSatisTalepleri, updateSatisTalebiStatus, deleteSatisTalebi, SatisTalebi } from '@/lib/products';
 
 const STATUS_LABELS: Record<SatisTalebi['status'], { label: string; badge: string }> = {
   yeni:       { label: 'Yeni',       badge: 'badge-blue' },
@@ -13,6 +13,7 @@ export default function SatisTalepleriPage() {
   const [talepler, setTalepler] = useState<SatisTalebi[]>([]);
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState<string | null>(null);
   const [filter, setFilter] = useState<SatisTalebi['status'] | 'tumu'>('tumu');
 
   const load = () => {
@@ -27,6 +28,14 @@ export default function SatisTalepleriPage() {
     await updateSatisTalebiStatus(id, status);
     setTalepler((prev) => prev.map((t) => t.id === id ? { ...t, status } : t));
     setUpdating(null);
+  };
+
+  const handleDelete = async (id: string, itemName: string) => {
+    if (!confirm(`"${itemName}" talebini silmek istediğinize emin misiniz?`)) return;
+    setDeleting(id);
+    await deleteSatisTalebi(id);
+    setTalepler((prev) => prev.filter((t) => t.id !== id));
+    setDeleting(null);
   };
 
   const filtered = filter === 'tumu' ? talepler : talepler.filter((t) => t.status === filter);
@@ -155,6 +164,19 @@ export default function SatisTalepleriPage() {
                     ✗ Reddet
                   </button>
                 )}
+                <button
+                  className="btn btn-sm"
+                  disabled={deleting === t.id}
+                  onClick={() => handleDelete(t.id!, t.itemName)}
+                  style={{
+                    background: 'rgba(248,81,73,0.08)',
+                    border: '1px solid rgba(248,81,73,0.25)',
+                    color: '#f85149',
+                    marginTop: 4,
+                  }}
+                >
+                  {deleting === t.id ? '...' : '🗑 Sil'}
+                </button>
               </div>
             </div>
           </div>

@@ -133,3 +133,7 @@ export async function getSatisTalepleri(): Promise<SatisTalebi[]> {
 export async function updateSatisTalebiStatus(id: string, status: SatisTalebi['status']): Promise<void> {
   await updateDoc(doc(db, REQUESTS_COL, id), { status });
 }
+
+export async function deleteSatisTalebi(id: string): Promise<void> {
+  await deleteDoc(doc(db, REQUESTS_COL, id));
+}
