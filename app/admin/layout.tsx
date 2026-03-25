@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/lib/auth-context';
@@ -9,12 +9,18 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const { user, isAdmin, loading, logout } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
     if (!loading && !isAdmin && pathname !== '/admin/login') {
       router.replace('/admin/login');
     }
   }, [loading, isAdmin, pathname, router]);
+
+  // Sayfa değişince mobil sidebar'ı kapat
+  useEffect(() => {
+    setSidebarOpen(false);
+  }, [pathname]);
 
   if (loading) {
     return (
@@ -34,40 +40,83 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     { href: '/admin/satis-talepleri', label: 'Satış Talepleri', icon: '🏷️' },
   ];
 
+  const sidebarContent = (
+    <>
+      <div className="admin-sidebar-logo">
+        <div style={{ fontFamily: 'var(--font-display)', fontSize: '1.2rem', fontWeight: 800 }}>
+          Ümit<span style={{ color: 'var(--accent)' }}>Spot</span>
+        </div>
+        <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 2 }}>Admin Panel</div>
+      </div>
+
+      {links.map((l) => (
+        <Link
+          key={l.href}
+          href={l.href}
+          className={`admin-sidebar-link ${pathname === l.href ? 'active' : ''}`}
+        >
+          <span>{l.icon}</span>
+          {l.label}
+        </Link>
+      ))}
+
+      <div style={{ marginTop: 'auto', padding: '0 20px 20px' }}>
+        <div style={{ fontSize: 12, color: 'var(--muted)', marginBottom: 10, wordBreak: 'break-all' }}>
+          {user?.email}
+        </div>
+        <button className="btn btn-ghost btn-sm btn-full" onClick={logout}>
+          Çıkış Yap
+        </button>
+      </div>
+    </>
+  );
+
   return (
     <div className="admin-layout">
-      {/* Sidebar */}
+      {/* Desktop Sidebar */}
       <aside className="admin-sidebar">
-        <div className="admin-sidebar-logo">
-          <div style={{ fontFamily: 'var(--font-display)', fontSize: '1.2rem', fontWeight: 800 }}>
-            Ümit<span style={{ color: 'var(--accent)' }}>Spot</span>
-          </div>
-          <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 2 }}>Admin Panel</div>
-        </div>
+        {sidebarContent}
+      </aside>
 
-        {links.map((l) => (
-          <Link
-            key={l.href}
-            href={l.href}
-            className={`admin-sidebar-link ${pathname === l.href ? 'active' : ''}`}
-          >
-            <span>{l.icon}</span>
-            {l.label}
-          </Link>
-        ))}
+      {/* Mobile Overlay Backdrop */}
+      {sidebarOpen && (
+        <div
+          className="admin-sidebar-backdrop"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
 
-        <div style={{ marginTop: 'auto', padding: '0 20px 20px' }}>
-          <div style={{ fontSize: 12, color: 'var(--muted)', marginBottom: 10, wordBreak: 'break-all' }}>
-            {user?.email}
-          </div>
-          <button className="btn btn-ghost btn-sm btn-full" onClick={logout}>
-            Çıkış Yap
-          </button>
-        </div>
+      {/* Mobile Sidebar */}
+      <aside className={`admin-sidebar-mobile ${sidebarOpen ? 'open' : ''}`}>
+        <button
+          className="admin-sidebar-close"
+          onClick={() => setSidebarOpen(false)}
+          aria-label="Menüyü kapat"
+        >
+          ✕
+        </button>
+        {sidebarContent}
       </aside>
 
       {/* Content */}
-      <div className="admin-content">{children}</div>
+      <div className="admin-content">
+        {/* Mobile Top Bar */}
+        <div className="admin-mobile-topbar">
+          <button
+            className="admin-hamburger"
+            onClick={() => setSidebarOpen(true)}
+            aria-label="Menüyü aç"
+          >
+            <span /><span /><span />
+          </button>
+          <div style={{ fontFamily: 'var(--font-display)', fontSize: '1.1rem', fontWeight: 800 }}>
+            Ümit<span style={{ color: 'var(--accent)' }}>Spot</span>
+          </div>
+          <div style={{ width: 40 }} />
+        </div>
+
+        {children}
+      </div>
     </div>
   );
 }
