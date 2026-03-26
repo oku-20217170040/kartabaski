@@ -27,9 +27,17 @@ No test suite is configured.
 ### Auth & Admin
 
 - `lib/auth-context.tsx` provides `AuthProvider` + `useAuth()` hook — wraps the entire app in `app/layout.tsx`
+- On login, Firebase ID token is stored in an HttpOnly cookie via `POST /api/auth/session`; cleared on logout via `DELETE /api/auth/session`
+- `middleware.ts` protects all `/admin/*` routes server-side — checks for `__session` cookie before rendering
 - Admin role is stored in Firestore `users/{uid}` collection (not Firebase Custom Claims)
 - Admin routes live under `app/admin/` — check `useAuth().isAdmin` for access control
 - Login is email/password via Firebase Auth
+
+### Image Uploads
+
+- File uploads go through `POST /api/upload` (server-side) — never upload directly from the client
+- The API route validates file type (image only) and size (max 10 MB), then signs the request with `CLOUDINARY_API_SECRET` before forwarding to Cloudinary
+- Never add `NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET` — preset is handled server-side only
 
 ### Firestore Collections
 
@@ -51,12 +59,21 @@ No test suite is configured.
 
 Products support multilingual/alias fields: `title` or `baslik`, `priceTRY`/`price`/`fiyat`, `category`/`kategori`, `condition`/`durum`, `inStock`/`stok`.
 
+Never use `as any` to read product fields — use the typed helpers from `lib/product-utils.ts` (`getTitle`, `getPrice`, `getCategory`, etc.).
+
+### Constants
+
+Phone number and WhatsApp base URL live in `lib/constants.ts` (reads from `NEXT_PUBLIC_PHONE` env var). Never hardcode `905426447296` anywhere in the codebase.
+
 ### Environment Variables
 
 Copy `.env.local.example` to `.env.local` and fill in:
 - `NEXT_PUBLIC_FIREBASE_*` — Firebase web SDK config
-- `NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME` + `NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET` — Cloudinary uploads
-- `CLOUDINARY_API_KEY` — Server-side Cloudinary operations
+- `NEXT_PUBLIC_PHONE` — Contact phone number (e.g. `905426447296`)
+- `NEXT_PUBLIC_PHONE_DISPLAY` — Human-readable display (e.g. `0542 644 72 96`)
+- `NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME` — Cloudinary cloud name
+- `CLOUDINARY_API_KEY` — Cloudinary API key (server-side)
+- `CLOUDINARY_API_SECRET` — Cloudinary API secret (server-side, required for signed uploads)
 
 ### Image Optimization
 
