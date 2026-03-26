@@ -630,6 +630,44 @@ input, select, textarea { font-family: var(--font-body); }
 }
 .empty-state-icon { font-size: 3rem; margin-bottom: 16px; opacity: 0.4; }
 .empty-state-title { font-family: var(--font-display); font-size: 1.4rem; color: var(--text); margin-bottom: 8px; }
+.empty-state-sub { font-size: 0.9rem; color: var(--muted); }
+
+/* ── PAGINATION ── */
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 6px;
+  margin: 48px 0 32px;
+  flex-wrap: wrap;
+}
+.pagination-btn {
+  min-width: 40px;
+  height: 40px;
+  padding: 0 12px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+.pagination-btn:hover:not(:disabled) {
+  background: var(--card);
+  border-color: var(--accent2);
+  color: var(--accent2);
+}
+.pagination-btn--active {
+  background: var(--accent2);
+  border-color: var(--accent2);
+  color: #fff;
+  font-weight: 600;
+}
+.pagination-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
 
 /* ── LOADING ── */
 .spinner {
