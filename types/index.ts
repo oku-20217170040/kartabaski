@@ -25,6 +25,7 @@ export type Category =
   | 'Dekorasyon'
   | 'Aydınlatma'
   | 'Bahçe'
+  | 'Ev Eşyaları'
   | 'Diğer';
 
 export const CATEGORIES: Category[] = [
@@ -36,6 +37,7 @@ export const CATEGORIES: Category[] = [
   'Dekorasyon',
   'Aydınlatma',
   'Bahçe',
+  'Ev Eşyaları',
   'Diğer',
 ];
 
