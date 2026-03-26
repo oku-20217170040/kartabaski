@@ -33,9 +33,15 @@ export default function SatisTalepleriPage() {
   const handleDelete = async (id: string, itemName: string) => {
     if (!confirm(`"${itemName}" talebini silmek istediğinize emin misiniz?`)) return;
     setDeleting(id);
-    await deleteSatisTalebi(id);
-    setTalepler((prev) => prev.filter((t) => t.id !== id));
-    setDeleting(null);
+    try {
+      await deleteSatisTalebi(id);
+      setTalepler((prev) => prev.filter((t) => t.id !== id));
+    } catch (err: any) {
+      console.error('Silme hatası:', err);
+      alert(`Silinemedi: ${err?.message || 'Bilinmeyen hata'}`);
+    } finally {
+      setDeleting(null);
+    }
   };
 
   const filtered = filter === 'tumu' ? talepler : talepler.filter((t) => t.status === filter);
