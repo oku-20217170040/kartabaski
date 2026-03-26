@@ -29,6 +29,7 @@ const EYE_ICON = (
 
 export default function ProductCard({ product }: Props) {
   const [imgError, setImgError] = useState(false);
+  const [imgLoaded, setImgLoaded] = useState(false);
   const [hovered, setHovered] = useState(false);
 
   const title     = getTitle(product);
@@ -64,14 +65,22 @@ export default function ProductCard({ product }: Props) {
         {/* ── Image ── */}
         <div className="pro-card-img-wrap">
           {imgSrc ? (
-            <img
-              src={imgSrc}
-              alt={title}
-              loading="lazy"
-              onError={() => setImgError(true)}
-              className="pro-card-img"
-              style={{ transform: hovered ? 'scale(1.08)' : 'scale(1)' }}
-            />
+            <>
+              {!imgLoaded && <div className="pro-card-img-skeleton" />}
+              <img
+                src={imgSrc}
+                alt={title}
+                loading="lazy"
+                onLoad={() => setImgLoaded(true)}
+                onError={() => setImgError(true)}
+                className="pro-card-img"
+                style={{
+                  transform: hovered ? 'scale(1.08)' : 'scale(1)',
+                  opacity: imgLoaded ? 1 : 0,
+                  transition: 'transform 0.5s cubic-bezier(0.4,0,0.2,1), opacity 0.3s ease',
+                }}
+              />
+            </>
           ) : (
             <div className="pro-card-no-img">🛋️</div>
           )}
@@ -191,11 +200,17 @@ export default function ProductCard({ product }: Props) {
           background: #111820;
           flex-shrink: 0;
         }
+        .pro-card-img-skeleton {
+          position: absolute;
+          inset: 0;
+          background: linear-gradient(90deg, #111820 25%, #1a2332 50%, #111820 75%);
+          background-size: 200% 100%;
+          animation: shimmer 1.5s infinite;
+        }
         .pro-card-img {
           width: 100%;
           height: 100%;
           object-fit: cover;
-          transition: transform 0.5s cubic-bezier(0.4,0,0.2,1);
         }
         .pro-card-no-img {
           width: 100%; height: 100%;
