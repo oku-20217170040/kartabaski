@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { WHATSAPP_BASE } from '@/lib/constants';
 
 const WA_ICON = (
   <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
@@ -100,7 +101,7 @@ export default function Navbar() {
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             {/* Desktop WhatsApp */}
             <motion.a
-              href="https://wa.me/905426447296?text=Merhaba%2C%20ürünleriniz%20hakkında%20bilgi%20almak%20istiyorum"
+              href={`${WHATSAPP_BASE}?text=Merhaba%2C%20ürünleriniz%20hakkında%20bilgi%20almak%20istiyorum`}
               target="_blank" rel="noopener noreferrer"
               className="nav-wa-btn"
               whileHover={{ scale: 1.04 }}
@@ -230,7 +231,7 @@ export default function Navbar() {
             {/* Footer */}
             <div style={{ padding: '16px 20px 32px', borderTop: '1px solid var(--border)' }}>
               <motion.a
-                href="https://wa.me/905426447296?text=Merhaba%2C%20ürünleriniz%20hakkında%20bilgi%20almak%20istiyorum"
+                href={`${WHATSAPP_BASE}?text=Merhaba%2C%20ürünleriniz%20hakkında%20bilgi%20almak%20istiyorum`}
                 target="_blank" rel="noopener noreferrer"
                 whileTap={{ scale: 0.97 }}
                 onClick={() => setOpen(false)}

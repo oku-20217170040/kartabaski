@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
+import { WHATSAPP_BASE } from '@/lib/constants';
 
 export default function NotFound() {
   return (
@@ -42,7 +43,7 @@ export default function NotFound() {
               🗂️ Kategoriler
             </Link>
             <a
-              href="https://wa.me/905426447296?text=Merhaba%2C%20yard%C4%B1ma%20ihtiyac%C4%B1m%20var"
+              href={`${WHATSAPP_BASE}?text=Merhaba%2C%20yard%C4%B1ma%20ihtiyac%C4%B1m%20var`}
               target="_blank"
               rel="noopener noreferrer"
               className="btn btn-secondary"

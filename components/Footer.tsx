@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { PHONE, PHONE_DISPLAY, WHATSAPP_BASE } from '@/lib/constants';
 
 const WA_ICON = (
   <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
@@ -49,7 +50,7 @@ export default function Footer() {
 
             {/* WhatsApp CTA */}
             <a
-              href="https://wa.me/905426447296?text=Merhaba%2C%20ürünleriniz%20hakkında%20bilgi%20almak%20istiyorum"
+              href={`${WHATSAPP_BASE}?text=Merhaba%2C%20ürünleriniz%20hakkında%20bilgi%20almak%20istiyorum`}
               target="_blank"
               rel="noopener noreferrer"
               className="footer-wa-btn"
@@ -95,8 +96,8 @@ export default function Footer() {
             <ul className="footer-contact-list">
               <li>
                 <span className="fc-icon">{PHONE_ICON}</span>
-                <a href="tel:+905426447296">
-                  0542 644 72 96
+                <a href={`tel:+${PHONE}`}>
+                  {PHONE_DISPLAY}
                 </a>
               </li>
               <li>

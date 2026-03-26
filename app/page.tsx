@@ -3,6 +3,7 @@ import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import HeroSection from '@/components/HeroSection';
 import ProductsClient from './ProductsClient';
+import { PHONE, PHONE_DISPLAY, WHATSAPP_BASE } from '@/lib/constants';
 
 export const revalidate = 60;
 
@@ -61,7 +62,7 @@ export default async function HomePage() {
                       Merhaba! Ürünlerimiz hakkında bilgi almak istiyorum 👋
                     </p>
                     <a
-                      href="https://wa.me/905426447296?text=Merhaba%2C%20ürünleriniz%20hakkında%20bilgi%20almak%20istiyorum"
+                      href={`${WHATSAPP_BASE}?text=Merhaba%2C%20ürünleriniz%20hakkında%20bilgi%20almak%20istiyorum`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="contact-pro-wa-btn"
@@ -71,7 +72,7 @@ export default async function HomePage() {
                       </svg>
                       WhatsApp ile Yaz
                     </a>
-                    <a href="tel:+905426447296" className="contact-pro-phone">📞 0542 644 72 96</a>
+                    <a href={`tel:+${PHONE}`} className="contact-pro-phone">📞 {PHONE_DISPLAY}</a>
                   </div>
                 </div>
               </div>

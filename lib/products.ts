@@ -5,6 +5,7 @@ import {
 } from 'firebase/firestore';
 import { db } from './firebase';
 import { Product } from '@/types';
+import { PHONE } from './constants';
 
 const COL = 'products';
 
@@ -18,11 +19,16 @@ export async function getProducts(forceRefresh = false): Promise<Product[]> {
   if (!forceRefresh && _cache && now - _cacheTime < CACHE_TTL) {
     return _cache;
   }
-  const q = query(collection(db, COL), orderBy('createdAt', 'desc'));
-  const snap = await getDocs(q);
-  _cache = snap.docs.map((d) => ({ id: d.id, ...d.data() } as Product));
-  _cacheTime = now;
-  return _cache;
+  try {
+    const q = query(collection(db, COL), orderBy('createdAt', 'desc'));
+    const snap = await getDocs(q);
+    _cache = snap.docs.map((d) => ({ id: d.id, ...d.data() } as Product));
+    _cacheTime = now;
+    return _cache;
+  } catch (err) {
+    console.error('[products] getProducts failed:', err);
+    return _cache ?? [];
+  }
 }
 
 export function invalidateCache() {
@@ -31,28 +37,36 @@ export function invalidateCache() {
 }
 
 export async function getProductBySlug(slug: string): Promise<Product | null> {
-  // Önce cache'den bak
   if (_cache) {
     const found = _cache.find((p) => (p as any).slug === slug);
     if (found) return found;
   }
-  const q = query(collection(db, COL), where('slug', '==', slug));
-  const snap = await getDocs(q);
-  if (snap.empty) return null;
-  const d = snap.docs[0];
-  return { id: d.id, ...d.data() } as Product;
+  try {
+    const q = query(collection(db, COL), where('slug', '==', slug));
+    const snap = await getDocs(q);
+    if (snap.empty) return null;
+    const d = snap.docs[0];
+    return { id: d.id, ...d.data() } as Product;
+  } catch (err) {
+    console.error('[products] getProductBySlug failed:', err);
+    return null;
+  }
 }
 
 export async function getProductById(id: string): Promise<Product | null> {
-  // Önce cache'den bak
   if (_cache) {
     const found = _cache.find((p) => p.id === id);
     if (found) return found;
   }
-  const ref = doc(db, COL, id);
-  const snap = await getDoc(ref);
-  if (!snap.exists()) return null;
-  return { id: snap.id, ...snap.data() } as Product;
+  try {
+    const ref = doc(db, COL, id);
+    const snap = await getDoc(ref);
+    if (!snap.exists()) return null;
+    return { id: snap.id, ...snap.data() } as Product;
+  } catch (err) {
+    console.error('[products] getProductById failed:', err);
+    return null;
+  }
 }
 
 export async function createProduct(data: Omit<Product, 'id'>): Promise<string> {
@@ -96,7 +110,7 @@ export function whatsappLink(productTitle: string, slug: string): string {
   const text = encodeURIComponent(
     `Merhaba, "${productTitle}" ürünü ile ilgileniyorum.\n\nÜrün linki: ${productUrl}`
   );
-  return `https://wa.me/905426447296?text=${text}`;
+  return `https://wa.me/${PHONE}?text=${text}`;
 }
 
 // ── SATIŞ TALEPLERİ ──
@@ -125,9 +139,14 @@ export async function saveSatisTalebi(data: Omit<SatisTalebi, 'id' | 'createdAt'
 }
 
 export async function getSatisTalepleri(): Promise<SatisTalebi[]> {
-  const q = query(collection(db, REQUESTS_COL), orderBy('createdAt', 'desc'));
-  const snap = await getDocs(q);
-  return snap.docs.map((d) => ({ id: d.id, ...d.data() } as SatisTalebi));
+  try {
+    const q = query(collection(db, REQUESTS_COL), orderBy('createdAt', 'desc'));
+    const snap = await getDocs(q);
+    return snap.docs.map((d) => ({ id: d.id, ...d.data() } as SatisTalebi));
+  } catch (err) {
+    console.error('[products] getSatisTalepleri failed:', err);
+    return [];
+  }
 }
 
 export async function updateSatisTalebiStatus(id: string, status: SatisTalebi['status']): Promise<void> {

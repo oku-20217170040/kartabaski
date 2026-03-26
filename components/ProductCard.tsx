@@ -3,8 +3,11 @@
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { Product } from '@/types';
-import { cloudinaryThumb } from '@/lib/products';
 import { useState } from 'react';
+import {
+  getTitle, getPrice, getCategory, getCondition, getInStock,
+  getTags, getSlug, getImageSrc, getFeatured, getHasDelivery,
+} from '@/lib/product-utils';
 
 interface Props { product: Product }
 
@@ -25,26 +28,19 @@ const EYE_ICON = (
 );
 
 export default function ProductCard({ product }: Props) {
-  const raw = product as any;
   const [imgError, setImgError] = useState(false);
   const [hovered, setHovered] = useState(false);
 
-  const title: string     = raw.title || raw.baslik || raw.isim || raw.name || '—';
-  const price: number     = raw.priceTRY ?? raw.price ?? raw.fiyat ?? raw.Price ?? 0;
-  const category: string  = raw.category || raw.kategori || raw.Category || '';
-  const condition: string = raw.condition || raw.durum || raw.kondisyon || '';
-  const inStock: boolean  = raw.inStock ?? raw.stok ?? raw.stock ?? true;
-  const hasDelivery: boolean = raw.nakliye ?? raw.delivery ?? false;
-  const tags: string[]    = raw.tags || raw.etiketler || [];
-  const featured: boolean = raw.featured ?? false;
-
-  const imageField = raw.images?.[0] || raw.image || raw.foto || raw.img || null;
-  let imgSrc: string | null = null;
-  if (imageField && !imgError) {
-    imgSrc = imageField.startsWith('http') ? imageField : cloudinaryThumb(imageField);
-  }
-
-  const slug: string = raw.slug || raw.id || product.id;
+  const title     = getTitle(product);
+  const price     = getPrice(product);
+  const category  = getCategory(product);
+  const condition = getCondition(product);
+  const inStock   = getInStock(product);
+  const hasDelivery = getHasDelivery(product);
+  const tags      = getTags(product);
+  const featured  = getFeatured(product);
+  const imgSrc    = imgError ? null : getImageSrc(product);
+  const slug      = getSlug(product);
   const formatted = price ? new Intl.NumberFormat('tr-TR').format(price) : null;
 
   const conditionColor =

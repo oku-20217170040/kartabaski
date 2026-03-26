@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { WHATSAPP_BASE } from '@/lib/constants';
 
 export default function WhatsAppFloat() {
   const [visible, setVisible] = useState(false);
@@ -15,7 +16,7 @@ export default function WhatsAppFloat() {
   return (
     <>
       <a
-        href="https://wa.me/905426447296?text=Merhaba%2C%20ürünleriniz%20hakkında%20bilgi%20almak%20istiyorum"
+        href={`${WHATSAPP_BASE}?text=Merhaba%2C%20ürünleriniz%20hakkında%20bilgi%20almak%20istiyorum`}
         target="_blank"
         rel="noopener noreferrer"
         className={`wa-float ${visible ? 'visible' : ''}`}

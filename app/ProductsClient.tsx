@@ -4,6 +4,7 @@ import { useState, useMemo } from 'react';
 import { Product, FilterState } from '@/types';
 import ProductCard from '@/components/ProductCard';
 import FilterBar, { SortOption } from '@/components/FilterBar';
+import { getTitle, getCategory, getCondition, getInStock, getTags, getPrice, getFeatured } from '@/lib/product-utils';
 
 interface Props {
   initialProducts: Product[];
@@ -19,16 +20,15 @@ export default function ProductsClient({ initialProducts }: Props) {
 
   const filtered = useMemo(() => {
     let list = initialProducts.filter((p) => {
-      const raw = p as any;
-      const title = (raw.title || raw.baslik || raw.name || '').toLowerCase();
-      const tags: string[] = raw.tags || raw.etiketler || [];
-      const category = raw.category || raw.kategori || '';
-      const condition = raw.condition || raw.durum || '';
-      const inStock = raw.inStock ?? raw.stok ?? true;
-      const price = raw.priceTRY ?? raw.price ?? raw.fiyat ?? 0;
+      const title = getTitle(p).toLowerCase();
+      const tags = getTags(p);
+      const category = getCategory(p);
+      const condition = getCondition(p);
+      const inStock = getInStock(p);
+      const price = getPrice(p);
 
       const q = filters.search.toLowerCase();
-      if (q && !title.includes(q) && !tags.some((t: string) => t.toLowerCase().includes(q))) return false;
+      if (q && !title.includes(q) && !tags.some((t) => t.toLowerCase().includes(q))) return false;
       if (filters.category && category !== filters.category) return false;
       if (filters.condition && condition !== filters.condition) return false;
       if (filters.inStock !== null && inStock !== filters.inStock) return false;
@@ -38,18 +38,14 @@ export default function ProductsClient({ initialProducts }: Props) {
     });
 
     list = [...list].sort((a, b) => {
-      const ra = a as any;
-      const rb = b as any;
       if (sort === 'featured') {
-        if (ra.featured && !rb.featured) return -1;
-        if (!ra.featured && rb.featured) return 1;
-        return (rb.createdAt ?? 0) - (ra.createdAt ?? 0);
+        if (getFeatured(a) && !getFeatured(b)) return -1;
+        if (!getFeatured(a) && getFeatured(b)) return 1;
+        return ((b as any).createdAt ?? 0) - ((a as any).createdAt ?? 0);
       }
-      if (sort === 'newest') return (rb.createdAt ?? 0) - (ra.createdAt ?? 0);
-      const pa = ra.priceTRY ?? ra.price ?? 0;
-      const pb = rb.priceTRY ?? rb.price ?? 0;
-      if (sort === 'price_asc') return pa - pb;
-      if (sort === 'price_desc') return pb - pa;
+      if (sort === 'newest') return ((b as any).createdAt ?? 0) - ((a as any).createdAt ?? 0);
+      if (sort === 'price_asc') return getPrice(a) - getPrice(b);
+      if (sort === 'price_desc') return getPrice(b) - getPrice(a);
       return 0;
     });
 

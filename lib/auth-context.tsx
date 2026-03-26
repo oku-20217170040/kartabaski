@@ -53,10 +53,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [mounted]);
 
   const login = async (email: string, password: string) => {
-    await signInWithEmailAndPassword(auth, email, password);
+    const cred = await signInWithEmailAndPassword(auth, email, password);
+    const idToken = await cred.user.getIdToken();
+    await fetch('/api/auth/session', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ idToken }),
+    });
   };
 
   const logout = async () => {
+    await fetch('/api/auth/session', { method: 'DELETE' });
     await signOut(auth);
   };
 

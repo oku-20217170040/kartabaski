@@ -1,6 +1,7 @@
 import { Metadata } from 'next';
 import { getProductBySlug, getProductById, cloudinaryUrl } from '@/lib/products';
 import ProductDetailClient from './ProductDetailClient';
+import { PHONE } from '@/lib/constants';
 
 interface Props {
   params: { slug: string };
@@ -88,7 +89,7 @@ export default async function ProductDetailPage({ params }: Props) {
         seller: {
           '@type': 'Organization',
           name: 'Ümit Spot',
-          telephone: '+905426447296',
+          telephone: `+${PHONE}`,
         },
       },
     };

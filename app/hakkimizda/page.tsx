@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
+import { WHATSAPP_BASE } from '@/lib/constants';
 
 export const metadata: Metadata = {
   title: 'Hakkımızda | Ümit Spot – İkinci El Mobilya & Beyaz Eşya Esenyurt',
@@ -103,7 +104,7 @@ export default function HakkimizdaPage() {
               </div>
               <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
                 <a
-                  href="https://wa.me/905426447296?text=Merhaba%2C%20bilgi%20almak%20istiyorum"
+                  href={`${WHATSAPP_BASE}?text=Merhaba%2C%20bilgi%20almak%20istiyorum`}
                   target="_blank" rel="noopener noreferrer"
                   className="btn-whatsapp"
                   style={{ fontSize: 14, padding: '12px 20px' }}

@@ -3,6 +3,7 @@
 import { useEffect, useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { getProducts, cloudinaryThumb } from '@/lib/products';
+import { WHATSAPP_BASE } from '@/lib/constants';
 import { Product, Category, CATEGORIES } from '@/types';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
@@ -170,7 +171,7 @@ export default function KategorilerPage() {
               Aradığınızı bulamadınız mı? WhatsApp'tan sorun, stokta olabilir.
             </p>
             <a
-              href="https://wa.me/905426447296?text=Merhaba%2C%20arad%C4%B1%C4%9F%C4%B1m%20bir%20%C3%BCr%C3%BCn%20var%2C%20yard%C4%B1mc%C4%B1%20olabilir%20misiniz%3F"
+              href={`${WHATSAPP_BASE}?text=Merhaba%2C%20arad%C4%B1%C4%9F%C4%B1m%20bir%20%C3%BCr%C3%BCn%20var%2C%20yard%C4%B1mc%C4%B1%20olabilir%20misiniz%3F`}
               target="_blank" rel="noopener noreferrer"
               className="btn btn-primary btn-lg"
             >

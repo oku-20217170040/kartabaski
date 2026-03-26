@@ -2,6 +2,7 @@
 
 import { motion } from 'framer-motion';
 import Link from 'next/link';
+import { WHATSAPP_BASE } from '@/lib/constants';
 
 // Ürün sayısını en yakın 25'in katına yuvarla aşağı: 35→25+, 80→75+, 134→125+
 function floorTo25(n: number): string {
@@ -99,7 +100,7 @@ export default function HeroSection({ productCount = 0 }: Props) {
           custom={3}
         >
           <motion.a
-            href="https://wa.me/905426447296?text=Merhaba%2C%20ürünleriniz%20hakkında%20bilgi%20almak%20istiyorum"
+            href={`${WHATSAPP_BASE}?text=Merhaba%2C%20ürünleriniz%20hakkında%20bilgi%20almak%20istiyorum`}
             target="_blank"
             rel="noopener noreferrer"
             className="hero-cta-primary"

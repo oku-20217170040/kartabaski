@@ -2,6 +2,8 @@ import type { Metadata } from 'next';
 import './globals.css';
 import { AuthProvider } from '@/lib/auth-context';
 import WhatsAppFloat from '@/components/WhatsAppFloat';
+import ErrorBoundary from '@/components/ErrorBoundary';
+import { PHONE } from '@/lib/constants';
 
 const SITE_NAME = 'Ümit Spot';
 const SITE_URL = 'https://umit-spot.vercel.app';
@@ -47,7 +49,7 @@ const localBusinessSchema = {
   alternateName: ['Ümit Spot Esenyurt', 'Esenyurt Spot', 'Ümit İkinci El'],
   description: DESCRIPTION,
   url: SITE_URL,
-  telephone: '+905426447296',
+  telephone: `+${PHONE}`,
   priceRange: '₺₺',
   currenciesAccepted: 'TRY',
   paymentAccepted: 'Cash, Credit Card',
@@ -150,7 +152,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="tr" suppressHydrationWarning>
       <body suppressHydrationWarning>
         <AuthProvider>
-          {children}
+          <ErrorBoundary>
+            {children}
+          </ErrorBoundary>
           <WhatsAppFloat />
         </AuthProvider>
         {GA_ID && (

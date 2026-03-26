@@ -5,6 +5,7 @@ import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { CATEGORIES } from '@/types';
 import { saveSatisTalebi } from '@/lib/products';
+import { PHONE } from '@/lib/constants';
 
 const ITEM_CONDITIONS = ['Sıfır (Hiç Kullanılmamış)', '2. El – İyi Durumda', '2. El – Normal Durumda', '2. El – Hasarlı/Onarım Gerekli'];
 
@@ -57,7 +58,7 @@ export default function UrunSatPage() {
       form.description ? `• Açıklama: ${form.description}` : '',
     ].filter(Boolean).join('\n');
 
-    const url = `https://wa.me/905426447296?text=${encodeURIComponent(lines)}`;
+    const url = `https://wa.me/${PHONE}?text=${encodeURIComponent(lines)}`;
     window.open(url, '_blank');
     setSent(true);
   };
