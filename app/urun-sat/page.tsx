@@ -4,7 +4,7 @@ import { useState } from 'react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { CATEGORIES } from '@/types';
-import { saveSatisTalebi } from '@/lib/products';
+import { saveSatisTalebiAction } from '@/lib/actions';
 import { PHONE } from '@/lib/constants';
 
 const ITEM_CONDITIONS = ['Sıfır (Hiç Kullanılmamış)', '2. El – İyi Durumda', '2. El – Normal Durumda', '2. El – Hasarlı/Onarım Gerekli'];
@@ -30,7 +30,7 @@ export default function UrunSatPage() {
 
     // Firestore'a kaydet (admin görebilsin)
     try {
-      await saveSatisTalebi({
+      await saveSatisTalebiAction({
         name: form.name,
         phone: form.phone,
         category: form.category,

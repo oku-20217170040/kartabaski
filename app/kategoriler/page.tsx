@@ -19,6 +19,7 @@ const CATEGORY_META: Record<Category, { icon: string; desc: string; color: strin
   'Dekorasyon':   { icon: '🪴',  desc: 'Ayna, tablo, dekoratif objeler', color: '#10b981' },
   'Aydınlatma':   { icon: '💡',  desc: 'Avize, abajur, sarkıt ve led aydınlatma', color: '#f97316' },
   'Bahçe':        { icon: '🌿',  desc: 'Bahçe mobilyası, saksı, dış mekan ürünleri', color: '#84cc16' },
+  'Ev Eşyaları':  { icon: '🏠',  desc: 'Mutfak eşyaları, tekstil, ev aksesuarları', color: '#f97316' },
   'Diğer':        { icon: '📦',  desc: 'Diğer kategorilerdeki ürünler', color: '#8b9caa' },
 };
 
