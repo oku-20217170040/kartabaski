@@ -55,3 +55,25 @@ export function getHasDelivery(p: Product): boolean {
   const r = p as RawProduct;
   return (r.nakliye ?? r.delivery ?? false) as boolean;
 }
+
+export function getCreatedAt(p: Product): number {
+  return p.createdAt ?? 0;
+}
+
+export function getShortDesc(p: Product): string {
+  const r = p as RawProduct;
+  return (r.shortDesc || r.aciklama || '') as string;
+}
+
+export function getDescription(p: Product): string {
+  const r = p as RawProduct;
+  return (r.description || r.aciklama || '') as string;
+}
+
+export function getFirstImageId(p: Product): string | null {
+  return p.images?.[0] ?? null;
+}
+
+export function getSpecs(p: Product): Record<string, string> {
+  return p.specs ?? {};
+}

@@ -52,6 +52,7 @@ import { Product } from '@/types';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import Link from 'next/link';
+import { getTitle, getPrice, getCategory, getCondition, getInStock, getTags, getSlug, getShortDesc, getDescription, getSpecs } from '@/lib/product-utils';
 
 export default function ProductDetailClient({ slug }: { slug: string }) {
   const [product, setProduct] = useState<Product | null>(null);
@@ -67,10 +68,10 @@ export default function ProductDetailClient({ slug }: { slug: string }) {
       .then(async (p) => {
         setProduct(p);
         if (p) {
-          const cat = (p as any).category || (p as any).kategori;
+          const cat = getCategory(p);
           const all = await getProducts();
           const sim = all
-            .filter((x) => x.id !== p.id && ((x as any).category || (x as any).kategori) === cat && (x as any).inStock !== false)
+            .filter((x) => x.id !== p.id && getCategory(x) === cat && getInStock(x))
             .slice(0, 4);
           setSimilar(sim);
         }
@@ -131,21 +132,20 @@ export default function ProductDetailClient({ slug }: { slug: string }) {
     );
   }
 
-  const raw = product as any;
-  const title: string = raw.title || raw.baslik || raw.isim || raw.name || '—';
-  const priceNum: number = raw.priceTRY ?? raw.price ?? raw.fiyat ?? 0;
-  const category: string = raw.category || raw.kategori || '';
-  const condition: string = raw.condition || raw.durum || raw.kondisyon || '';
-  const inStock: boolean = raw.inStock ?? raw.stok ?? true;
-  const tags: string[] = raw.tags || raw.etiketler || [];
-  const shortDesc: string = raw.shortDesc || raw.kisaAciklama || raw.kisa_aciklama || '';
-  const description: string = raw.description || raw.aciklama || raw.açıklama || '';
-  const specs: Record<string, string> = raw.specs || raw.ozellikler || {};
-  const productSlug: string = raw.slug || product.id || slug;
+  const title       = getTitle(product);
+  const priceNum    = getPrice(product);
+  const category    = getCategory(product);
+  const condition   = getCondition(product);
+  const inStock     = getInStock(product);
+  const tags        = getTags(product);
+  const shortDesc   = getShortDesc(product);
+  const description = getDescription(product);
+  const specs       = getSpecs(product);
+  const productSlug = getSlug(product);
 
-  const rawImages: string[] = raw.images || raw.gorseller || raw.foto || [];
+  const rawImages: string[] = product.images || [];
   const images = rawImages.length
-    ? rawImages.map((id: string) => id.startsWith('http') ? id : cloudinaryUrl(id))
+    ? rawImages.map((id) => id.startsWith('http') ? id : cloudinaryUrl(id))
     : null;
 
   const price = priceNum ? new Intl.NumberFormat('tr-TR').format(priceNum) : null;
@@ -331,15 +331,14 @@ export default function ProductDetailClient({ slug }: { slug: string }) {
               </div>
               <div className="products-grid">
                 {similar.map((p) => {
-                  const r = p as any;
-                  const t = r.title || r.baslik || r.name || 'Ürün';
-                  const pr = r.priceTRY ?? r.price ?? r.fiyat;
-                  const cond = r.condition || r.durum || '2. El';
-                  const imgId = r.images?.[0];
+                  const t     = getTitle(p);
+                  const pr    = getPrice(p);
+                  const cond  = getCondition(p);
+                  const imgId = p.images?.[0] ?? null;
                   const thumb = imgId ? (imgId.startsWith('http') ? imgId : cloudinaryThumb(imgId)) : null;
-                  const stok = r.inStock ?? r.stok ?? true;
+                  const stok  = getInStock(p);
                   return (
-                    <Link key={p.id} href={`/urun/${r.slug || p.id}`} className="product-card">
+                    <Link key={p.id} href={`/urun/${getSlug(p)}`} className="product-card">
                       <div className="product-card-img">
                         {thumb
                           ? <img src={thumb} alt={t} loading="lazy" />

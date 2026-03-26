@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { getProducts, cloudinaryThumb } from '@/lib/products';
 import { WHATSAPP_BASE } from '@/lib/constants';
 import { Product, Category, CATEGORIES } from '@/types';
+import { getCategory, getTitle, getPrice, getCondition, getInStock, getSlug, getFirstImageId } from '@/lib/product-utils';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import Link from 'next/link';
@@ -34,7 +35,7 @@ export default function KategorilerPage() {
   const counts = useMemo(() => {
     const map: Record<string, number> = {};
     products.forEach((p) => {
-      const cat = (p as any).category || (p as any).kategori || 'Diğer';
+      const cat = getCategory(p) || 'Diğer';
       map[cat] = (map[cat] || 0) + 1;
     });
     return map;
@@ -43,7 +44,7 @@ export default function KategorilerPage() {
   const categoryProducts = useMemo(() => {
     if (!selected) return [];
     return products
-      .filter((p) => ((p as any).category || (p as any).kategori) === selected)
+      .filter((p) => getCategory(p) === selected)
       .slice(0, 6);
   }, [products, selected]);
 
@@ -127,18 +128,17 @@ export default function KategorilerPage() {
               ) : (
                 <div className="products-grid">
                   {categoryProducts.map((p) => {
-                    const raw = p as any;
-                    const title = raw.title || raw.baslik || raw.name || 'Ürün';
-                    const price = raw.priceTRY ?? raw.price ?? raw.fiyat;
-                    const inStock = raw.inStock ?? raw.stok ?? true;
-                    const condition = raw.condition || raw.durum || '2. El';
-                    const imageId = raw.images?.[0];
+                    const title = getTitle(p);
+                    const price = getPrice(p);
+                    const inStock = getInStock(p);
+                    const condition = getCondition(p);
+                    const imageId = getFirstImageId(p);
                     const thumb = imageId
                       ? (imageId.startsWith('http') ? imageId : cloudinaryThumb(imageId))
                       : null;
 
                     return (
-                      <Link key={p.id} href={`/urun/${raw.slug || p.id}`} className="product-card">
+                      <Link key={p.id} href={`/urun/${getSlug(p)}`} className="product-card">
                         <div className="product-card-img">
                           {thumb
                             ? <img src={thumb} alt={title} loading="lazy" />

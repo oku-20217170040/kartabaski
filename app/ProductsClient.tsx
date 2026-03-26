@@ -41,7 +41,7 @@ export default function ProductsClient({ initialProducts }: Props) {
       if (sort === 'featured') {
         if (getFeatured(a) && !getFeatured(b)) return -1;
         if (!getFeatured(a) && getFeatured(b)) return 1;
-        return ((b as any).createdAt ?? 0) - ((a as any).createdAt ?? 0);
+        return (b.createdAt ?? 0) - (a.createdAt ?? 0);
       }
       if (sort === 'newest') return ((b as any).createdAt ?? 0) - ((a as any).createdAt ?? 0);
       if (sort === 'price_asc') return getPrice(a) - getPrice(b);

@@ -38,7 +38,7 @@ export function invalidateCache() {
 
 export async function getProductBySlug(slug: string): Promise<Product | null> {
   if (_cache) {
-    const found = _cache.find((p) => (p as any).slug === slug);
+    const found = _cache.find((p) => p.slug === slug);
     if (found) return found;
   }
   try {

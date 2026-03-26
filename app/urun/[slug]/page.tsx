@@ -2,6 +2,7 @@ import { Metadata } from 'next';
 import { getProductBySlug, getProductById, cloudinaryUrl } from '@/lib/products';
 import ProductDetailClient from './ProductDetailClient';
 import { PHONE } from '@/lib/constants';
+import { getTitle, getPrice, getCategory, getCondition, getInStock, getFirstImageId, getShortDesc, getDescription } from '@/lib/product-utils';
 
 interface Props {
   params: { slug: string };
@@ -16,12 +17,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   if (!product) return { title: 'Ürün Bulunamadı' };
 
-  const raw = product as any;
-  const title = raw.title || raw.baslik || raw.name || 'Ürün';
-  const description = raw.shortDesc || raw.description || raw.aciklama || `${title} – Ümit Spot'ta uygun fiyata`;
-  const price = raw.priceTRY ?? raw.price ?? raw.fiyat;
-  const category = raw.category || raw.kategori || '';
-  const imageId = raw.images?.[0];
+  const title = getTitle(product);
+  const description = getShortDesc(product) || getDescription(product) || `${title} – Ümit Spot'ta uygun fiyata`;
+  const price = getPrice(product);
+  const category = getCategory(product);
+  const imageId = getFirstImageId(product);
   const imageUrl = imageId
     ? (imageId.startsWith('http') ? imageId : cloudinaryUrl(imageId, 'f_auto,q_auto,w_1200,h_630,c_fill'))
     : undefined;
@@ -58,12 +58,11 @@ export default async function ProductDetailPage({ params }: Props) {
 
   let productSchema = null;
   if (product) {
-    const raw = product as any;
-    const title = raw.title || raw.baslik || raw.name || 'Ürün';
-    const price = raw.priceTRY ?? raw.price ?? raw.fiyat;
-    const condition = raw.condition || raw.durum || '2. El';
-    const inStock = raw.inStock ?? raw.stok ?? true;
-    const imageId = raw.images?.[0];
+    const pTitle = getTitle(product);
+    const price = getPrice(product);
+    const condition = getCondition(product) || '2. El';
+    const inStock = getInStock(product);
+    const imageId = getFirstImageId(product);
     const imageUrl = imageId
       ? (imageId.startsWith('http') ? imageId : cloudinaryUrl(imageId, 'f_auto,q_auto,w_900,h_700,c_fill'))
       : undefined;
@@ -71,8 +70,8 @@ export default async function ProductDetailPage({ params }: Props) {
     productSchema = {
       '@context': 'https://schema.org',
       '@type': 'Product',
-      name: title,
-      description: raw.shortDesc || raw.description || `${title} – Esenyurt Ümit Spot'ta satışta`,
+      name: pTitle,
+      description: getShortDesc(product) || getDescription(product) || `${pTitle} – Esenyurt Ümit Spot'ta satışta`,
       ...(imageUrl && { image: imageUrl }),
       brand: { '@type': 'Brand', name: 'Ümit Spot' },
       offers: {
