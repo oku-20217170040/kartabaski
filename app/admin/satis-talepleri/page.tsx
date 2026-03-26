@@ -1,7 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { getSatisTalepleri, updateSatisTalebiStatus, deleteSatisTalebi, SatisTalebi } from '@/lib/products';
+import { getSatisTalepleri, SatisTalebi } from '@/lib/products';
+import { deleteSatisTalebiAction, updateSatisTalebiStatusAction } from '@/lib/actions';
 
 const STATUS_LABELS: Record<SatisTalebi['status'], { label: string; badge: string }> = {
   yeni:       { label: 'Yeni',       badge: 'badge-blue' },
@@ -25,7 +26,7 @@ export default function SatisTalepleriPage() {
 
   const handleStatus = async (id: string, status: SatisTalebi['status']) => {
     setUpdating(id);
-    await updateSatisTalebiStatus(id, status);
+    await updateSatisTalebiStatusAction(id, status);
     setTalepler((prev) => prev.map((t) => t.id === id ? { ...t, status } : t));
     setUpdating(null);
   };
@@ -34,7 +35,7 @@ export default function SatisTalepleriPage() {
     if (!confirm(`"${itemName}" talebini silmek istediğinize emin misiniz?`)) return;
     setDeleting(id);
     try {
-      await deleteSatisTalebi(id);
+      await deleteSatisTalebiAction(id);
       setTalepler((prev) => prev.filter((t) => t.id !== id));
     } catch (err: any) {
       console.error('Silme hatası:', err);

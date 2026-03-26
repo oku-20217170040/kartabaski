@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { createProduct } from '@/lib/products';
+import { createProductAction } from '@/lib/actions';
 import { Product } from '@/types';
 import ProductForm from '@/components/ProductForm';
 import Link from 'next/link';
@@ -10,7 +10,7 @@ export default function NewProductPage() {
   const router = useRouter();
 
   const handleSubmit = async (data: Omit<Product, 'id' | 'createdAt' | 'updatedAt'>) => {
-    await createProduct({ ...data, createdAt: Date.now(), updatedAt: Date.now() });
+    await createProductAction({ ...data, createdAt: Date.now(), updatedAt: Date.now() });
     router.push('/admin/products');
   };
 

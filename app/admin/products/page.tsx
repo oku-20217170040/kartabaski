@@ -1,7 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { getProducts, deleteProduct, toggleFeatured, cloudinaryThumb } from '@/lib/products';
+import { getProducts, cloudinaryThumb } from '@/lib/products';
+import { deleteProductAction, toggleFeaturedAction } from '@/lib/actions';
 import { Product } from '@/types';
 import Link from 'next/link';
 
@@ -14,7 +15,7 @@ export default function AdminProductsPage() {
 
   const load = () => {
     setLoading(true);
-    getProducts(true).then(setProducts).finally(() => setLoading(false));
+    getProducts().then(setProducts).finally(() => setLoading(false));
   };
 
   useEffect(() => { load(); }, []);
@@ -27,14 +28,14 @@ export default function AdminProductsPage() {
   const handleDelete = async (id: string, title: string) => {
     if (!confirm(`"${title}" silinsin mi?`)) return;
     setDeleting(id);
-    await deleteProduct(id);
+    await deleteProductAction(id);
     load();
     setDeleting(null);
   };
 
   const handleToggleFeatured = async (p: Product) => {
     setTogglingFeatured(p.id);
-    await toggleFeatured(p.id, !p.featured);
+    await toggleFeaturedAction(p.id, !p.featured);
     setProducts((prev) => prev.map((x) => x.id === p.id ? { ...x, featured: !p.featured } : x));
     setTogglingFeatured(null);
   };

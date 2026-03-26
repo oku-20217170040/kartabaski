@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { getProductById, updateProduct } from '@/lib/products';
+import { getProductById } from '@/lib/products';
+import { updateProductAction } from '@/lib/actions';
 import { Product } from '@/types';
 import ProductForm from '@/components/ProductForm';
 import Link from 'next/link';
@@ -20,7 +21,7 @@ export default function EditProductPage() {
   }, [id]);
 
   const handleSubmit = async (data: Omit<Product, 'id' | 'createdAt' | 'updatedAt'>) => {
-    await updateProduct(id, data);
+    await updateProductAction(id, data);
     router.push('/admin/products');
   };
 

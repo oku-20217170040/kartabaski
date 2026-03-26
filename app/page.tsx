@@ -1,11 +1,18 @@
-import { getProducts } from '@/lib/products';
+import { unstable_cache } from 'next/cache';
+import { getProducts as _getProducts } from '@/lib/products';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import HeroSection from '@/components/HeroSection';
 import ProductsClient from './ProductsClient';
 import { PHONE, PHONE_DISPLAY, WHATSAPP_BASE } from '@/lib/constants';
 
-export const revalidate = 60;
+// unstable_cache: Next.js Data Cache üzerinde saklar (serverless instance'lar arası paylaşılır)
+// revalidateTag('products') çağrıldığında anında temizlenir
+const getProducts = unstable_cache(
+  () => _getProducts(),
+  ['products'],
+  { tags: ['products'] }
+);
 
 export default async function HomePage() {
   const products = await getProducts();
