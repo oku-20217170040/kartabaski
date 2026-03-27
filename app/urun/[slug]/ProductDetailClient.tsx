@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://umit-spot.vercel.app';
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.umitspot.com';
 
 function ShareButton({ title, slug }: { title: string; slug: string }) {
   const [copied, setCopied] = useState(false);

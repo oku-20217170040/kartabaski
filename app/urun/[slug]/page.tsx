@@ -8,7 +8,7 @@ interface Props {
   params: { slug: string };
 }
 
-const SITE_URL = 'https://umit-spot.vercel.app';
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.umitspot.com';
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = params;

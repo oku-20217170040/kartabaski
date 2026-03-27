@@ -6,7 +6,7 @@ import ErrorBoundary from '@/components/ErrorBoundary';
 import { PHONE } from '@/lib/constants';
 
 const SITE_NAME = 'Ümit Spot';
-const SITE_URL = 'https://umit-spot.vercel.app';
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.umitspot.com';
 const DESCRIPTION = 'Esenyurt\'un en yakın spotçusu. İkinci el ve sıfır spot mobilya, beyaz eşya alım satım. Esenyurt, Beylikdüzü, Avcılar, Büyükçekmece bölgelerine aynı gün teslimat. 0542 644 72 96';
 
 export const metadata: Metadata = {
