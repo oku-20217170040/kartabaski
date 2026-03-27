@@ -41,6 +41,11 @@ export default function ProductsClient({ initialProducts }: Props) {
     });
 
     list = [...list].sort((a, b) => {
+      // Stokta olanlar her zaman önce
+      const aStock = getInStock(a) ? 0 : 1;
+      const bStock = getInStock(b) ? 0 : 1;
+      if (aStock !== bStock) return aStock - bStock;
+
       if (sort === 'featured') {
         if (getFeatured(a) && !getFeatured(b)) return -1;
         if (!getFeatured(a) && getFeatured(b)) return 1;

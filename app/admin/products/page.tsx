@@ -20,10 +20,12 @@ export default function AdminProductsPage() {
 
   useEffect(() => { load(); }, []);
 
-  const filtered = products.filter((p) => {
-    const q = search.toLowerCase();
-    return !q || p.title.toLowerCase().includes(q) || p.category.toLowerCase().includes(q);
-  });
+  const filtered = products
+    .filter((p) => {
+      const q = search.toLowerCase();
+      return !q || p.title.toLowerCase().includes(q) || p.category.toLowerCase().includes(q);
+    })
+    .sort((a, b) => (a.inStock === b.inStock ? 0 : a.inStock ? -1 : 1));
 
   const handleDelete = async (id: string, title: string) => {
     if (!confirm(`"${title}" silinsin mi?`)) return;
