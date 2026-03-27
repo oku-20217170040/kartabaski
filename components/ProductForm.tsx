@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Product, CATEGORIES, Category } from '@/types';
 import { cloudinaryUrl } from '@/lib/products';
 
@@ -48,6 +48,25 @@ export default function ProductForm({ initial, onSubmit, submitLabel }: Props) {
   const [dragOver, setDragOver] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
+  // Bu session'da yüklenen (henüz kaydedilmemiş) görselleri takip et
+  const sessionUploads = useRef<Set<string>>(new Set());
+  const savedRef = useRef(false);
+
+  // Sayfa terk edilince kaydedilmemiş görselleri Cloudinary'den sil
+  useEffect(() => {
+    return () => {
+      if (!savedRef.current && sessionUploads.current.size > 0) {
+        navigator.sendBeacon(
+          '/api/cloudinary-delete',
+          new Blob(
+            [JSON.stringify({ publicIds: Array.from(sessionUploads.current) })],
+            { type: 'application/json' }
+          )
+        );
+      }
+    };
+  }, []);
+
   // Auto-slug
   const handleTitleChange = (v: string) => {
     setTitle(v);
@@ -67,6 +86,7 @@ export default function ProductForm({ initial, onSubmit, submitLabel }: Props) {
     setUploading(true);
     try {
       const ids = await Promise.all(Array.from(files).map(uploadToCloudinary));
+      ids.forEach((id) => sessionUploads.current.add(id));
       setImages((prev) => [...prev, ...ids]);
     } catch {
       setError('Görsel yüklenemedi. Cloudinary ayarlarını kontrol edin.');
@@ -113,6 +133,8 @@ export default function ProductForm({ initial, onSubmit, submitLabel }: Props) {
         tags,
         specs: parseSpecs(),
       });
+      savedRef.current = true;
+      sessionUploads.current.clear();
     } catch (e: any) {
       setError(e.message || 'Bir hata oluştu.');
     } finally {
@@ -204,7 +226,18 @@ export default function ProductForm({ initial, onSubmit, submitLabel }: Props) {
                   <img src={cloudinaryUrl(id, 'f_auto,q_auto,w_200,h_160,c_fill')} alt={`img-${i}`} />
                   <button
                     className="img-preview-remove"
-                    onClick={() => setImages((prev) => prev.filter((_, j) => j !== i))}
+                    onClick={() => {
+                      // Session'da yüklendiyse Cloudinary'den hemen sil
+                      if (sessionUploads.current.has(id)) {
+                        sessionUploads.current.delete(id);
+                        fetch('/api/cloudinary-delete', {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({ publicIds: [id] }),
+                        });
+                      }
+                      setImages((prev) => prev.filter((_, j) => j !== i));
+                    }}
                   >×</button>
                 </div>
               ))}
