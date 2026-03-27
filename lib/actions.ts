@@ -34,6 +34,11 @@ export async function toggleFeaturedAction(id: string, featured: boolean): Promi
   revalidateTag('products');
 }
 
+export async function toggleStockAction(id: string, inStock: boolean): Promise<void> {
+  await _updateProduct(id, { inStock });
+  revalidateTag('products');
+}
+
 // ── Satış Talebi Aksiyonları ─────────────────────────────────────────────────
 
 export async function saveSatisTalebiAction(
