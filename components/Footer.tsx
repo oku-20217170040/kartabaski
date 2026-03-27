@@ -41,7 +41,6 @@ export default function Footer() {
           {/* Brand column */}
           <div className="footer-brand">
             <Link href="/" className="footer-logo-link">
-              <span className="footer-logo-badge">Ü</span>
               <span className="footer-logo-text">Ümit<span>Spot</span></span>
             </Link>
             <p className="footer-brand-desc">
