@@ -882,7 +882,7 @@ body::before {
 .nav-logo {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 0;
   font-size: 1.35rem;
 }
 
