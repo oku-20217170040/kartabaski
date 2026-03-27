@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/lib/auth-context';
+import LogoSVG from '@/components/LogoSVG';
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const { user, isAdmin, loading, logout } = useAuth();
@@ -43,10 +44,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const sidebarContent = (
     <>
       <div className="admin-sidebar-logo">
-        <div style={{ fontFamily: 'var(--font-display)', fontSize: '1.2rem', fontWeight: 800 }}>
-          Ümit<span style={{ color: 'var(--accent)' }}>Spot</span>
-        </div>
-        <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 2 }}>Admin Panel</div>
+        <LogoSVG height={28} />
+        <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 4 }}>Admin Panel</div>
       </div>
 
       {links.map((l) => (
@@ -109,9 +108,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           >
             <span /><span /><span />
           </button>
-          <div style={{ fontFamily: 'var(--font-display)', fontSize: '1.1rem', fontWeight: 800 }}>
-            Ümit<span style={{ color: 'var(--accent)' }}>Spot</span>
-          </div>
+          <LogoSVG height={28} />
           <div style={{ width: 40 }} />
         </div>
 

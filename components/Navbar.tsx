@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { WHATSAPP_BASE } from '@/lib/constants';
+import LogoSVG from '@/components/LogoSVG';
 
 const WA_ICON = (
   <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
@@ -57,7 +58,7 @@ export default function Navbar() {
 
           {/* Logo */}
           <Link href="/" className="nav-logo" style={{ display: 'flex', alignItems: 'center' }}>
-            <img src="/logo.svg" alt="ÜmitSpot" height={36} style={{ display: 'block' }} />
+            <LogoSVG height={36} />
           </Link>
 
           {/* Desktop nav links */}
@@ -184,7 +185,7 @@ export default function Navbar() {
               padding: '18px 20px', borderBottom: '1px solid var(--border)',
             }}>
               <span className="nav-logo" style={{ display: 'flex', alignItems: 'center' }}>
-                <img src="/logo.svg" alt="ÜmitSpot" height={36} style={{ display: 'block' }} />
+                <LogoSVG height={36} />
               </span>
               <motion.button
                 whileTap={{ scale: 0.9 }}

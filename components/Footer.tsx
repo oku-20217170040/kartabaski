@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { PHONE, PHONE_DISPLAY, WHATSAPP_BASE } from '@/lib/constants';
+import LogoSVG from '@/components/LogoSVG';
 
 const WA_ICON = (
   <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
@@ -41,7 +42,7 @@ export default function Footer() {
           {/* Brand column */}
           <div className="footer-brand">
             <Link href="/" className="footer-logo-link">
-              <img src="/logo.svg" alt="ÜmitSpot" height={40} style={{ display: 'block' }} />
+              <LogoSVG height={40} />
             </Link>
             <p className="footer-brand-desc">
               Esenyurt&apos;un en güvenilir ikinci el ve sıfır spot mobilya, beyaz eşya alım satım merkezi.
