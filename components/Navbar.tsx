@@ -57,7 +57,7 @@ export default function Navbar() {
 
           {/* Logo */}
           <Link href="/" className="nav-logo" style={{ display: 'flex', alignItems: 'center' }}>
-            Ümit<span style={{ color: 'var(--accent)' }}>Spot</span>
+            <img src="/logo.svg" alt="ÜmitSpot" height={36} style={{ display: 'block' }} />
           </Link>
 
           {/* Desktop nav links */}
@@ -184,7 +184,7 @@ export default function Navbar() {
               padding: '18px 20px', borderBottom: '1px solid var(--border)',
             }}>
               <span className="nav-logo" style={{ display: 'flex', alignItems: 'center' }}>
-                Ümit<span style={{ color: 'var(--accent)' }}>Spot</span>
+                <img src="/logo.svg" alt="ÜmitSpot" height={36} style={{ display: 'block' }} />
               </span>
               <motion.button
                 whileTap={{ scale: 0.9 }}

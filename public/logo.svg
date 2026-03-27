@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 460 100">
+  <rect width="460" height="100" fill="#0B0F14"/>
+
+  <!-- GEOMETRIC ICON: Two overlapping diamonds forming an abstract "second life" symbol -->
+  <!-- Primary diamond - solid green -->
+  <polygon points="50,10 82,50 50,90 18,50" fill="#1DB954"/>
+  <!-- Secondary diamond - cutout/offset creating depth -->
+  <polygon points="62,22 86,50 62,78 38,50" fill="#0B0F14"/>
+  <!-- Inner accent - small green diamond -->
+  <polygon points="62,36 72,50 62,64 52,50" fill="#1DB954"/>
+
+  <!-- WORDMARK: tight, heavy, no mercy -->
+  <text x="106" y="66"
+    font-family="'Arial Black','Helvetica Neue',Helvetica,sans-serif"
+    font-weight="900" font-size="50" letter-spacing="-2.5"
+    fill="#FFFFFF">Ümit</text>
+  <text x="262" y="66"
+    font-family="'Arial Black','Helvetica Neue',Helvetica,sans-serif"
+    font-weight="900" font-size="50" letter-spacing="-2.5"
+    fill="#1DB954">Spot</text>
+</svg>

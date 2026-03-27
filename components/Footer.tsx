@@ -41,7 +41,7 @@ export default function Footer() {
           {/* Brand column */}
           <div className="footer-brand">
             <Link href="/" className="footer-logo-link">
-              <span className="footer-logo-text">Ümit<span>Spot</span></span>
+              <img src="/logo.svg" alt="ÜmitSpot" height={40} style={{ display: 'block' }} />
             </Link>
             <p className="footer-brand-desc">
               Esenyurt&apos;un en güvenilir ikinci el ve sıfır spot mobilya, beyaz eşya alım satım merkezi.
