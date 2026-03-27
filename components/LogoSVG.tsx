@@ -20,19 +20,14 @@ export default function LogoSVG({ height = 36 }: Props) {
       <polygon points="62,22 86,50 62,78 38,50" fill="#0B0F14" />
       <polygon points="62,36 72,50 62,64 52,50" fill="#1DB954" />
 
-      {/* Wordmark */}
+      {/* Wordmark — birleşik */}
       <text
         x="106" y="66"
         fontFamily="'Arial Black','Helvetica Neue',Helvetica,sans-serif"
         fontWeight="900" fontSize="50" letterSpacing="-2.5"
-        fill="#FFFFFF"
-      >Ümit</text>
-      <text
-        x="262" y="66"
-        fontFamily="'Arial Black','Helvetica Neue',Helvetica,sans-serif"
-        fontWeight="900" fontSize="50" letterSpacing="-2.5"
-        fill="#1DB954"
-      >Spot</text>
+      >
+        <tspan fill="#FFFFFF">Ümit</tspan><tspan fill="#1DB954">Spot</tspan>
+      </text>
     </svg>
   );
 }
