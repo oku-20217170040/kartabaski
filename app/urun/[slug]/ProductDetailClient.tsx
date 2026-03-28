@@ -60,6 +60,7 @@ export default function ProductDetailClient({ slug }: { slug: string }) {
   const [loading, setLoading] = useState(true);
   const [activeImg, setActiveImg] = useState(0);
   const [lightbox, setLightbox] = useState<number | null>(null);
+  const [touchStartX, setTouchStartX] = useState<number | null>(null);
 
   useEffect(() => {
     if (!slug || slug === 'undefined') { setLoading(false); return; }
@@ -171,6 +172,17 @@ export default function ProductDetailClient({ slug }: { slug: string }) {
                 className="product-gallery-main"
                 onClick={() => images && setLightbox(activeImg)}
                 style={{ cursor: images ? 'zoom-in' : 'default', position: 'relative' }}
+                onTouchStart={(e) => setTouchStartX(e.touches[0].clientX)}
+                onTouchEnd={(e) => {
+                  if (touchStartX === null || !images || images.length < 2) return;
+                  const diff = touchStartX - e.changedTouches[0].clientX;
+                  if (Math.abs(diff) < 40) return;
+                  setActiveImg(diff > 0
+                    ? (activeImg + 1) % images.length
+                    : (activeImg - 1 + images.length) % images.length
+                  );
+                  setTouchStartX(null);
+                }}
               >
                 {images ? (
                   <>
@@ -192,6 +204,22 @@ export default function ProductDetailClient({ slug }: { slug: string }) {
                   <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '5rem', opacity: 0.15 }}>🛋️</div>
                 )}
               </div>
+
+              {/* Mobil: nokta göstergesi */}
+              {images && images.length > 1 && (
+                <div className="gallery-dots">
+                  {images.map((_, i) => (
+                    <button
+                      key={i}
+                      className={`gallery-dot ${i === activeImg ? 'gallery-dot--active' : ''}`}
+                      onClick={(e) => { e.stopPropagation(); setActiveImg(i); }}
+                      aria-label={`Fotoğraf ${i + 1}`}
+                    />
+                  ))}
+                </div>
+              )}
+
+              {/* Masaüstü: thumbnail strip */}
               {images && images.length > 1 && (
                 <div className="product-gallery-thumbs">
                   {images.map((src, i) => (
