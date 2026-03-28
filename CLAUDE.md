@@ -82,6 +82,8 @@ npm run test:coverage # Jest with coverage report
 
 Products support multilingual/alias fields: `title` or `baslik`, `priceTRY`/`price`/`fiyat`, `category`/`kategori`, `condition`/`durum`, `inStock`/`stok`.
 
+Valid categories: `Mobilya`, `Beyaz Eşya`, `Elektronik`, `Ofis`, `Yatak`, `Dekorasyon`, `Aydınlatma`, `Bahçe`, `Ev Eşyaları`, `Diğer`.
+
 Zod schemas in `lib/schemas.ts` handle normalization at the data layer. Typed helpers in `lib/product-utils.ts` handle alias resolution at the UI layer.
 
 ### Constants
