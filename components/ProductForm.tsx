@@ -82,7 +82,13 @@ export default function ProductForm({ initial, onSubmit, submitLabel }: Props) {
     setCameraReady(false);
     setShowCamera(false);
     setCameraError('');
+    // iOS scroll lock'u geri al
+    const top = document.body.style.top;
+    document.body.style.position = '';
+    document.body.style.top = '';
+    document.body.style.width = '';
     document.body.style.overflow = '';
+    if (top) window.scrollTo(0, -parseInt(top, 10));
   }, []);
 
   // Sayfa terk edilince kaydedilmemiş görselleri ve kamerayı kapat
@@ -135,7 +141,11 @@ export default function ProductForm({ initial, onSubmit, submitLabel }: Props) {
     setCameraError('');
     setCameraReady(false);
     setShowCamera(true);
-    document.body.style.overflow = 'hidden'; // sayfanın kaymasını engelle
+    // iOS dahil tüm mobil tarayıcılarda sayfayı dondur
+    document.body.style.top = `-${window.scrollY}px`;
+    document.body.style.position = 'fixed';
+    document.body.style.width = '100%';
+    document.body.style.overflow = 'hidden';
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
         video: { facingMode: { ideal: 'environment' }, width: { ideal: 1920 }, height: { ideal: 1080 } },
