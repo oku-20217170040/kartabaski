@@ -48,9 +48,15 @@ export default function ProductForm({ initial, onSubmit, submitLabel }: Props) {
   const [error, setError] = useState('');
   const [dragOver, setDragOver] = useState(false);
 
-  // Image reorder
+  // Image reorder — desktop (HTML5 drag) + mobile (touch)
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
   const dragIndexRef = useRef<number | null>(null);
+
+  // Touch drag
+  const [touchDragIndex, setTouchDragIndex] = useState<number | null>(null);
+  const [touchGhostPos, setTouchGhostPos] = useState<{ x: number; y: number } | null>(null);
+  const touchDragIndexRef = useRef<number | null>(null);
+  const imgGridRef = useRef<HTMLDivElement>(null);
 
   // Camera
   const [showCamera, setShowCamera] = useState(false);
@@ -192,6 +198,58 @@ export default function ProductForm({ initial, onSubmit, submitLabel }: Props) {
 
   const handleImgDragEnd = () => {
     dragIndexRef.current = null;
+    setDragOverIndex(null);
+  };
+
+  // ── Image reorder — touch (mobile) ───────────────────────────────────────────
+
+  // Non-passive touchmove must be added via addEventListener, not React props
+  useEffect(() => {
+    const grid = imgGridRef.current;
+    if (!grid) return;
+
+    const onTouchMove = (e: TouchEvent) => {
+      if (touchDragIndexRef.current === null) return;
+      e.preventDefault(); // block page scroll while reordering
+
+      const touch = e.touches[0];
+      setTouchGhostPos({ x: touch.clientX, y: touch.clientY });
+
+      // Ghost has pointer-events:none so elementFromPoint sees through it
+      const el = document.elementFromPoint(touch.clientX, touch.clientY);
+      const item = el?.closest('[data-img-index]') as HTMLElement | null;
+      if (item) {
+        const idx = parseInt(item.dataset.imgIndex ?? '-1', 10);
+        if (idx >= 0) setDragOverIndex(idx);
+      }
+    };
+
+    grid.addEventListener('touchmove', onTouchMove, { passive: false });
+    return () => grid.removeEventListener('touchmove', onTouchMove);
+  }, []); // empty — reads from refs only
+
+  const handleImgTouchStart = (e: React.TouchEvent, index: number) => {
+    touchDragIndexRef.current = index;
+    setTouchDragIndex(index);
+    const touch = e.touches[0];
+    setTouchGhostPos({ x: touch.clientX, y: touch.clientY });
+    setDragOverIndex(index);
+  };
+
+  const handleImgTouchEnd = () => {
+    const from = touchDragIndexRef.current;
+    const to = dragOverIndex;
+    if (from !== null && to !== null && from !== to) {
+      setImages((prev) => {
+        const next = [...prev];
+        const [moved] = next.splice(from, 1);
+        next.splice(to, 0, moved);
+        return next;
+      });
+    }
+    touchDragIndexRef.current = null;
+    setTouchDragIndex(null);
+    setTouchGhostPos(null);
     setDragOverIndex(null);
   };
 
@@ -429,22 +487,49 @@ export default function ProductForm({ initial, onSubmit, submitLabel }: Props) {
                     Sıralamak için görselleri sürükleyin — ilk görsel ürün kapak fotoğrafı olur
                   </p>
                 )}
-                <div className="img-preview-grid">
+                {/* Touch ghost — follows finger on mobile */}
+                {touchGhostPos && touchDragIndex !== null && (
+                  <div style={{
+                    position: 'fixed',
+                    left: touchGhostPos.x - 45,
+                    top: touchGhostPos.y - 38,
+                    width: 90, height: 75,
+                    borderRadius: 8,
+                    overflow: 'hidden',
+                    border: '2px solid var(--accent2)',
+                    boxShadow: '0 8px 24px rgba(0,0,0,0.5)',
+                    opacity: 0.9,
+                    pointerEvents: 'none',
+                    zIndex: 999,
+                    transform: 'scale(1.08)',
+                  }}>
+                    <img
+                      src={cloudinaryUrl(images[touchDragIndex], 'f_auto,q_auto,w_200,h_160,c_fill')}
+                      style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                      alt=""
+                    />
+                  </div>
+                )}
+
+                <div className="img-preview-grid" ref={imgGridRef}>
                   {images.map((id, i) => (
                     <div
                       key={id}
                       className="img-preview-item"
+                      data-img-index={i}
                       draggable
                       onDragStart={() => handleImgDragStart(i)}
                       onDragOver={(e) => handleImgDragOver(e, i)}
                       onDrop={(e) => handleImgDrop(e, i)}
                       onDragEnd={handleImgDragEnd}
+                      onTouchStart={(e) => handleImgTouchStart(e, i)}
+                      onTouchEnd={handleImgTouchEnd}
                       style={{
                         cursor: 'grab',
-                        outline: dragOverIndex === i && dragIndexRef.current !== i
+                        outline: dragOverIndex === i && (dragIndexRef.current !== i && touchDragIndex !== i)
                           ? '2px solid var(--accent2)'
                           : undefined,
-                        opacity: dragIndexRef.current === i ? 0.5 : 1,
+                        opacity: dragIndexRef.current === i || touchDragIndex === i ? 0.35 : 1,
                         transition: 'outline 0.1s, opacity 0.1s',
                       }}
                     >
