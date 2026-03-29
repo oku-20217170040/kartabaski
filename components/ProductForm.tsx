@@ -34,7 +34,6 @@ export default function ProductForm({ initial, onSubmit, submitLabel }: Props) {
   const [category, setCategory] = useState<Category>(initial?.category || 'Mobilya');
   const [condition, setCondition] = useState<'Sıfır' | '2. El'>(initial?.condition || '2. El');
   const [inStock, setInStock] = useState(initial?.inStock ?? true);
-  const [shortDesc, setShortDesc] = useState(initial?.shortDesc || '');
   const [description, setDescription] = useState(initial?.description || '');
   const [images, setImages] = useState<string[]>(initial?.images || []);
   const [tags, setTags] = useState<string[]>(initial?.tags || []);
@@ -137,7 +136,7 @@ export default function ProductForm({ initial, onSubmit, submitLabel }: Props) {
         category,
         condition,
         inStock,
-        shortDesc,
+        shortDesc: initial?.shortDesc || '',
         description,
         images,
         tags,
@@ -181,11 +180,6 @@ export default function ProductForm({ initial, onSubmit, submitLabel }: Props) {
                 {CATEGORIES.map((c) => <option key={c}>{c}</option>)}
               </select>
             </div>
-          </div>
-
-          <div className="form-group">
-            <label className="form-label">Kısa Açıklama</label>
-            <input className="form-input" value={shortDesc} onChange={(e) => setShortDesc(e.target.value)} placeholder="Temiz kullanılmış, sağlam iskelet" />
           </div>
 
           <div className="form-group">
