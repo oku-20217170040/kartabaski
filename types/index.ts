@@ -4,7 +4,7 @@ export interface Product {
   slug: string;
   priceTRY: number;
   category: Category;
-  condition: 'Sıfır' | '2. El';
+  condition: 'Sıfır' | 'Sıfır Gibi' | 'Az Kullanılmış' | '2. El' | 'İyi Durumda' | 'Normal Durumda' | 'Parasına Göre' | 'Hasarlı/Onarım Gerekli';
   inStock: boolean;
   featured?: boolean;
   tags: string[];
@@ -42,12 +42,21 @@ export const CATEGORIES: Category[] = [
   'Diğer',
 ];
 
-export const CONDITIONS = ['Sıfır', '2. El'] as const;
+export const CONDITIONS = [
+  'Sıfır',
+  'Sıfır Gibi',
+  'Az Kullanılmış',
+  '2. El',
+  'İyi Durumda',
+  'Normal Durumda',
+  'Parasına Göre',
+  'Hasarlı/Onarım Gerekli',
+] as const;
 
 export interface FilterState {
   search: string;
   category: Category | '';
-  condition: 'Sıfır' | '2. El' | '';
+  condition: 'Sıfır' | 'Sıfır Gibi' | 'Az Kullanılmış' | '2. El' | 'İyi Durumda' | 'Normal Durumda' | 'Parasına Göre' | 'Hasarlı/Onarım Gerekli' | '';
   inStock: boolean | null;
 }
 

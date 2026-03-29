@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
-import { Product, CATEGORIES, Category } from '@/types';
+import { Product, CATEGORIES, CONDITIONS, Category } from '@/types';
 import { cloudinaryUrl } from '@/lib/products';
 
 interface Props {
@@ -33,7 +33,7 @@ export default function ProductForm({ initial, onSubmit, submitLabel }: Props) {
   const [slug, setSlug] = useState(initial?.slug || '');
   const [price, setPrice] = useState(String(initial?.priceTRY || ''));
   const [category, setCategory] = useState<Category>(initial?.category || 'Mobilya');
-  const [condition, setCondition] = useState<'Sıfır' | '2. El'>(initial?.condition || '2. El');
+  const [condition, setCondition] = useState<Product['condition']>(initial?.condition || '2. El');
   const [inStock, setInStock] = useState(initial?.inStock ?? true);
   const [description, setDescription] = useState(initial?.description || '');
   const [images, setImages] = useState<string[]>(initial?.images || []);
@@ -635,9 +635,8 @@ export default function ProductForm({ initial, onSubmit, submitLabel }: Props) {
 
             <div className="form-group">
               <label className="form-label">Kondisyon</label>
-              <select className="form-select" value={condition} onChange={(e) => setCondition(e.target.value as 'Sıfır' | '2. El')}>
-                <option>Sıfır</option>
-                <option>2. El</option>
+              <select className="form-select" value={condition} onChange={(e) => setCondition(e.target.value as Product['condition'])}>
+                {CONDITIONS.map((c) => <option key={c}>{c}</option>)}
               </select>
             </div>
 

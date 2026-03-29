@@ -19,7 +19,7 @@ export const ProductSchema = z.object({
   slug:        z.string().optional().default(''),
   priceTRY:    z.number().default(0),
   category:    CategorySchema.catch('Diğer'),
-  condition:   z.enum(['Sıfır', '2. El']).catch('2. El'),
+  condition:   z.enum(['Sıfır', 'Sıfır Gibi', 'Az Kullanılmış', '2. El', 'İyi Durumda', 'Normal Durumda', 'Parasına Göre', 'Hasarlı/Onarım Gerekli']).catch('2. El'),
   inStock:     z.boolean().default(true),
   featured:    z.boolean().optional(),
   tags:        z.array(z.string()).default([]),
