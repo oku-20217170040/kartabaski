@@ -205,6 +205,7 @@ export default function ProductDetailClient({ slug }: { slug: string }) {
                 )}
               </div>
 
+
               {/* Mobil: nokta göstergesi */}
               {images && images.length > 1 && (
                 <div className="gallery-dots">
@@ -296,10 +297,11 @@ export default function ProductDetailClient({ slug }: { slug: string }) {
 
             {/* Bilgiler */}
             <div className="product-info">
-              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
                 {condition && <span className={`badge ${condition === 'Sıfır' ? 'badge-green' : 'badge-orange'}`}>{condition}</span>}
                 {category && <span className="badge badge-muted">{category}</span>}
                 {inStock ? <span className="badge badge-green">✓ Stokta</span> : <span className="badge badge-red">Satıldı</span>}
+                {tags?.map((t: string) => <span key={t} className="badge badge-blue">{t}</span>)}
               </div>
 
               <h1 className="product-title">{title}</h1>
@@ -315,12 +317,6 @@ export default function ProductDetailClient({ slug }: { slug: string }) {
                 </a>
                 <ShareButton title={title} slug={productSlug} />
               </div>
-
-              {tags?.length > 0 && (
-                <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                  {tags.map((t: string) => <span key={t} className="badge badge-blue">{t}</span>)}
-                </div>
-              )}
 
               {description && (
                 <div style={{ borderTop: '1px solid var(--border)', paddingTop: 20 }}>

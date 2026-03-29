@@ -377,14 +377,13 @@ input, select, textarea { font-family: var(--font-body); }
   background: rgba(255,255,255,0.25);
   cursor: pointer;
   padding: 0;
-  transition: background 0.2s, transform 0.2s, width 0.2s;
+  transition: background 0.2s, width 0.2s;
   flex-shrink: 0;
 }
 .gallery-dot--active {
   background: #fff;
   width: 20px;
   border-radius: 4px;
-  transform: none;
 }
 
 @media (max-width: 768px) {
