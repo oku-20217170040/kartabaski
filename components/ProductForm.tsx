@@ -316,82 +316,75 @@ export default function ProductForm({ initial, onSubmit, submitLabel }: Props) {
 
   return (
     <>
-      {/* ── Camera Modal — portal ile doğrudan body'e render edilir,
-           böylece admin-layout'taki transform/overflow etkisinden kaçınılır ── */}
+      {/* ── Camera Modal — portal: body'e render, video position:absolute ile tam ekran ── */}
       {showCamera && typeof document !== 'undefined' && createPortal(
         <div
           style={{
-            position: 'fixed', inset: 0, zIndex: 1000,
+            position: 'fixed',
+            top: 0, left: 0, right: 0, bottom: 0,
+            zIndex: 9999,
             background: '#000',
-            display: 'flex', flexDirection: 'column',
-            width: '100%', height: '100%',
-            touchAction: 'none',
             overflow: 'hidden',
+            touchAction: 'none',
           }}
         >
           {cameraError ? (
+            /* Hata durumu */
             <div style={{
-              flex: 1, display: 'flex', flexDirection: 'column',
+              position: 'absolute', inset: 0,
+              display: 'flex', flexDirection: 'column',
               alignItems: 'center', justifyContent: 'center', gap: 20,
             }}>
-              <p style={{ color: 'var(--danger)', fontSize: 15, textAlign: 'center', padding: '0 32px' }}>
+              <p style={{ color: '#f85149', fontSize: 15, textAlign: 'center', padding: '0 32px' }}>
                 {cameraError}
               </p>
-              <button className="btn" onClick={stopCamera} style={{ minWidth: 120 }}>Kapat</button>
+              <button onClick={stopCamera} style={{
+                padding: '10px 28px', borderRadius: 8,
+                background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)',
+                color: '#fff', fontSize: 14, cursor: 'pointer',
+              }}>Kapat</button>
             </div>
           ) : (
             <>
-              {/* Üst bar — sağda X butonu */}
-              <div style={{
-                width: '100%',
-                display: 'flex', justifyContent: 'flex-end',
-                padding: '20px 20px 0',
-                flexShrink: 0,
-                zIndex: 10,
-                background: 'linear-gradient(to bottom, rgba(0,0,0,0.45) 0%, transparent 100%)',
-              }}>
-                <button
-                  onClick={stopCamera}
-                  style={{
-                    background: 'rgba(0,0,0,0.45)',
-                    border: '1px solid rgba(255,255,255,0.25)',
-                    borderRadius: '50%',
-                    width: 44, height: 44,
-                    color: '#fff', fontSize: 18,
-                    cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    flexShrink: 0,
-                  }}
-                  aria-label="Kamerayı kapat"
-                >
-                  ✕
-                </button>
-              </div>
-
-              {/* Video wrapper — flex:1 div'e atanır; video { height: auto } global kuralını ezer */}
-              <div style={{ flex: 1, minHeight: 0, overflow: 'hidden', position: 'relative' }}>
-                <video
-                  ref={videoRef}
-                  autoPlay
-                  playsInline
-                  muted
-                  onCanPlay={() => setCameraReady(true)}
-                  style={{
-                    width: '100%',
-                    height: '100%',
-                    objectFit: 'cover',
-                    display: 'block',
-                  }}
-                />
-              </div>
+              {/* Video — position:absolute ile container'ı tamamen doldurur.
+                  Flex/height:auto CSS kurallarından tamamen bağımsız. */}
+              <video
+                ref={videoRef}
+                autoPlay
+                playsInline
+                muted
+                onCanPlay={() => setCameraReady(true)}
+                style={{
+                  position: 'absolute',
+                  top: 0, left: 0,
+                  width: '100%', height: '100%',
+                  objectFit: 'cover',
+                  display: 'block',
+                }}
+              />
               <canvas ref={canvasRef} style={{ display: 'none' }} />
 
-              {/* Alt bar — ortada çekim butonu */}
+              {/* Sağ üst X */}
+              <button
+                onClick={stopCamera}
+                style={{
+                  position: 'absolute', top: 20, right: 20, zIndex: 10,
+                  background: 'rgba(0,0,0,0.5)',
+                  border: '1px solid rgba(255,255,255,0.25)',
+                  borderRadius: '50%',
+                  width: 44, height: 44,
+                  color: '#fff', fontSize: 18,
+                  cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                }}
+                aria-label="Kamerayı kapat"
+              >✕</button>
+
+              {/* Alt orta — çekim butonu */}
               <div style={{
-                width: '100%',
+                position: 'absolute', bottom: 0, left: 0, right: 0, zIndex: 10,
                 display: 'flex', justifyContent: 'center', alignItems: 'center',
-                paddingTop: 20,
-                paddingBottom: 'max(36px, env(safe-area-inset-bottom, 36px))',
-                flexShrink: 0,
+                paddingTop: 24,
+                paddingBottom: 'max(40px, env(safe-area-inset-bottom, 40px))',
                 background: 'linear-gradient(to top, rgba(0,0,0,0.55) 0%, transparent 100%)',
               }}>
                 {!cameraReady ? (
@@ -407,7 +400,6 @@ export default function ProductForm({ initial, onSubmit, submitLabel }: Props) {
                       boxShadow: '0 0 0 4px rgba(255,255,255,0.2)',
                       cursor: 'pointer',
                       transition: 'transform 0.1s',
-                      flexShrink: 0,
                     }}
                     onMouseDown={(e) => { (e.currentTarget as HTMLButtonElement).style.transform = 'scale(0.91)'; }}
                     onMouseUp={(e) => { (e.currentTarget as HTMLButtonElement).style.transform = 'scale(1)'; }}
