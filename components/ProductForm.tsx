@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { Product, CATEGORIES, Category } from '@/types';
 import { cloudinaryUrl } from '@/lib/products';
 
@@ -47,15 +47,37 @@ export default function ProductForm({ initial, onSubmit, submitLabel }: Props) {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [dragOver, setDragOver] = useState(false);
+
+  // Image reorder
+  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
+  const dragIndexRef = useRef<number | null>(null);
+
+  // Camera
+  const [showCamera, setShowCamera] = useState(false);
+  const [cameraReady, setCameraReady] = useState(false);
+  const [cameraError, setCameraError] = useState('');
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const streamRef = useRef<MediaStream | null>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+
   const fileRef = useRef<HTMLInputElement>(null);
 
   // Bu session'da yüklenen (henüz kaydedilmemiş) görselleri takip et
   const sessionUploads = useRef<Set<string>>(new Set());
   const savedRef = useRef(false);
 
-  // Sayfa terk edilince kaydedilmemiş görselleri Cloudinary'den sil
+  const stopCamera = useCallback(() => {
+    streamRef.current?.getTracks().forEach((t) => t.stop());
+    streamRef.current = null;
+    setCameraReady(false);
+    setShowCamera(false);
+    setCameraError('');
+  }, []);
+
+  // Sayfa terk edilince kaydedilmemiş görselleri ve kamerayı kapat
   useEffect(() => {
     return () => {
+      stopCamera();
       if (!savedRef.current && sessionUploads.current.size > 0) {
         navigator.sendBeacon(
           '/api/cloudinary-delete',
@@ -66,7 +88,7 @@ export default function ProductForm({ initial, onSubmit, submitLabel }: Props) {
         );
       }
     };
-  }, []);
+  }, [stopCamera]);
 
   // Auto-slug
   const handleTitleChange = (v: string) => {
@@ -95,6 +117,85 @@ export default function ProductForm({ initial, onSubmit, submitLabel }: Props) {
       setUploading(false);
     }
   };
+
+  // ── Camera ────────────────────────────────────────────────────────────────────
+
+  const startCamera = async () => {
+    setCameraError('');
+    setCameraReady(false);
+    setShowCamera(true);
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: { ideal: 'environment' }, width: { ideal: 1920 }, height: { ideal: 1080 } },
+      });
+      streamRef.current = stream;
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+      }
+    } catch {
+      setCameraError('Kameraya erişilemedi. Tarayıcı izinlerini kontrol edin.');
+      setShowCamera(false);
+    }
+  };
+
+  const capturePhoto = async () => {
+    if (!videoRef.current || !canvasRef.current) return;
+    const video = videoRef.current;
+    const canvas = canvasRef.current;
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    canvas.getContext('2d')?.drawImage(video, 0, 0);
+    canvas.toBlob(async (blob) => {
+      if (!blob) return;
+      const file = new File([blob], `kamera-${Date.now()}.jpg`, { type: 'image/jpeg' });
+      stopCamera();
+      setUploading(true);
+      try {
+        const id = await uploadToCloudinary(file);
+        sessionUploads.current.add(id);
+        setImages((prev) => [...prev, id]);
+      } catch {
+        setError('Fotoğraf yüklenemedi.');
+      } finally {
+        setUploading(false);
+      }
+    }, 'image/jpeg', 0.92);
+  };
+
+  // ── Image reorder (drag & drop) ───────────────────────────────────────────────
+
+  const handleImgDragStart = (index: number) => {
+    dragIndexRef.current = index;
+  };
+
+  const handleImgDragOver = (e: React.DragEvent, index: number) => {
+    e.preventDefault();
+    if (dragIndexRef.current !== null) setDragOverIndex(index);
+  };
+
+  const handleImgDrop = (e: React.DragEvent, dropIndex: number) => {
+    e.preventDefault();
+    const from = dragIndexRef.current;
+    if (from === null || from === dropIndex) {
+      setDragOverIndex(null);
+      return;
+    }
+    setImages((prev) => {
+      const next = [...prev];
+      const [moved] = next.splice(from, 1);
+      next.splice(dropIndex, 0, moved);
+      return next;
+    });
+    dragIndexRef.current = null;
+    setDragOverIndex(null);
+  };
+
+  const handleImgDragEnd = () => {
+    dragIndexRef.current = null;
+    setDragOverIndex(null);
+  };
+
+  // ─────────────────────────────────────────────────────────────────────────────
 
   const addTag = () => {
     const t = tagInput.trim();
@@ -153,186 +254,321 @@ export default function ProductForm({ initial, onSubmit, submitLabel }: Props) {
   };
 
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: '1fr 360px', gap: 28, alignItems: 'start' }}>
-      {/* Left column */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
-        <div className="card" style={{ padding: 28, marginBottom: 20 }}>
-          <h2 style={{ fontFamily: 'var(--font-display)', marginBottom: 20 }}>Temel Bilgiler</h2>
+    <>
+      {/* ── Camera Modal ── */}
+      {showCamera && (
+        <div
+          style={{
+            position: 'fixed', inset: 0, zIndex: 1000,
+            background: 'rgba(0,0,0,0.92)',
+            display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+            gap: 16,
+          }}
+        >
+          {cameraError ? (
+            <p style={{ color: 'var(--danger)', fontSize: 15 }}>{cameraError}</p>
+          ) : (
+            <>
+              <video
+                ref={videoRef}
+                autoPlay
+                playsInline
+                muted
+                onCanPlay={() => setCameraReady(true)}
+                style={{
+                  maxWidth: '90vw', maxHeight: '70vh',
+                  borderRadius: 12,
+                  border: '2px solid var(--border)',
+                  background: '#000',
+                }}
+              />
+              <canvas ref={canvasRef} style={{ display: 'none' }} />
+            </>
+          )}
 
-          <div className="form-group">
-            <label className="form-label">Başlık *</label>
-            <input className="form-input" value={title} onChange={(e) => handleTitleChange(e.target.value)} placeholder="L Köşe Koltuk Gri" />
+          <div style={{ display: 'flex', gap: 12 }}>
+            {cameraReady && (
+              <button
+                className="btn btn-primary"
+                onClick={capturePhoto}
+                style={{ minWidth: 140, fontSize: 15 }}
+              >
+                📸 Çek
+              </button>
+            )}
+            <button
+              className="btn"
+              onClick={stopCamera}
+              style={{
+                minWidth: 120,
+                background: 'rgba(248,81,73,0.15)',
+                border: '1px solid rgba(248,81,73,0.35)',
+                color: 'var(--danger)',
+              }}
+            >
+              İptal
+            </button>
           </div>
 
-          <div className="form-group">
-            <label className="form-label">Slug *</label>
-            <input className="form-input" value={slug} onChange={(e) => setSlug(e.target.value)} placeholder="l-kose-koltuk-gri" />
-          </div>
+          {!cameraReady && !cameraError && (
+            <p style={{ color: 'var(--muted)', fontSize: 13 }}>Kamera başlatılıyor...</p>
+          )}
+        </div>
+      )}
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 360px', gap: 28, alignItems: 'start' }}>
+        {/* Left column */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
+          <div className="card" style={{ padding: 28, marginBottom: 20 }}>
+            <h2 style={{ fontFamily: 'var(--font-display)', marginBottom: 20 }}>Temel Bilgiler</h2>
+
             <div className="form-group">
-              <label className="form-label">Fiyat (TL) *</label>
-              <input className="form-input" type="number" value={price} onChange={(e) => setPrice(e.target.value)} placeholder="14900" />
+              <label className="form-label">Başlık *</label>
+              <input className="form-input" value={title} onChange={(e) => handleTitleChange(e.target.value)} placeholder="L Köşe Koltuk Gri" />
             </div>
+
             <div className="form-group">
-              <label className="form-label">Kategori</label>
-              <select className="form-select" value={category} onChange={(e) => setCategory(e.target.value as Category)}>
-                {CATEGORIES.map((c) => <option key={c}>{c}</option>)}
+              <label className="form-label">Slug *</label>
+              <input className="form-input" value={slug} onChange={(e) => setSlug(e.target.value)} placeholder="l-kose-koltuk-gri" />
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+              <div className="form-group">
+                <label className="form-label">Fiyat (TL) *</label>
+                <input className="form-input" type="number" value={price} onChange={(e) => setPrice(e.target.value)} placeholder="14900" />
+              </div>
+              <div className="form-group">
+                <label className="form-label">Kategori</label>
+                <select className="form-select" value={category} onChange={(e) => setCategory(e.target.value as Category)}>
+                  {CATEGORIES.map((c) => <option key={c}>{c}</option>)}
+                </select>
+              </div>
+            </div>
+
+            <div className="form-group">
+              <label className="form-label">Detaylı Açıklama</label>
+              <textarea className="form-textarea" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Ürün hakkında detaylı bilgi..." style={{ minHeight: 120 }} />
+            </div>
+          </div>
+
+          {/* Specs */}
+          <div className="card" style={{ padding: 28, marginBottom: 20 }}>
+            <h2 style={{ fontFamily: 'var(--font-display)', marginBottom: 8 }}>Özellikler</h2>
+            <p style={{ fontSize: 13, color: 'var(--muted)', marginBottom: 16 }}>Her satıra bir özellik: <code style={{ background: 'var(--bg)', padding: '2px 6px', borderRadius: 4 }}>Anahtar:Değer</code></p>
+            <textarea
+              className="form-textarea"
+              value={specsRaw}
+              onChange={(e) => setSpecsRaw(e.target.value)}
+              placeholder={"Renk:Gri\nDurum:2.El\nTeslimat:Aynı Gün"}
+              style={{ minHeight: 130, fontFamily: 'monospace', fontSize: 13 }}
+            />
+          </div>
+
+          {/* Images */}
+          <div className="card" style={{ padding: 28 }}>
+            <h2 style={{ fontFamily: 'var(--font-display)', marginBottom: 16 }}>Görseller</h2>
+
+            {/* Upload zone + Camera button */}
+            <div style={{ display: 'flex', gap: 10, marginBottom: images.length > 0 ? 0 : undefined }}>
+              <div
+                className={`img-upload-zone ${dragOver ? 'drag-over' : ''}`}
+                style={{ flex: 1, marginBottom: 0 }}
+                onClick={() => fileRef.current?.click()}
+                onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+                onDragLeave={() => setDragOver(false)}
+                onDrop={(e) => { e.preventDefault(); setDragOver(false); handleUpload(e.dataTransfer.files); }}
+              >
+                {uploading ? '⏳ Yükleniyor...' : '📁 Dosya seç veya sürükle'}
+              </div>
+
+              <button
+                type="button"
+                onClick={startCamera}
+                disabled={uploading}
+                style={{
+                  display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+                  gap: 4,
+                  padding: '12px 18px',
+                  border: '2px dashed var(--border)',
+                  borderRadius: 'var(--radius-sm)',
+                  background: 'transparent',
+                  color: 'var(--muted)',
+                  fontSize: 12,
+                  cursor: 'pointer',
+                  transition: 'all 0.2s',
+                  whiteSpace: 'nowrap',
+                  flexShrink: 0,
+                }}
+                onMouseOver={(e) => {
+                  (e.currentTarget as HTMLButtonElement).style.borderColor = 'var(--accent2)';
+                  (e.currentTarget as HTMLButtonElement).style.color = 'var(--accent2)';
+                }}
+                onMouseOut={(e) => {
+                  (e.currentTarget as HTMLButtonElement).style.borderColor = 'var(--border)';
+                  (e.currentTarget as HTMLButtonElement).style.color = 'var(--muted)';
+                }}
+              >
+                <span style={{ fontSize: 22 }}>📷</span>
+                Kamera
+              </button>
+            </div>
+
+            <input
+              ref={fileRef}
+              type="file"
+              accept="image/*"
+              multiple
+              style={{ display: 'none' }}
+              onChange={(e) => handleUpload(e.target.files)}
+            />
+
+            {images.length > 0 && (
+              <>
+                {images.length > 1 && (
+                  <p style={{ fontSize: 11, color: 'var(--muted)', margin: '10px 0 6px', userSelect: 'none' }}>
+                    Sıralamak için görselleri sürükleyin — ilk görsel ürün kapak fotoğrafı olur
+                  </p>
+                )}
+                <div className="img-preview-grid">
+                  {images.map((id, i) => (
+                    <div
+                      key={id}
+                      className="img-preview-item"
+                      draggable
+                      onDragStart={() => handleImgDragStart(i)}
+                      onDragOver={(e) => handleImgDragOver(e, i)}
+                      onDrop={(e) => handleImgDrop(e, i)}
+                      onDragEnd={handleImgDragEnd}
+                      style={{
+                        cursor: 'grab',
+                        outline: dragOverIndex === i && dragIndexRef.current !== i
+                          ? '2px solid var(--accent2)'
+                          : undefined,
+                        opacity: dragIndexRef.current === i ? 0.5 : 1,
+                        transition: 'outline 0.1s, opacity 0.1s',
+                      }}
+                    >
+                      <img src={cloudinaryUrl(id, 'f_auto,q_auto,w_200,h_160,c_fill')} alt={`img-${i}`} draggable={false} />
+
+                      {/* Order badge */}
+                      <span style={{
+                        position: 'absolute', bottom: 4, left: 4,
+                        background: i === 0 ? 'var(--accent)' : 'rgba(0,0,0,0.65)',
+                        color: i === 0 ? '#000' : '#fff',
+                        fontSize: 10, fontWeight: 700,
+                        padding: '1px 5px', borderRadius: 4,
+                        lineHeight: '16px',
+                        userSelect: 'none',
+                        pointerEvents: 'none',
+                      }}>
+                        {i === 0 ? 'Kapak' : `#${i + 1}`}
+                      </span>
+
+                      <button
+                        className="img-preview-remove"
+                        onClick={() => {
+                          if (sessionUploads.current.has(id)) {
+                            sessionUploads.current.delete(id);
+                            fetch('/api/cloudinary-delete', {
+                              method: 'POST',
+                              headers: { 'Content-Type': 'application/json' },
+                              body: JSON.stringify({ publicIds: [id] }),
+                            });
+                          }
+                          setImages((prev) => prev.filter((_, j) => j !== i));
+                        }}
+                      >×</button>
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+
+        {/* Right column */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+          {/* Status */}
+          <div className="card" style={{ padding: 24 }}>
+            <h2 style={{ fontFamily: 'var(--font-display)', marginBottom: 16 }}>Durum</h2>
+
+            <div className="form-group">
+              <label className="form-label">Kondisyon</label>
+              <select className="form-select" value={condition} onChange={(e) => setCondition(e.target.value as 'Sıfır' | '2. El')}>
+                <option>Sıfır</option>
+                <option>2. El</option>
+              </select>
+            </div>
+
+            <div className="form-group">
+              <label className="form-label">Stok Durumu</label>
+              <select className="form-select" value={String(inStock)} onChange={(e) => setInStock(e.target.value === 'true')}>
+                <option value="true">Stokta</option>
+                <option value="false">Satıldı</option>
               </select>
             </div>
           </div>
 
-          <div className="form-group">
-            <label className="form-label">Detaylı Açıklama</label>
-            <textarea className="form-textarea" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Ürün hakkında detaylı bilgi..." style={{ minHeight: 120 }} />
-          </div>
-        </div>
-
-        {/* Specs */}
-        <div className="card" style={{ padding: 28, marginBottom: 20 }}>
-          <h2 style={{ fontFamily: 'var(--font-display)', marginBottom: 8 }}>Özellikler</h2>
-          <p style={{ fontSize: 13, color: 'var(--muted)', marginBottom: 16 }}>Her satıra bir özellik: <code style={{ background: 'var(--bg)', padding: '2px 6px', borderRadius: 4 }}>Anahtar:Değer</code></p>
-          <textarea
-            className="form-textarea"
-            value={specsRaw}
-            onChange={(e) => setSpecsRaw(e.target.value)}
-            placeholder={"Renk:Gri\nDurum:2.El\nTeslimat:Aynı Gün"}
-            style={{ minHeight: 130, fontFamily: 'monospace', fontSize: 13 }}
-          />
-        </div>
-
-        {/* Images */}
-        <div className="card" style={{ padding: 28 }}>
-          <h2 style={{ fontFamily: 'var(--font-display)', marginBottom: 16 }}>Görseller</h2>
-
-          <div
-            className={`img-upload-zone ${dragOver ? 'drag-over' : ''}`}
-            onClick={() => fileRef.current?.click()}
-            onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
-            onDragLeave={() => setDragOver(false)}
-            onDrop={(e) => { e.preventDefault(); setDragOver(false); handleUpload(e.dataTransfer.files); }}
-          >
-            {uploading ? '⏳ Yükleniyor...' : '📷 Fotoğraf yüklemek için tıklayın veya sürükleyin'}
-          </div>
-
-          <input
-            ref={fileRef}
-            type="file"
-            accept="image/*"
-            multiple
-            style={{ display: 'none' }}
-            onChange={(e) => handleUpload(e.target.files)}
-          />
-
-          {images.length > 0 && (
-            <div className="img-preview-grid">
-              {images.map((id, i) => (
-                <div key={id} className="img-preview-item">
-                  <img src={cloudinaryUrl(id, 'f_auto,q_auto,w_200,h_160,c_fill')} alt={`img-${i}`} />
-                  <button
-                    className="img-preview-remove"
-                    onClick={() => {
-                      // Session'da yüklendiyse Cloudinary'den hemen sil
-                      if (sessionUploads.current.has(id)) {
-                        sessionUploads.current.delete(id);
-                        fetch('/api/cloudinary-delete', {
-                          method: 'POST',
-                          headers: { 'Content-Type': 'application/json' },
-                          body: JSON.stringify({ publicIds: [id] }),
-                        });
-                      }
-                      setImages((prev) => prev.filter((_, j) => j !== i));
-                    }}
-                  >×</button>
-                </div>
+          {/* Tags */}
+          <div className="card" style={{ padding: 24 }}>
+            <h2 style={{ fontFamily: 'var(--font-display)', marginBottom: 12 }}>Etiketler</h2>
+            <div className="tags-wrap">
+              {tags.map((t) => (
+                <span key={t} className="tag-chip">
+                  {t}
+                  <button onClick={() => removeTag(t)}>×</button>
+                </span>
               ))}
+              <input
+                className="tags-input"
+                placeholder="Etiket ekle..."
+                value={tagInput}
+                onChange={(e) => setTagInput(e.target.value)}
+                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ',') { e.preventDefault(); addTag(); } }}
+              />
             </div>
-          )}
+            <p style={{ fontSize: 11, color: 'var(--muted)', marginTop: 8 }}>Enter veya virgül ile ekle. Örn: Nakliye Var, Aynı Gün Teslim</p>
+          </div>
+
+          {/* SEO Tags */}
+          <div className="card" style={{ padding: 24 }}>
+            <h2 style={{ fontFamily: 'var(--font-display)', marginBottom: 4 }}>SEO Etiketleri 🔍</h2>
+            <p style={{ fontSize: 12, color: 'var(--muted)', marginBottom: 12 }}>Müşterilere gösterilmez — sadece arama motorları için JSON-LD'ye gömülür.</p>
+            <div className="tags-wrap">
+              {seoTags.map((t) => (
+                <span key={t} className="tag-chip" style={{ opacity: 0.75 }}>
+                  {t}
+                  <button onClick={() => removeSeoTag(t)}>×</button>
+                </span>
+              ))}
+              <input
+                className="tags-input"
+                placeholder="SEO etiketi ekle..."
+                value={seoTagInput}
+                onChange={(e) => setSeoTagInput(e.target.value)}
+                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ',') { e.preventDefault(); addSeoTag(); } }}
+              />
+            </div>
+            <p style={{ fontSize: 11, color: 'var(--muted)', marginTop: 8 }}>Örn: ikinci el koltuk esenyurt, spot mobilya istanbul</p>
+          </div>
+
+          {/* Submit */}
+          <div className="card" style={{ padding: 24 }}>
+            {error && (
+              <div style={{ background: 'rgba(248,81,73,0.1)', border: '1px solid rgba(248,81,73,0.25)', borderRadius: 8, padding: '10px 14px', fontSize: 13, color: 'var(--danger)', marginBottom: 16 }}>
+                {error}
+              </div>
+            )}
+            <button
+              className="btn btn-primary btn-full btn-lg"
+              onClick={handleSubmit}
+              disabled={saving || uploading}
+            >
+              {saving ? 'Kaydediliyor...' : submitLabel}
+            </button>
+          </div>
         </div>
       </div>
-
-      {/* Right column */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-        {/* Status */}
-        <div className="card" style={{ padding: 24 }}>
-          <h2 style={{ fontFamily: 'var(--font-display)', marginBottom: 16 }}>Durum</h2>
-
-          <div className="form-group">
-            <label className="form-label">Kondisyon</label>
-            <select className="form-select" value={condition} onChange={(e) => setCondition(e.target.value as 'Sıfır' | '2. El')}>
-              <option>Sıfır</option>
-              <option>2. El</option>
-            </select>
-          </div>
-
-          <div className="form-group">
-            <label className="form-label">Stok Durumu</label>
-            <select className="form-select" value={String(inStock)} onChange={(e) => setInStock(e.target.value === 'true')}>
-              <option value="true">Stokta</option>
-              <option value="false">Satıldı</option>
-            </select>
-          </div>
-        </div>
-
-        {/* Tags */}
-        <div className="card" style={{ padding: 24 }}>
-          <h2 style={{ fontFamily: 'var(--font-display)', marginBottom: 12 }}>Etiketler</h2>
-          <div className="tags-wrap">
-            {tags.map((t) => (
-              <span key={t} className="tag-chip">
-                {t}
-                <button onClick={() => removeTag(t)}>×</button>
-              </span>
-            ))}
-            <input
-              className="tags-input"
-              placeholder="Etiket ekle..."
-              value={tagInput}
-              onChange={(e) => setTagInput(e.target.value)}
-              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ',') { e.preventDefault(); addTag(); } }}
-            />
-          </div>
-          <p style={{ fontSize: 11, color: 'var(--muted)', marginTop: 8 }}>Enter veya virgül ile ekle. Örn: Nakliye Var, Aynı Gün Teslim</p>
-        </div>
-
-        {/* SEO Tags */}
-        <div className="card" style={{ padding: 24 }}>
-          <h2 style={{ fontFamily: 'var(--font-display)', marginBottom: 4 }}>SEO Etiketleri 🔍</h2>
-          <p style={{ fontSize: 12, color: 'var(--muted)', marginBottom: 12 }}>Müşterilere gösterilmez — sadece arama motorları için JSON-LD'ye gömülür.</p>
-          <div className="tags-wrap">
-            {seoTags.map((t) => (
-              <span key={t} className="tag-chip" style={{ opacity: 0.75 }}>
-                {t}
-                <button onClick={() => removeSeoTag(t)}>×</button>
-              </span>
-            ))}
-            <input
-              className="tags-input"
-              placeholder="SEO etiketi ekle..."
-              value={seoTagInput}
-              onChange={(e) => setSeoTagInput(e.target.value)}
-              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ',') { e.preventDefault(); addSeoTag(); } }}
-            />
-          </div>
-          <p style={{ fontSize: 11, color: 'var(--muted)', marginTop: 8 }}>Örn: ikinci el koltuk esenyurt, spot mobilya istanbul</p>
-        </div>
-
-        {/* Submit */}
-        <div className="card" style={{ padding: 24 }}>
-          {error && (
-            <div style={{ background: 'rgba(248,81,73,0.1)', border: '1px solid rgba(248,81,73,0.25)', borderRadius: 8, padding: '10px 14px', fontSize: 13, color: 'var(--danger)', marginBottom: 16 }}>
-              {error}
-            </div>
-          )}
-          <button
-            className="btn btn-primary btn-full btn-lg"
-            onClick={handleSubmit}
-            disabled={saving || uploading}
-          >
-            {saving ? 'Kaydediliyor...' : submitLabel}
-          </button>
-        </div>
-      </div>
-    </div>
+    </>
   );
 }

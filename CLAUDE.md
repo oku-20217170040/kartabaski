@@ -12,6 +12,7 @@ npm run start         # Start production server
 npm test              # Run Jest unit tests
 npm run test:watch    # Jest in watch mode
 npm run test:coverage # Jest with coverage report
+npm test -- --testPathPattern=product-utils  # Run a single test file
 ```
 
 ## Architecture
@@ -49,11 +50,13 @@ npm run test:coverage # Jest with coverage report
 - Admin client components import and call these actions directly — never call Firebase mutation functions directly from client code
 - Available actions: `createProductAction`, `updateProductAction`, `deleteProductAction`, `toggleFeaturedAction`, `deleteSatisTalebiAction`, `updateSatisTalebiStatusAction`
 
-### Image Uploads
+### Image Uploads & Deletion
 
 - File uploads go through `POST /api/upload` (server-side) — never upload directly from the client
+- Image deletion goes through `POST /api/cloudinary-delete` (server-side) — never call Cloudinary delete API from the client
 - The API route validates file type (image only) and size (max 10 MB), then signs the request with `CLOUDINARY_API_SECRET` before forwarding to Cloudinary
 - Never add `NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET` — preset is handled server-side only
+- `lib/products-admin.ts` (`'server-only'`) contains admin-specific Firestore operations that also handle Cloudinary image cleanup on product deletion
 
 ### Error Handling
 
@@ -69,6 +72,7 @@ npm run test:coverage # Jest with coverage report
 | `products` | All product listings |
 | `users` | Admin role assignments |
 | `satis_talepleri` | Customer sell requests |
+| `seo_settings` | Single document `main` — editable SEO config (service areas, keywords, etc.) managed via `lib/seo-settings.ts` |
 
 ### Styling
 
@@ -101,6 +105,18 @@ Copy `.env.local.example` to `.env.local` and fill in:
 - `CLOUDINARY_API_SECRET` — Cloudinary API secret (server-side, required for signed uploads)
 - `NEXT_PUBLIC_SENTRY_DSN` — Sentry DSN for error tracking
 - `SENTRY_ORG` / `SENTRY_PROJECT` — Sentry organization and project slugs
+
+### Public Pages
+
+| Route | Purpose |
+|---|---|
+| `/` | Home — product listing with filters/pagination |
+| `/urun/[slug]` | Product detail page (SSR, slug is Firestore doc ID) |
+| `/urun-sat` | Customer sell request form (writes to `satis_talepleri`) |
+| `/kategoriler` | Category index page |
+| `/hakkimizda` | About page |
+
+`app/sitemap.ts` and `app/robots.ts` auto-generate SEO sitemap and robots.txt.
 
 ### Image Optimization
 
