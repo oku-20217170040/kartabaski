@@ -23,6 +23,7 @@ export type Category =
   | 'Elektronik'
   | 'Ofis'
   | 'Yatak'
+  | 'Baza'
   | 'Dekorasyon'
   | 'Aydınlatma'
   | 'Bahçe'
@@ -35,6 +36,7 @@ export const CATEGORIES: Category[] = [
   'Elektronik',
   'Ofis',
   'Yatak',
+  'Baza',
   'Dekorasyon',
   'Aydınlatma',
   'Bahçe',

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { FilterState, CATEGORIES } from '@/types';
+import { FilterState, CATEGORIES, CONDITIONS } from '@/types';
 
 export type SortOption = 'featured' | 'newest' | 'price_asc' | 'price_desc';
 
@@ -57,8 +57,7 @@ export default function FilterBar({ filters, onChange, sort, onSortChange, minPr
           <select className="form-select" value={filters.condition}
             onChange={(e) => set({ condition: e.target.value as FilterState['condition'] })}>
             <option value="">Tümü</option>
-            <option value="Sıfır">Sıfır</option>
-            <option value="2. El">2. El</option>
+            {CONDITIONS.map((c) => <option key={c} value={c}>{c}</option>)}
           </select>
         </div>
         <div className="filter-group">

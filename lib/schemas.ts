@@ -4,7 +4,7 @@ import { z } from 'zod';
 
 export const CategorySchema = z.enum([
   'Mobilya', 'Beyaz Eşya', 'Elektronik', 'Ofis',
-  'Yatak', 'Dekorasyon', 'Aydınlatma', 'Bahçe', 'Ev Eşyaları', 'Diğer',
+  'Yatak', 'Baza', 'Dekorasyon', 'Aydınlatma', 'Bahçe', 'Ev Eşyaları', 'Diğer',
 ]);
 
 // ── Ürün ─────────────────────────────────────────────────────────────────────
