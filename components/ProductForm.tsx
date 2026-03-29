@@ -420,7 +420,7 @@ export default function ProductForm({ initial, onSubmit, submitLabel }: Props) {
                     onMouseDown={(e) => { (e.currentTarget as HTMLButtonElement).style.transform = 'scale(0.91)'; }}
                     onMouseUp={(e) => { (e.currentTarget as HTMLButtonElement).style.transform = 'scale(1)'; }}
                     onTouchStart={(e) => { e.stopPropagation(); (e.currentTarget as HTMLButtonElement).style.transform = 'scale(0.91)'; }}
-                    onTouchEnd={(e) => { e.stopPropagation(); (e.currentTarget as HTMLButtonElement).style.transform = 'scale(1)'; capturePhoto(); }}
+                    onTouchEnd={(e) => { e.stopPropagation(); (e.currentTarget as HTMLButtonElement).style.transform = 'scale(1)'; }}
                     aria-label="Fotoğraf çek"
                   />
                 )}
