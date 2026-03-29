@@ -322,7 +322,7 @@ export default function ProductForm({ initial, onSubmit, submitLabel }: Props) {
             position: 'fixed', inset: 0, zIndex: 1000,
             background: '#000',
             display: 'flex', flexDirection: 'column',
-            // Arkaplanda sayfanın kaymasını engelle
+            width: '100%', height: '100%',
             touchAction: 'none',
             overflow: 'hidden',
           }}
@@ -339,7 +339,33 @@ export default function ProductForm({ initial, onSubmit, submitLabel }: Props) {
             </div>
           ) : (
             <>
-              {/* Video — tam ekranı doldurur */}
+              {/* Üst bar — sağda X butonu */}
+              <div style={{
+                width: '100%',
+                display: 'flex', justifyContent: 'flex-end',
+                padding: '20px 20px 0',
+                flexShrink: 0,
+                zIndex: 10,
+                background: 'linear-gradient(to bottom, rgba(0,0,0,0.45) 0%, transparent 100%)',
+              }}>
+                <button
+                  onClick={stopCamera}
+                  style={{
+                    background: 'rgba(0,0,0,0.45)',
+                    border: '1px solid rgba(255,255,255,0.25)',
+                    borderRadius: '50%',
+                    width: 44, height: 44,
+                    color: '#fff', fontSize: 18,
+                    cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    flexShrink: 0,
+                  }}
+                  aria-label="Kamerayı kapat"
+                >
+                  ✕
+                </button>
+              </div>
+
+              {/* Video — kalan alanı doldurur */}
               <video
                 ref={videoRef}
                 autoPlay
@@ -349,66 +375,45 @@ export default function ProductForm({ initial, onSubmit, submitLabel }: Props) {
                 style={{
                   flex: 1,
                   width: '100%',
+                  minHeight: 0,
                   objectFit: 'cover',
                   display: 'block',
                 }}
               />
               <canvas ref={canvasRef} style={{ display: 'none' }} />
 
-              {/* Sağ üst X — kenardan 20px boşluk */}
-              <button
-                onClick={stopCamera}
-                style={{
-                  position: 'absolute', top: 20, right: 20,
-                  background: 'rgba(0,0,0,0.5)',
-                  border: '1px solid rgba(255,255,255,0.25)',
-                  borderRadius: '50%',
-                  width: 44, height: 44,
-                  color: '#fff', fontSize: 18,
-                  cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  zIndex: 10,
-                }}
-                aria-label="Kamerayı kapat"
-              >
-                ✕
-              </button>
-
-              {/* Alt orta — sadece çekim butonu */}
+              {/* Alt bar — ortada çekim butonu */}
               <div style={{
-                position: 'absolute', bottom: 0, left: 0, right: 0,
-                paddingBottom: 'max(32px, env(safe-area-inset-bottom, 32px))',
-                paddingTop: 24,
-                background: 'linear-gradient(to top, rgba(0,0,0,0.6) 0%, transparent 100%)',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                width: '100%',
+                display: 'flex', justifyContent: 'center', alignItems: 'center',
+                paddingTop: 20,
+                paddingBottom: 'max(36px, env(safe-area-inset-bottom, 36px))',
+                flexShrink: 0,
+                background: 'linear-gradient(to top, rgba(0,0,0,0.55) 0%, transparent 100%)',
               }}>
-                <button
-                  onClick={capturePhoto}
-                  disabled={!cameraReady}
-                  style={{
-                    width: 76, height: 76,
-                    borderRadius: '50%',
-                    background: cameraReady ? '#fff' : 'rgba(255,255,255,0.3)',
-                    border: '4px solid rgba(255,255,255,0.5)',
-                    boxShadow: cameraReady ? '0 0 0 4px rgba(255,255,255,0.2)' : 'none',
-                    cursor: cameraReady ? 'pointer' : 'default',
-                    transition: 'transform 0.1s, background 0.2s',
-                  }}
-                  onMouseDown={(e) => { if (cameraReady) (e.currentTarget as HTMLButtonElement).style.transform = 'scale(0.91)'; }}
-                  onMouseUp={(e) => { (e.currentTarget as HTMLButtonElement).style.transform = 'scale(1)'; }}
-                  onTouchStart={(e) => { e.stopPropagation(); if (cameraReady) (e.currentTarget as HTMLButtonElement).style.transform = 'scale(0.91)'; }}
-                  onTouchEnd={(e) => { e.stopPropagation(); (e.currentTarget as HTMLButtonElement).style.transform = 'scale(1)'; capturePhoto(); }}
-                  aria-label="Fotoğraf çek"
-                />
+                {!cameraReady ? (
+                  <span style={{ color: 'rgba(255,255,255,0.6)', fontSize: 14 }}>Kamera başlatılıyor...</span>
+                ) : (
+                  <button
+                    onClick={capturePhoto}
+                    style={{
+                      width: 76, height: 76,
+                      borderRadius: '50%',
+                      background: '#fff',
+                      border: '4px solid rgba(255,255,255,0.5)',
+                      boxShadow: '0 0 0 4px rgba(255,255,255,0.2)',
+                      cursor: 'pointer',
+                      transition: 'transform 0.1s',
+                      flexShrink: 0,
+                    }}
+                    onMouseDown={(e) => { (e.currentTarget as HTMLButtonElement).style.transform = 'scale(0.91)'; }}
+                    onMouseUp={(e) => { (e.currentTarget as HTMLButtonElement).style.transform = 'scale(1)'; }}
+                    onTouchStart={(e) => { e.stopPropagation(); (e.currentTarget as HTMLButtonElement).style.transform = 'scale(0.91)'; }}
+                    onTouchEnd={(e) => { e.stopPropagation(); (e.currentTarget as HTMLButtonElement).style.transform = 'scale(1)'; capturePhoto(); }}
+                    aria-label="Fotoğraf çek"
+                  />
+                )}
               </div>
-
-              {!cameraReady && (
-                <div style={{
-                  position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%,-50%)',
-                  color: 'rgba(255,255,255,0.6)', fontSize: 14,
-                }}>
-                  Kamera başlatılıyor...
-                </div>
-              )}
             </>
           )}
         </div>
