@@ -67,11 +67,14 @@ export default async function ProductDetailPage({ params }: Props) {
       ? (imageId.startsWith('http') ? imageId : cloudinaryUrl(imageId, 'f_auto,q_auto,w_900,h_700,c_fill'))
       : undefined;
 
+    const seoTags: string[] = product.seoTags || [];
+
     productSchema = {
       '@context': 'https://schema.org',
       '@type': 'Product',
       name: pTitle,
       description: getShortDesc(product) || getDescription(product) || `${pTitle} – Esenyurt Ümit Spot'ta satışta`,
+      ...(seoTags.length > 0 && { keywords: seoTags.join(', ') }),
       ...(imageUrl && { image: imageUrl }),
       brand: { '@type': 'Brand', name: 'Ümit Spot' },
       offers: {

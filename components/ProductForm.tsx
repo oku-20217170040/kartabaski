@@ -39,6 +39,8 @@ export default function ProductForm({ initial, onSubmit, submitLabel }: Props) {
   const [images, setImages] = useState<string[]>(initial?.images || []);
   const [tags, setTags] = useState<string[]>(initial?.tags || []);
   const [tagInput, setTagInput] = useState('');
+  const [seoTags, setSeoTags] = useState<string[]>(initial?.seoTags || []);
+  const [seoTagInput, setSeoTagInput] = useState('');
   const [specsRaw, setSpecsRaw] = useState(
     Object.entries(initial?.specs || {}).map(([k, v]) => `${k}:${v}`).join('\n')
   );
@@ -103,6 +105,14 @@ export default function ProductForm({ initial, onSubmit, submitLabel }: Props) {
 
   const removeTag = (t: string) => setTags((prev) => prev.filter((x) => x !== t));
 
+  const addSeoTag = () => {
+    const t = seoTagInput.trim();
+    if (t && !seoTags.includes(t)) setSeoTags((prev) => [...prev, t]);
+    setSeoTagInput('');
+  };
+
+  const removeSeoTag = (t: string) => setSeoTags((prev) => prev.filter((x) => x !== t));
+
   const parseSpecs = (): Record<string, string> => {
     const specs: Record<string, string> = {};
     specsRaw.split('\n').forEach((line) => {
@@ -131,6 +141,7 @@ export default function ProductForm({ initial, onSubmit, submitLabel }: Props) {
         description,
         images,
         tags,
+        seoTags,
         specs: parseSpecs(),
       });
       savedRef.current = true;
@@ -288,6 +299,28 @@ export default function ProductForm({ initial, onSubmit, submitLabel }: Props) {
             />
           </div>
           <p style={{ fontSize: 11, color: 'var(--muted)', marginTop: 8 }}>Enter veya virgül ile ekle. Örn: Nakliye Var, Aynı Gün Teslim</p>
+        </div>
+
+        {/* SEO Tags */}
+        <div className="card" style={{ padding: 24 }}>
+          <h2 style={{ fontFamily: 'var(--font-display)', marginBottom: 4 }}>SEO Etiketleri 🔍</h2>
+          <p style={{ fontSize: 12, color: 'var(--muted)', marginBottom: 12 }}>Müşterilere gösterilmez — sadece arama motorları için JSON-LD'ye gömülür.</p>
+          <div className="tags-wrap">
+            {seoTags.map((t) => (
+              <span key={t} className="tag-chip" style={{ opacity: 0.75 }}>
+                {t}
+                <button onClick={() => removeSeoTag(t)}>×</button>
+              </span>
+            ))}
+            <input
+              className="tags-input"
+              placeholder="SEO etiketi ekle..."
+              value={seoTagInput}
+              onChange={(e) => setSeoTagInput(e.target.value)}
+              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ',') { e.preventDefault(); addSeoTag(); } }}
+            />
+          </div>
+          <p style={{ fontSize: 11, color: 'var(--muted)', marginTop: 8 }}>Örn: ikinci el koltuk esenyurt, spot mobilya istanbul</p>
         </div>
 
         {/* Submit */}

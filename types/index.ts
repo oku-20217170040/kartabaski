@@ -12,6 +12,7 @@ export interface Product {
   description: string;
   images: string[]; // Cloudinary public_ids
   specs: Record<string, string>;
+  seoTags?: string[]; // Gizli SEO etiketleri — müşteri görmez, JSON-LD'ye gömülür
   createdAt: number;
   updatedAt: number;
 }
