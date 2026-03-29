@@ -1,9 +1,17 @@
 import type { Metadata } from 'next';
+import { unstable_cache } from 'next/cache';
 import './globals.css';
 import { AuthProvider } from '@/lib/auth-context';
 import WhatsAppFloat from '@/components/WhatsAppFloat';
 import ErrorBoundary from '@/components/ErrorBoundary';
 import { PHONE } from '@/lib/constants';
+import { getSeoSettings } from '@/lib/seo-settings';
+
+const getCachedSeoSettings = unstable_cache(
+  getSeoSettings,
+  ['seo-settings'],
+  { tags: ['seo-settings'] }
+);
 
 const SITE_NAME = 'Ümit Spot';
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.umitspot.com';
@@ -50,61 +58,46 @@ export const metadata: Metadata = {
   },
 };
 
-const localBusinessSchema = {
-  '@context': 'https://schema.org',
-  '@type': 'FurnitureStore',
-  name: 'Ümit Spot',
-  alternateName: ['Ümit Spot Esenyurt', 'Esenyurt Spot', 'Ümit İkinci El'],
-  description: DESCRIPTION,
-  url: SITE_URL,
-  telephone: `+${PHONE}`,
-  priceRange: '₺₺',
-  currenciesAccepted: 'TRY',
-  paymentAccepted: 'Cash, Credit Card',
-  address: {
-    '@type': 'PostalAddress',
-    streetAddress: 'Mehmet Akif Ersoy Mahallesi 1824 Sokak 11A',
-    addressLocality: 'Esenyurt',
-    addressRegion: 'İstanbul',
-    postalCode: '34515',
-    addressCountry: 'TR',
-  },
-  geo: {
-    '@type': 'GeoCoordinates',
-    latitude: 41.0082,
-    longitude: 28.6726,
-  },
-  openingHoursSpecification: [
-    {
-      '@type': 'OpeningHoursSpecification',
-      dayOfWeek: ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'],
-      opens: '09:00',
-      closes: '00:00',
+function buildLocalBusinessSchema(seo: Awaited<ReturnType<typeof getCachedSeoSettings>>) {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'FurnitureStore',
+    name: 'Ümit Spot',
+    alternateName: ['Ümit Spot Esenyurt', 'Esenyurt Spot', 'Ümit İkinci El'],
+    description: seo.extraDescription || DESCRIPTION,
+    url: SITE_URL,
+    telephone: `+${PHONE}`,
+    priceRange: '₺₺',
+    currenciesAccepted: 'TRY',
+    paymentAccepted: 'Cash, Credit Card',
+    address: {
+      '@type': 'PostalAddress',
+      streetAddress: 'Mehmet Akif Ersoy Mahallesi 1824 Sokak 11A',
+      addressLocality: 'Esenyurt',
+      addressRegion: 'İstanbul',
+      postalCode: '34515',
+      addressCountry: 'TR',
     },
-  ],
-  areaServed: [
-    { '@type': 'City', name: 'Esenyurt' },
-    { '@type': 'City', name: 'Beylikdüzü' },
-    { '@type': 'City', name: 'Avcılar' },
-    { '@type': 'City', name: 'Büyükçekmece' },
-    { '@type': 'City', name: 'Bahçeşehir' },
-    { '@type': 'City', name: 'Başakşehir' },
-  ],
-  hasOfferCatalog: {
-    '@type': 'OfferCatalog',
-    name: 'İkinci El & Sıfır Spot Ürünler',
-    itemListElement: [
-      { '@type': 'Offer', itemOffered: { '@type': 'Product', name: 'İkinci El Koltuk Takımı' } },
-      { '@type': 'Offer', itemOffered: { '@type': 'Product', name: 'İkinci El Yatak Odası' } },
-      { '@type': 'Offer', itemOffered: { '@type': 'Product', name: 'İkinci El Buzdolabı' } },
-      { '@type': 'Offer', itemOffered: { '@type': 'Product', name: 'İkinci El Çamaşır Makinesi' } },
-      { '@type': 'Offer', itemOffered: { '@type': 'Product', name: 'Sıfır Spot Mobilya' } },
-    ],
-  },
-  sameAs: [
-    'https://www.google.com/maps?cid=esenyurt-spot',
-  ],
-};
+    geo: {
+      '@type': 'GeoCoordinates',
+      latitude: 41.0082,
+      longitude: 28.6726,
+    },
+    openingHours: seo.workingHours || 'Mo-Su 09:00-00:00',
+    areaServed: seo.serviceAreas.map(name => ({ '@type': 'City', name })),
+    knowsAbout: seo.services,
+    keywords: seo.keywords.join(', '),
+    hasOfferCatalog: {
+      '@type': 'OfferCatalog',
+      name: 'İkinci El & Sıfır Spot Ürünler',
+      itemListElement: seo.featuredCategories.map(name => ({
+        '@type': 'Offer',
+        itemOffered: { '@type': 'Product', name },
+      })),
+    },
+    sameAs: ['https://www.google.com/maps?cid=esenyurt-spot'],
+  };
+}
 
 const faqSchema = {
   '@context': 'https://schema.org',
@@ -155,7 +148,10 @@ const faqSchema = {
 
 const GA_ID = process.env.NEXT_PUBLIC_GA_ID || '';
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const seo = await getCachedSeoSettings();
+  const localBusinessSchema = buildLocalBusinessSchema(seo);
+
   return (
     <html lang="tr" suppressHydrationWarning>
       <body suppressHydrationWarning>
