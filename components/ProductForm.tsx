@@ -365,21 +365,22 @@ export default function ProductForm({ initial, onSubmit, submitLabel }: Props) {
                 </button>
               </div>
 
-              {/* Video — kalan alanı doldurur */}
-              <video
-                ref={videoRef}
-                autoPlay
-                playsInline
-                muted
-                onCanPlay={() => setCameraReady(true)}
-                style={{
-                  flex: 1,
-                  width: '100%',
-                  minHeight: 0,
-                  objectFit: 'cover',
-                  display: 'block',
-                }}
-              />
+              {/* Video wrapper — flex:1 div'e atanır; video { height: auto } global kuralını ezer */}
+              <div style={{ flex: 1, minHeight: 0, overflow: 'hidden', position: 'relative' }}>
+                <video
+                  ref={videoRef}
+                  autoPlay
+                  playsInline
+                  muted
+                  onCanPlay={() => setCameraReady(true)}
+                  style={{
+                    width: '100%',
+                    height: '100%',
+                    objectFit: 'cover',
+                    display: 'block',
+                  }}
+                />
+              </div>
               <canvas ref={canvasRef} style={{ display: 'none' }} />
 
               {/* Alt bar — ortada çekim butonu */}
