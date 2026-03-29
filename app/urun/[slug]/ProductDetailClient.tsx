@@ -25,7 +25,7 @@ function ShareButton({ title, slug }: { title: string; slug: string }) {
         target='_blank' rel='noopener noreferrer'
         className='btn btn-secondary'
         title="WhatsApp'ta Paylaş"
-        style={{ padding: '14px 16px' }}
+        style={{ padding: '10px 12px' }}
       >
         <svg width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2'>
           <circle cx='18' cy='5' r='3'/><circle cx='6' cy='12' r='3'/><circle cx='18' cy='19' r='3'/>
@@ -37,7 +37,7 @@ function ShareButton({ title, slug }: { title: string; slug: string }) {
         onClick={handleCopy}
         className='btn btn-secondary'
         title='Linki Kopyala'
-        style={{ padding: '14px 16px' }}
+        style={{ padding: '10px 12px' }}
       >
         {copied
           ? <svg width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='var(--accent)' strokeWidth='2.5'><polyline points='20 6 9 17 4 12'/></svg>
