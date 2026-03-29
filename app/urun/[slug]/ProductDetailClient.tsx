@@ -52,7 +52,7 @@ import { Product } from '@/types';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import Link from 'next/link';
-import { getTitle, getPrice, getCategory, getCondition, getInStock, getTags, getSlug, getShortDesc, getDescription, getSpecs } from '@/lib/product-utils';
+import { getTitle, getPrice, getCategory, getCondition, getInStock, getTags, getSlug, getDescription, getSpecs } from '@/lib/product-utils';
 
 export default function ProductDetailClient({ slug }: { slug: string }) {
   const [product, setProduct] = useState<Product | null>(null);
@@ -139,7 +139,6 @@ export default function ProductDetailClient({ slug }: { slug: string }) {
   const condition   = getCondition(product);
   const inStock     = getInStock(product);
   const tags        = getTags(product);
-  const shortDesc   = getShortDesc(product);
   const description = getDescription(product);
   const specs       = getSpecs(product);
   const productSlug = getSlug(product);
@@ -306,7 +305,6 @@ export default function ProductDetailClient({ slug }: { slug: string }) {
 
               <h1 className="product-title">{title}</h1>
               {price && <div className="product-price">₺{price}</div>}
-              {shortDesc && <p style={{ color: 'var(--muted)', lineHeight: 1.7 }}>{shortDesc}</p>}
 
               <div style={{ display: 'flex', gap: 10 }}>
                 <a href={whatsappLink(title, productSlug)} target="_blank" rel="noopener noreferrer" className="btn-whatsapp" style={{ flex: 1 }}>
