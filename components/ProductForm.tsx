@@ -355,65 +355,15 @@ export default function ProductForm({ initial, onSubmit, submitLabel }: Props) {
               />
               <canvas ref={canvasRef} style={{ display: 'none' }} />
 
-              {/* Alt bar — native kamera gibi */}
-              <div style={{
-                position: 'absolute', bottom: 0, left: 0, right: 0,
-                paddingBottom: 'env(safe-area-inset-bottom, 24px)',
-                background: 'linear-gradient(to top, rgba(0,0,0,0.7) 0%, transparent 100%)',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                gap: 48,
-                paddingTop: 24,
-              }}>
-                {/* İptal */}
-                <button
-                  onClick={stopCamera}
-                  style={{
-                    background: 'rgba(255,255,255,0.15)',
-                    border: '1px solid rgba(255,255,255,0.3)',
-                    borderRadius: '50%',
-                    width: 52, height: 52,
-                    color: '#fff', fontSize: 22,
-                    cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  }}
-                  aria-label="İptal"
-                >
-                  ✕
-                </button>
-
-                {/* Çekim butonu */}
-                <button
-                  onClick={capturePhoto}
-                  disabled={!cameraReady}
-                  style={{
-                    width: 76, height: 76,
-                    borderRadius: '50%',
-                    background: cameraReady ? '#fff' : 'rgba(255,255,255,0.3)',
-                    border: '4px solid rgba(255,255,255,0.5)',
-                    boxShadow: cameraReady ? '0 0 0 3px rgba(255,255,255,0.25)' : 'none',
-                    cursor: cameraReady ? 'pointer' : 'default',
-                    transition: 'transform 0.1s, background 0.2s',
-                    flexShrink: 0,
-                  }}
-                  onMouseDown={(e) => { if (cameraReady) (e.currentTarget as HTMLButtonElement).style.transform = 'scale(0.92)'; }}
-                  onMouseUp={(e) => { (e.currentTarget as HTMLButtonElement).style.transform = 'scale(1)'; }}
-                  onTouchStart={(e) => { e.stopPropagation(); if (cameraReady) (e.currentTarget as HTMLButtonElement).style.transform = 'scale(0.92)'; }}
-                  onTouchEnd={(e) => { e.stopPropagation(); (e.currentTarget as HTMLButtonElement).style.transform = 'scale(1)'; }}
-                  aria-label="Fotoğraf çek"
-                />
-
-                {/* Sağ taraf dengeleme için boşluk */}
-                <div style={{ width: 52, height: 52 }} />
-              </div>
-
-              {/* Sağ üst X */}
+              {/* Sağ üst X — kenardan 20px boşluk */}
               <button
                 onClick={stopCamera}
                 style={{
-                  position: 'absolute', top: 'max(16px, env(safe-area-inset-top, 16px))', right: 16,
-                  background: 'rgba(0,0,0,0.45)',
-                  border: '1px solid rgba(255,255,255,0.2)',
+                  position: 'absolute', top: 20, right: 20,
+                  background: 'rgba(0,0,0,0.5)',
+                  border: '1px solid rgba(255,255,255,0.25)',
                   borderRadius: '50%',
-                  width: 40, height: 40,
+                  width: 44, height: 44,
                   color: '#fff', fontSize: 18,
                   cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
                   zIndex: 10,
@@ -422,6 +372,34 @@ export default function ProductForm({ initial, onSubmit, submitLabel }: Props) {
               >
                 ✕
               </button>
+
+              {/* Alt orta — sadece çekim butonu */}
+              <div style={{
+                position: 'absolute', bottom: 0, left: 0, right: 0,
+                paddingBottom: 'max(32px, env(safe-area-inset-bottom, 32px))',
+                paddingTop: 24,
+                background: 'linear-gradient(to top, rgba(0,0,0,0.6) 0%, transparent 100%)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+              }}>
+                <button
+                  onClick={capturePhoto}
+                  disabled={!cameraReady}
+                  style={{
+                    width: 76, height: 76,
+                    borderRadius: '50%',
+                    background: cameraReady ? '#fff' : 'rgba(255,255,255,0.3)',
+                    border: '4px solid rgba(255,255,255,0.5)',
+                    boxShadow: cameraReady ? '0 0 0 4px rgba(255,255,255,0.2)' : 'none',
+                    cursor: cameraReady ? 'pointer' : 'default',
+                    transition: 'transform 0.1s, background 0.2s',
+                  }}
+                  onMouseDown={(e) => { if (cameraReady) (e.currentTarget as HTMLButtonElement).style.transform = 'scale(0.91)'; }}
+                  onMouseUp={(e) => { (e.currentTarget as HTMLButtonElement).style.transform = 'scale(1)'; }}
+                  onTouchStart={(e) => { e.stopPropagation(); if (cameraReady) (e.currentTarget as HTMLButtonElement).style.transform = 'scale(0.91)'; }}
+                  onTouchEnd={(e) => { e.stopPropagation(); (e.currentTarget as HTMLButtonElement).style.transform = 'scale(1)'; capturePhoto(); }}
+                  aria-label="Fotoğraf çek"
+                />
+              </div>
 
               {!cameraReady && (
                 <div style={{
