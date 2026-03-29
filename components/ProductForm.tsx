@@ -63,9 +63,12 @@ export default function ProductForm({ initial, onSubmit, submitLabel }: Props) {
   const [showCamera, setShowCamera] = useState(false);
   const [cameraReady, setCameraReady] = useState(false);
   const [cameraError, setCameraError] = useState('');
+  const [mounted, setMounted] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+
+  useEffect(() => { setMounted(true); }, []);
 
   const fileRef = useRef<HTMLInputElement>(null);
 
@@ -317,15 +320,18 @@ export default function ProductForm({ initial, onSubmit, submitLabel }: Props) {
   return (
     <>
       {/* ── Camera Modal — portal: body'e render, video position:absolute ile tam ekran ── */}
-      {showCamera && typeof document !== 'undefined' && createPortal(
+      {showCamera && mounted && createPortal(
         <div
           style={{
             position: 'fixed',
-            top: 0, left: 0, right: 0, bottom: 0,
-            zIndex: 9999,
+            top: 0, left: 0,
+            width: '100vw', height: '100vh',
+            zIndex: 99999,
             background: '#000',
             overflow: 'hidden',
             touchAction: 'none',
+            // GPU layer — admin-sidebar-mobile'ın transform'undan izole eder
+            transform: 'translateZ(0)',
           }}
         >
           {cameraError ? (
