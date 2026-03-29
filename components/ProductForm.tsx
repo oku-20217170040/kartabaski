@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { Product, CATEGORIES, Category } from '@/types';
 import { cloudinaryUrl } from '@/lib/products';
 
@@ -315,8 +316,9 @@ export default function ProductForm({ initial, onSubmit, submitLabel }: Props) {
 
   return (
     <>
-      {/* ── Camera Modal ── */}
-      {showCamera && (
+      {/* ── Camera Modal — portal ile doğrudan body'e render edilir,
+           böylece admin-layout'taki transform/overflow etkisinden kaçınılır ── */}
+      {showCamera && typeof document !== 'undefined' && createPortal(
         <div
           style={{
             position: 'fixed', inset: 0, zIndex: 1000,
@@ -418,7 +420,7 @@ export default function ProductForm({ initial, onSubmit, submitLabel }: Props) {
             </>
           )}
         </div>
-      )}
+      , document.body)}
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 360px', gap: 28, alignItems: 'start' }}>
         {/* Left column */}
