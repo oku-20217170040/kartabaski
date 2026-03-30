@@ -93,7 +93,7 @@ export function cloudinaryUrl(publicId: string, opts = 'f_auto,q_auto,w_1200,c_l
 }
 
 export function cloudinaryThumb(publicId: string): string {
-  return cloudinaryUrl(publicId, 'f_auto,q_auto,w_600,h_500,c_fill');
+  return cloudinaryUrl(publicId, 'f_auto,q_auto,w_600,c_limit');
 }
 
 // ── WhatsApp ─────────────────────────────────────────────────────────────────
