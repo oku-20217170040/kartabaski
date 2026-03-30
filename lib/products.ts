@@ -88,7 +88,7 @@ export async function toggleFeatured(id: string, featured: boolean): Promise<voi
 
 // ── Cloudinary ───────────────────────────────────────────────────────────────
 
-export function cloudinaryUrl(publicId: string, opts = 'f_auto,q_auto,w_900,h_700,c_fill'): string {
+export function cloudinaryUrl(publicId: string, opts = 'f_auto,q_auto,w_1200,c_limit'): string {
   return `https://res.cloudinary.com/dshbqbtpb/image/upload/${opts}/${publicId}`;
 }
 

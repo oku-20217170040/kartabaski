@@ -86,7 +86,9 @@ npm test -- --testPathPattern=product-utils  # Run a single test file
 
 Products support multilingual/alias fields: `title` or `baslik`, `priceTRY`/`price`/`fiyat`, `category`/`kategori`, `condition`/`durum`, `inStock`/`stok`.
 
-Valid categories: `Mobilya`, `Beyaz Eşya`, `Elektronik`, `Ofis`, `Yatak`, `Dekorasyon`, `Aydınlatma`, `Bahçe`, `Ev Eşyaları`, `Diğer`.
+Valid categories: `Mobilya`, `Beyaz Eşya`, `Elektronik`, `Ofis`, `Yatak`, `Baza`, `Dekorasyon`, `Aydınlatma`, `Bahçe`, `Ev Eşyaları`, `Diğer`.
+
+Valid conditions: `Sıfır`, `Sıfır Gibi`, `Az Kullanılmış`, `2. El`, `İyi Durumda`, `Normal Durumda`, `Parasına Göre`, `Hasarlı/Onarım Gerekli`.
 
 Zod schemas in `lib/schemas.ts` handle normalization at the data layer. Typed helpers in `lib/product-utils.ts` handle alias resolution at the UI layer.
 
