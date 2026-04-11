@@ -6,9 +6,6 @@ import {
   updateProduct as _updateProduct,
   deleteProduct as _deleteProduct,
   toggleFeatured as _toggleFeatured,
-  saveSatisTalebi as _saveSatisTalebi,
-  deleteSatisTalebi as _deleteSatisTalebi,
-  updateSatisTalebiStatus as _updateSatisTalebiStatus,
 } from './products-admin';
 
 // ── Ürün Aksiyonları ─────────────────────────────────────────────────────────
@@ -34,30 +31,7 @@ export async function toggleFeaturedAction(id: string, featured: boolean): Promi
   revalidateTag('products');
 }
 
-export async function toggleStockAction(id: string, inStock: boolean): Promise<void> {
-  await _updateProduct(id, { inStock });
+export async function toggleActiveAction(id: string, active: boolean): Promise<void> {
+  await _updateProduct(id, { active });
   revalidateTag('products');
-}
-
-// ── Satış Talebi Aksiyonları ─────────────────────────────────────────────────
-
-export async function saveSatisTalebiAction(
-  data: Omit<import('./products').SatisTalebi, 'id' | 'createdAt' | 'status'>
-): Promise<string> {
-  const id = await _saveSatisTalebi(data);
-  revalidateTag('satis-talepleri');
-  return id;
-}
-
-export async function deleteSatisTalebiAction(id: string): Promise<void> {
-  await _deleteSatisTalebi(id);
-  revalidateTag('satis-talepleri');
-}
-
-export async function updateSatisTalebiStatusAction(
-  id: string,
-  status: 'yeni' | 'incelendi' | 'reddedildi'
-): Promise<void> {
-  await _updateSatisTalebiStatus(id, status);
-  revalidateTag('satis-talepleri');
 }

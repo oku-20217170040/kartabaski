@@ -2,64 +2,38 @@ export interface Product {
   id: string;
   title: string;
   slug: string;
-  priceTRY: number;
+  priceMin: number;
+  priceMax: number;
   category: Category;
-  condition: 'Sıfır' | 'Sıfır Gibi' | 'Az Kullanılmış' | '2. El' | 'İyi Durumda' | 'Normal Durumda' | 'Parasına Göre' | 'Hasarlı/Onarım Gerekli';
-  inStock: boolean;
+  active: boolean;
   featured?: boolean;
-  tags: string[];
   shortDesc: string;
   description: string;
   images: string[]; // Cloudinary public_ids
-  specs: Record<string, string>;
+  deliveryDays: number; // varsayılan: 3
   seoTags?: string[]; // Gizli SEO etiketleri — müşteri görmez, JSON-LD'ye gömülür
   createdAt: number;
   updatedAt: number;
 }
 
 export type Category =
-  | 'Mobilya'
-  | 'Beyaz Eşya'
-  | 'Elektronik'
-  | 'Ofis'
-  | 'Yatak'
-  | 'Baza'
-  | 'Dekorasyon'
-  | 'Aydınlatma'
-  | 'Bahçe'
-  | 'Ev Eşyaları'
-  | 'Diğer';
+  | 'Sihirli Mat Kupa'
+  | 'Sihirli Konik Kupa'
+  | 'Seramik Nescafe Fincanı'
+  | 'Sihirli Renkli Kupa'
+  | 'Özel Tasarım';
 
 export const CATEGORIES: Category[] = [
-  'Mobilya',
-  'Beyaz Eşya',
-  'Elektronik',
-  'Ofis',
-  'Yatak',
-  'Baza',
-  'Dekorasyon',
-  'Aydınlatma',
-  'Bahçe',
-  'Ev Eşyaları',
-  'Diğer',
+  'Sihirli Mat Kupa',
+  'Sihirli Konik Kupa',
+  'Seramik Nescafe Fincanı',
+  'Sihirli Renkli Kupa',
+  'Özel Tasarım',
 ];
-
-export const CONDITIONS = [
-  'Sıfır',
-  'Sıfır Gibi',
-  'Az Kullanılmış',
-  '2. El',
-  'İyi Durumda',
-  'Normal Durumda',
-  'Parasına Göre',
-  'Hasarlı/Onarım Gerekli',
-] as const;
 
 export interface FilterState {
   search: string;
   category: Category | '';
-  condition: 'Sıfır' | 'Sıfır Gibi' | 'Az Kullanılmış' | '2. El' | 'İyi Durumda' | 'Normal Durumda' | 'Parasına Göre' | 'Hasarlı/Onarım Gerekli' | '';
-  inStock: boolean | null;
 }
 
 export interface AdminUser {

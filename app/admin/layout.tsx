@@ -38,14 +38,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     { href: '/admin', label: 'Dashboard', icon: '📊' },
     { href: '/admin/products', label: 'Ürünler', icon: '📦' },
     { href: '/admin/products/new', label: 'Yeni Ürün', icon: '➕' },
-    { href: '/admin/satis-talepleri', label: 'Satış Talepleri', icon: '🏷️' },
-    { href: '/admin/seo', label: 'SEO Ayarları', icon: '🔍' },
   ];
 
   const sidebarContent = (
     <>
       <div className="admin-sidebar-logo">
-        <LogoSVG height={28} />
+        <LogoSVG height={36} />
         <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 4 }}>Admin Panel</div>
       </div>
 
@@ -109,7 +107,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           >
             <span /><span /><span />
           </button>
-          <LogoSVG height={28} />
+          <LogoSVG height={36} />
           <div style={{ width: 40 }} />
         </div>
 

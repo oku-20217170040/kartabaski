@@ -1,0 +1,37 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ── Yardımcı fonksiyonlar ─────────────────────────────────────────────────
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return isSignedIn() &&
+        exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true;
+    }
+
+    // ── products koleksiyonu ──────────────────────────────────────────────────
+    match /products/{productId} {
+      // Herkes aktif ürünleri okuyabilir
+      allow read: if resource.data.active == true;
+      // Admin tüm ürünleri okuyabilir (aktif olmayanlar dahil)
+      allow read: if isAdmin();
+      // Sadece admin yazabilir
+      allow create, update, delete: if isAdmin();
+    }
+
+    // ── users koleksiyonu ─────────────────────────────────────────────────────
+    match /users/{userId} {
+      // Kullanıcı kendi profilini okuyabilir
+      allow read: if isSignedIn() && request.auth.uid == userId;
+      // Admin tüm kullanıcıları yönetebilir
+      allow read, write: if isAdmin();
+    }
+
+  }
+}

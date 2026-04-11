@@ -1,14 +1,14 @@
 import { Metadata } from 'next';
-import { getProductBySlug, getProductById, cloudinaryUrl } from '@/lib/products';
+import { getProductBySlug, getProductById, cloudinaryUrl, formatPriceRange } from '@/lib/products';
 import ProductDetailClient from './ProductDetailClient';
-import { PHONE } from '@/lib/constants';
-import { getTitle, getPrice, getCategory, getCondition, getInStock, getFirstImageId, getShortDesc, getDescription } from '@/lib/product-utils';
+import { PHONE, SITE_NAME } from '@/lib/constants';
+import { getTitle, getPriceMin, getPriceMax, getCategory, getActive, getFirstImageId, getShortDesc, getDescription } from '@/lib/product-utils';
+
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://kartabaski.com';
 
 interface Props {
   params: { slug: string };
 }
-
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.umitspot.com';
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = params;
@@ -18,8 +18,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (!product) return { title: 'Ürün Bulunamadı' };
 
   const title = getTitle(product);
-  const description = getShortDesc(product) || getDescription(product) || `${title} – Ümit Spot'ta uygun fiyata`;
-  const price = getPrice(product);
+  const description = getShortDesc(product) || getDescription(product) || `${title} – KAR-TA BASKI'da özel baskı`;
+  const priceMin = getPriceMin(product);
+  const priceMax = getPriceMax(product);
+  const priceLabel = formatPriceRange(priceMin, priceMax);
   const category = getCategory(product);
   const imageId = getFirstImageId(product);
   const imageUrl = imageId
@@ -27,11 +29,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     : undefined;
 
   return {
-    title: `${title}${price ? ` – ₺${new Intl.NumberFormat('tr-TR').format(price)}` : ''}`,
-    description: `${description} | Esenyurt Ümit Spot`,
-    keywords: [title, category, 'ikinci el', 'spot', 'esenyurt', 'ümit spot'],
+    title: `${title}${priceMin ? ` – ${priceLabel}` : ''}`,
+    description: `${description} | KAR-TA BASKI`,
+    keywords: [title, category, 'kupa baskı', 'özel tasarım', 'sihirli kupa', 'kar-ta baski'],
     openGraph: {
-      title: `${title} | Ümit Spot`,
+      title: `${title} | ${SITE_NAME}`,
       description,
       type: 'website',
       locale: 'tr_TR',
@@ -39,7 +41,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     },
     twitter: {
       card: 'summary_large_image',
-      title: `${title} | Ümit Spot`,
+      title: `${title} | ${SITE_NAME}`,
       description,
       ...(imageUrl && { images: [imageUrl] }),
     },
@@ -52,16 +54,14 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function ProductDetailPage({ params }: Props) {
   const { slug } = params;
 
-  // Product schema — Google ve AI motorları için
   const product = await getProductBySlug(slug).catch(() => null)
     || await getProductById(slug).catch(() => null);
 
   let productSchema = null;
   if (product) {
     const pTitle = getTitle(product);
-    const price = getPrice(product);
-    const condition = getCondition(product) || '2. El';
-    const inStock = getInStock(product);
+    const priceMin = getPriceMin(product);
+    const inStock = getActive(product);
     const imageId = getFirstImageId(product);
     const imageUrl = imageId
       ? (imageId.startsWith('http') ? imageId : cloudinaryUrl(imageId, 'f_auto,q_auto,w_900,h_700,c_fill'))
@@ -73,24 +73,22 @@ export default async function ProductDetailPage({ params }: Props) {
       '@context': 'https://schema.org',
       '@type': 'Product',
       name: pTitle,
-      description: getShortDesc(product) || getDescription(product) || `${pTitle} – Esenyurt Ümit Spot'ta satışta`,
+      description: getShortDesc(product) || getDescription(product) || `${pTitle} – KAR-TA BASKI'da özel kupa baskı`,
       ...(seoTags.length > 0 && { keywords: seoTags.join(', ') }),
       ...(imageUrl && { image: imageUrl }),
-      brand: { '@type': 'Brand', name: 'Ümit Spot' },
+      brand: { '@type': 'Brand', name: SITE_NAME },
       offers: {
         '@type': 'Offer',
         url: `${SITE_URL}/urun/${slug}`,
         priceCurrency: 'TRY',
-        ...(price && { price: String(price) }),
+        ...(priceMin && { price: String(priceMin) }),
         availability: inStock
           ? 'https://schema.org/InStock'
-          : 'https://schema.org/SoldOut',
-        itemCondition: condition === 'Sıfır'
-          ? 'https://schema.org/NewCondition'
-          : 'https://schema.org/UsedCondition',
+          : 'https://schema.org/OutOfStock',
+        itemCondition: 'https://schema.org/NewCondition',
         seller: {
           '@type': 'Organization',
-          name: 'Ümit Spot',
+          name: SITE_NAME,
           telephone: `+${PHONE}`,
         },
       },

@@ -4,7 +4,7 @@ import crypto from 'crypto';
 const CLOUD_NAME = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME!;
 const API_KEY = process.env.CLOUDINARY_API_KEY!;
 const API_SECRET = process.env.CLOUDINARY_API_SECRET!;
-const FOLDER = 'umit-spot/urunler';
+const FOLDER = 'karta-baski/urunler';
 
 export async function POST(req: NextRequest) {
   if (!CLOUD_NAME || !API_KEY || !API_SECRET) {

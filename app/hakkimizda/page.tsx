@@ -5,8 +5,8 @@ import Footer from '@/components/Footer';
 import { WHATSAPP_BASE } from '@/lib/constants';
 
 export const metadata: Metadata = {
-  title: 'Hakkımızda | Ümit Spot – İkinci El Mobilya & Beyaz Eşya Esenyurt',
-  description: 'Ümit Spot olarak Esenyurt\'ta yıllardır ikinci el ve sıfır spot mobilya, beyaz eşya alım satımı yapıyoruz. Güvenilir, hızlı ve uygun fiyatlı hizmet.',
+  title: 'Hakkımızda | KAR-TA BASKI – Özel Kupa Baskı',
+  description: 'KAR-TA BASKI olarak özel tasarım kupa baskı hizmetleri sunuyoruz. Hayal ettiğiniz tasarımı kupanıza baskı yaparak hayata geçiriyoruz.',
 };
 
 export default function HakkimizdaPage() {
@@ -25,10 +25,10 @@ export default function HakkimizdaPage() {
 
           {/* Başlık */}
           <h1 style={{ fontSize: 'clamp(1.8rem, 4vw, 2.6rem)', fontWeight: 700, marginBottom: 12, lineHeight: 1.2 }}>
-            Ümit<span style={{ color: 'var(--accent)' }}>Spot</span> Hakkında
+            KAR-TA <span style={{ color: 'var(--accent)' }}>BASKI</span> Hakkında
           </h1>
           <p style={{ color: 'var(--muted)', fontSize: 16, marginBottom: 48, lineHeight: 1.7 }}>
-            Esenyurt'un güvenilir ikinci el & sıfır spot mağazası
+            Hayal Et, Biz Basalım
           </p>
 
           {/* Bölümler */}
@@ -36,26 +36,26 @@ export default function HakkimizdaPage() {
 
             <section>
               <h2 style={{ fontSize: '1.2rem', fontWeight: 600, marginBottom: 12, color: 'var(--text)' }}>
-                🏪 Biz Kimiz?
+                ☕ Biz Kimiz?
               </h2>
               <p style={{ color: 'var(--muted)', lineHeight: 1.8 }}>
-                Ümit Spot, İstanbul Esenyurt'ta faaliyet gösteren ikinci el ve sıfır spot mobilya, beyaz eşya alım satım mağazasıdır.
-                Her bütçeye uygun, kaliteli ürünleri müşterilerimizle buluşturmak için çalışıyoruz.
-                Köşe takımından buzdolabına, çamaşır makinesinden yatak odası takımına kadar geniş ürün yelpazemizle
-                evinizi döşemenize yardımcı oluyoruz.
+                KAR-TA BASKI, kişiye özel kupa baskı alanında hizmet veren bir online mağazadır.
+                Sihirli mat kupa, sihirli konik kupa, seramik nescafe fincanı ve daha fazlasını
+                hayalinizdeki tasarımla kişiselleştiriyoruz. Türkiye'nin her yerine kargo hizmetimizle
+                özel tasarımınızı kapınıza getiriyoruz.
               </p>
             </section>
 
             <section>
               <h2 style={{ fontSize: '1.2rem', fontWeight: 600, marginBottom: 12, color: 'var(--text)' }}>
-                💡 Neden Ümit Spot?
+                ✨ Neden KAR-TA BASKI?
               </h2>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 16 }}>
                 {[
-                  { icon: '✅', title: 'Güvenilir Alışveriş', desc: 'Her ürün kontrolden geçerek satışa sunulur.' },
-                  { icon: '💰', title: 'Uygun Fiyat', desc: 'Piyasanın en rekabetçi fiyatlarını sunuyoruz.' },
-                  { icon: '🚚', title: 'Aynı Gün Teslimat', desc: 'İstanbul içi nakliye ve kurulum desteği.' },
-                  { icon: '🔄', title: 'Alım & Satım', desc: 'Eşyanızı satmak istiyorsanız bize ulaşın.' },
+                  { icon: '🎨', title: 'Özel Tasarım', desc: 'Her müşteri için benzersiz, kişiselleştirilmiş baskı.' },
+                  { icon: '⭐', title: 'Kaliteli Baskı', desc: 'Solmayan, uzun ömürlü yüksek kalite baskı teknolojisi.' },
+                  { icon: '🚚', title: 'Türkiye Geneli Kargo', desc: 'Hızlı ve güvenli kargo ile kapınıza teslim.' },
+                  { icon: '💬', title: 'WhatsApp Sipariş', desc: 'Kolay ve hızlı sipariş için sadece mesaj atın.' },
                 ].map((item) => (
                   <div key={item.title} style={{
                     background: 'var(--surface)',
@@ -73,17 +73,15 @@ export default function HakkimizdaPage() {
 
             <section>
               <h2 style={{ fontSize: '1.2rem', fontWeight: 600, marginBottom: 12, color: 'var(--text)' }}>
-                📍 Neredeyiz?
+                📦 Nasıl Sipariş Verilir?
               </h2>
               <p style={{ color: 'var(--muted)', lineHeight: 1.8, marginBottom: 8 }}>
-                Mehmet Akif Ersoy Mah. 1824 Sk. No:11A, 34515 Esenyurt / İstanbul
+                Ürünü seçin, WhatsApp üzerinden bize ulaşın ve tasarımınızı gönderin — biz hallederiz.
+                Siparişleriniz genellikle 3–5 iş günü içinde hazırlanıp kargolanır.
               </p>
-              <p style={{ color: 'var(--muted)', lineHeight: 1.8, marginBottom: 8 }}>
-                🕐 Çalışma saatlerimiz: Her gün 09:00 – 00:00
-              </p>
-              <p style={{ color: 'var(--muted)', lineHeight: 1.8 }}>
-                Beylikdüzü, Avcılar, Büyükçekmece, Bahçeşehir ve Başakşehir'den kolayca ulaşabilirsiniz.
-              </p>
+              <Link href="/nasil-siparis-verilir" style={{ color: 'var(--accent)', fontSize: 14, fontWeight: 600 }}>
+                Detaylı sipariş rehberi →
+              </Link>
             </section>
 
             {/* CTA */}
@@ -104,7 +102,7 @@ export default function HakkimizdaPage() {
               </div>
               <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
                 <a
-                  href={`${WHATSAPP_BASE}?text=Merhaba%2C%20bilgi%20almak%20istiyorum`}
+                  href={`${WHATSAPP_BASE}?text=Merhaba%2C%20kupa%20bask%C4%B1%20hakk%C4%B1nda%20bilgi%20almak%20istiyorum`}
                   target="_blank" rel="noopener noreferrer"
                   className="btn-whatsapp"
                   style={{ fontSize: 14, padding: '12px 20px' }}

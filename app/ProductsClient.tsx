@@ -4,7 +4,7 @@ import { useState, useMemo, useEffect } from 'react';
 import { Product, FilterState } from '@/types';
 import ProductCard from '@/components/ProductCard';
 import FilterBar, { SortOption } from '@/components/FilterBar';
-import { getTitle, getCategory, getCondition, getInStock, getTags, getPrice, getFeatured } from '@/lib/product-utils';
+import { getTitle, getCategory, getActive, getPriceMin, getFeatured } from '@/lib/product-utils';
 
 const PAGE_SIZE = 12;
 
@@ -14,7 +14,7 @@ interface Props {
 
 export default function ProductsClient({ initialProducts }: Props) {
   const [filters, setFilters] = useState<FilterState>({
-    search: '', category: '', condition: '', inStock: null,
+    search: '', category: '',
   });
   const [sort, setSort] = useState<SortOption>('featured');
   const [minPrice, setMinPrice] = useState('');
@@ -23,44 +23,35 @@ export default function ProductsClient({ initialProducts }: Props) {
 
   const filtered = useMemo(() => {
     let list = initialProducts.filter((p) => {
-      const title = getTitle(p).toLowerCase();
-      const tags = getTags(p);
+      if (!getActive(p)) return false;
+
+      const title    = getTitle(p).toLowerCase();
       const category = getCategory(p);
-      const condition = getCondition(p);
-      const inStock = getInStock(p);
-      const price = getPrice(p);
+      const price    = getPriceMin(p);
 
       const q = filters.search.toLowerCase();
-      if (q && !title.includes(q) && !tags.some((t) => t.toLowerCase().includes(q))) return false;
+      if (q && !title.includes(q)) return false;
       if (filters.category && category !== filters.category) return false;
-      if (filters.condition && condition !== filters.condition) return false;
-      if (filters.inStock !== null && inStock !== filters.inStock) return false;
       if (minPrice && price < Number(minPrice)) return false;
       if (maxPrice && price > Number(maxPrice)) return false;
       return true;
     });
 
     list = [...list].sort((a, b) => {
-      // Stokta olanlar her zaman önce
-      const aStock = getInStock(a) ? 0 : 1;
-      const bStock = getInStock(b) ? 0 : 1;
-      if (aStock !== bStock) return aStock - bStock;
-
       if (sort === 'featured') {
         if (getFeatured(a) && !getFeatured(b)) return -1;
         if (!getFeatured(a) && getFeatured(b)) return 1;
         return (b.createdAt ?? 0) - (a.createdAt ?? 0);
       }
       if (sort === 'newest') return (b.createdAt ?? 0) - (a.createdAt ?? 0);
-      if (sort === 'price_asc') return getPrice(a) - getPrice(b);
-      if (sort === 'price_desc') return getPrice(b) - getPrice(a);
+      if (sort === 'price_asc') return getPriceMin(a) - getPriceMin(b);
+      if (sort === 'price_desc') return getPriceMin(b) - getPriceMin(a);
       return 0;
     });
 
     return list;
   }, [initialProducts, filters, sort, minPrice, maxPrice]);
 
-  // Reset to page 1 when filters/sort change
   useEffect(() => {
     setPage(1);
   }, [filters, sort, minPrice, maxPrice]);

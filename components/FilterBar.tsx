@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { FilterState, CATEGORIES, CONDITIONS } from '@/types';
+import { FilterState, CATEGORIES } from '@/types';
 
 export type SortOption = 'featured' | 'newest' | 'price_asc' | 'price_desc';
 
@@ -18,13 +18,13 @@ interface Props {
 }
 
 const activeCount = (f: FilterState, minPrice: string, maxPrice: string) =>
-  [f.search, f.category, f.condition, f.inStock !== null, minPrice, maxPrice].filter(Boolean).length;
+  [f.search, f.category, minPrice, maxPrice].filter(Boolean).length;
 
 export default function FilterBar({ filters, onChange, sort, onSortChange, minPrice, maxPrice, onMinPrice, onMaxPrice, total }: Props) {
   const [open, setOpen] = useState(false);
   const set = (patch: Partial<FilterState>) => onChange({ ...filters, ...patch });
   const reset = () => {
-    onChange({ search: '', category: '', condition: '', inStock: null });
+    onChange({ search: '', category: '' });
     onSortChange('featured');
     onMinPrice('');
     onMaxPrice('');
@@ -39,7 +39,7 @@ export default function FilterBar({ filters, onChange, sort, onSortChange, minPr
           <label>Ara</label>
           <input
             className="form-input"
-            placeholder="Ürün adı veya etiket..."
+            placeholder="Ürün adı ara..."
             value={filters.search}
             onChange={(e) => set({ search: e.target.value })}
           />
@@ -50,24 +50,6 @@ export default function FilterBar({ filters, onChange, sort, onSortChange, minPr
             onChange={(e) => set({ category: e.target.value as FilterState['category'] })}>
             <option value="">Tümü</option>
             {CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
-          </select>
-        </div>
-        <div className="filter-group">
-          <label>Kondisyon</label>
-          <select className="form-select" value={filters.condition}
-            onChange={(e) => set({ condition: e.target.value as FilterState['condition'] })}>
-            <option value="">Tümü</option>
-            {CONDITIONS.map((c) => <option key={c} value={c}>{c}</option>)}
-          </select>
-        </div>
-        <div className="filter-group">
-          <label>Stok</label>
-          <select className="form-select"
-            value={filters.inStock === null ? '' : String(filters.inStock)}
-            onChange={(e) => set({ inStock: e.target.value === '' ? null : e.target.value === 'true' })}>
-            <option value="">Tümü</option>
-            <option value="true">Stokta</option>
-            <option value="false">Satıldı</option>
           </select>
         </div>
         <div className="filter-group">
@@ -164,27 +146,6 @@ export default function FilterBar({ filters, onChange, sort, onSortChange, minPr
                 </select>
               </div>
               <div className="filter-group" style={{ flex: 1 }}>
-                <label>Kondisyon</label>
-                <select className="form-select" value={filters.condition}
-                  onChange={(e) => set({ condition: e.target.value as FilterState['condition'] })}>
-                  <option value="">Tümü</option>
-                  <option value="Sıfır">Sıfır</option>
-                  <option value="2. El">2. El</option>
-                </select>
-              </div>
-              <div className="filter-group" style={{ flex: 1 }}>
-                <label>Stok</label>
-                <select className="form-select"
-                  value={filters.inStock === null ? '' : String(filters.inStock)}
-                  onChange={(e) => set({ inStock: e.target.value === '' ? null : e.target.value === 'true' })}>
-                  <option value="">Tümü</option>
-                  <option value="true">Stokta</option>
-                  <option value="false">Satıldı</option>
-                </select>
-              </div>
-            </div>
-            <div className="filter-mobile-row">
-              <div className="filter-group" style={{ flex: 1 }}>
                 <label>Sırala</label>
                 <select className="form-select" value={sort} onChange={(e) => onSortChange(e.target.value as SortOption)}>
                   <option value="featured">Önerilen</option>
@@ -193,6 +154,8 @@ export default function FilterBar({ filters, onChange, sort, onSortChange, minPr
                   <option value="price_desc">Fiyat ↓</option>
                 </select>
               </div>
+            </div>
+            <div className="filter-mobile-row">
               <div className="filter-group" style={{ flex: 1 }}>
                 <label>Min Fiyat (₺)</label>
                 <input
@@ -222,61 +185,6 @@ export default function FilterBar({ filters, onChange, sort, onSortChange, minPr
         </div>
       </div>
 
-      <style>{`
-        .filter-bar-desktop { display: flex; }
-        .filter-bar-mobile  { display: none; }
-
-        @media (max-width: 760px) {
-          .filter-bar-desktop { display: none !important; }
-          .filter-bar-mobile  { display: flex; flex-direction: column; gap: 0; margin-bottom: 16px; }
-        }
-
-        .filter-mobile-top {
-          display: flex; gap: 8px; align-items: center;
-        }
-
-        .filter-mobile-toggle {
-          display: flex; align-items: center; gap: 6px;
-          background: var(--surface);
-          border: 1px solid var(--border);
-          color: var(--text);
-          border-radius: var(--radius-sm);
-          padding: 10px 14px;
-          font-size: 13px; font-weight: 600;
-          white-space: nowrap; cursor: pointer;
-          transition: border-color 0.15s;
-          font-family: var(--font-body);
-          flex-shrink: 0;
-        }
-        .filter-mobile-toggle:hover { border-color: var(--accent2); }
-
-        .filter-mobile-badge {
-          background: var(--accent); color: #000;
-          border-radius: 10px; font-size: 11px; font-weight: 700;
-          padding: 1px 6px; line-height: 1.4;
-        }
-
-        .filter-mobile-drawer {
-          overflow: hidden; max-height: 0;
-          transition: max-height 0.35s ease, opacity 0.25s ease;
-          opacity: 0;
-        }
-        .filter-mobile-drawer.open { max-height: 400px; opacity: 1; }
-
-        .filter-mobile-drawer-inner {
-          padding: 14px;
-          background: var(--surface);
-          border: 1px solid var(--border);
-          border-radius: var(--radius-sm);
-          margin-top: 8px;
-          display: flex; flex-direction: column; gap: 10px;
-        }
-
-        .filter-mobile-row { display: flex; gap: 8px; }
-        .filter-mobile-row .filter-group { margin-bottom: 0; }
-        .filter-mobile-row .form-select { font-size: 12px; padding: 8px 8px; }
-        .filter-mobile-row label { font-size: 10px; }
-      `}</style>
     </>
   );
 }

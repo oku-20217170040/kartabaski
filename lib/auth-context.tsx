@@ -33,6 +33,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (!mounted) return;
+    if (!auth) {
+      setLoading(false);
+      return;
+    }
 
     const unsub = onAuthStateChanged(auth, async (u) => {
       setUser(u);
@@ -53,6 +57,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [mounted]);
 
   const login = async (email: string, password: string) => {
+    if (!auth) throw new Error('Firebase yapılandırılmamış.');
     const cred = await signInWithEmailAndPassword(auth, email, password);
     const idToken = await cred.user.getIdToken();
     await fetch('/api/auth/session', {
@@ -64,7 +69,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logout = async () => {
     await fetch('/api/auth/session', { method: 'DELETE' });
-    await signOut(auth);
+    if (auth) await signOut(auth);
   };
 
   // Server'da ve ilk mount'ta sadece children render et

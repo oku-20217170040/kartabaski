@@ -1,10 +1,11 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { getProducts, cloudinaryThumb } from '@/lib/products';
-import { deleteProductAction, toggleFeaturedAction, toggleStockAction } from '@/lib/actions';
+import { getProducts, cloudinaryThumb, formatPriceRange } from '@/lib/products';
+import { deleteProductAction, toggleFeaturedAction, toggleActiveAction } from '@/lib/actions';
 import { Product } from '@/types';
 import Link from 'next/link';
+import { getActive, getPriceMin, getPriceMax } from '@/lib/product-utils';
 
 export default function AdminProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
@@ -12,7 +13,7 @@ export default function AdminProductsPage() {
   const [search, setSearch] = useState('');
   const [deleting, setDeleting] = useState<string | null>(null);
   const [togglingFeatured, setTogglingFeatured] = useState<string | null>(null);
-  const [togglingStock, setTogglingStock] = useState<string | null>(null);
+  const [togglingActive, setTogglingActive] = useState<string | null>(null);
 
   const load = () => {
     setLoading(true);
@@ -26,7 +27,7 @@ export default function AdminProductsPage() {
       const q = search.toLowerCase();
       return !q || p.title.toLowerCase().includes(q) || p.category.toLowerCase().includes(q);
     })
-    .sort((a, b) => (a.inStock === b.inStock ? 0 : a.inStock ? -1 : 1));
+    .sort((a, b) => (getActive(a) === getActive(b) ? 0 : getActive(a) ? -1 : 1));
 
   const handleDelete = async (id: string, title: string) => {
     if (!confirm(`"${title}" silinsin mi?`)) return;
@@ -43,14 +44,16 @@ export default function AdminProductsPage() {
     setTogglingFeatured(null);
   };
 
-  const handleToggleStock = async (p: Product) => {
-    setTogglingStock(p.id);
-    await toggleStockAction(p.id, !p.inStock);
-    setProducts((prev) => prev.map((x) => x.id === p.id ? { ...x, inStock: !p.inStock } : x));
-    setTogglingStock(null);
+  const handleToggleActive = async (p: Product) => {
+    setTogglingActive(p.id);
+    const newActive = !getActive(p);
+    await toggleActiveAction(p.id, newActive);
+    setProducts((prev) => prev.map((x) => x.id === p.id ? { ...x, active: newActive } : x));
+    setTogglingActive(null);
   };
 
   const featuredCount = products.filter((p) => p.featured).length;
+  const activeCount = products.filter((p) => getActive(p)).length;
 
   return (
     <div>
@@ -58,9 +61,9 @@ export default function AdminProductsPage() {
         <div>
           <h1 style={{ fontFamily: 'var(--font-display)', fontSize: '1.8rem' }}>Ürünler</h1>
           <p style={{ color: 'var(--muted)', fontSize: 14, marginTop: 4 }}>
-            {products.length} ürün
+            {products.length} ürün · {activeCount} aktif
             {featuredCount > 0 && (
-              <span style={{ marginLeft: 10, color: '#f59e0b' }}>⭐ {featuredCount} öne çıkan</span>
+              <span style={{ marginLeft: 10, color: 'var(--accent)' }}>⭐ {featuredCount} öne çıkan</span>
             )}
           </p>
         </div>
@@ -92,10 +95,11 @@ export default function AdminProductsPage() {
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
           {filtered.map((p) => {
             const thumb = p.images?.[0] ? cloudinaryThumb(p.images[0]) : null;
-            const price = new Intl.NumberFormat('tr-TR').format(p.priceTRY);
+            const priceLabel = formatPriceRange(getPriceMin(p), getPriceMax(p));
+            const active = getActive(p);
             const isDeleting = deleting === p.id;
             const isTogglingFeatured = togglingFeatured === p.id;
-            const isTogglingStock = togglingStock === p.id;
+            const isTogglingActive = togglingActive === p.id;
 
             return (
               <div
@@ -106,8 +110,9 @@ export default function AdminProductsPage() {
                   display: 'flex',
                   gap: 14,
                   alignItems: 'center',
-                  background: p.featured ? 'rgba(245,158,11,0.06)' : undefined,
-                  borderLeft: p.featured ? '3px solid #f59e0b' : '3px solid transparent',
+                  background: p.featured ? 'rgba(201,168,76,0.06)' : undefined,
+                  borderLeft: p.featured ? '3px solid var(--accent)' : '3px solid transparent',
+                  opacity: active ? 1 : 0.6,
                 }}
               >
                 {/* Thumbnail */}
@@ -124,7 +129,7 @@ export default function AdminProductsPage() {
                       background: 'var(--surface)', display: 'flex',
                       alignItems: 'center', justifyContent: 'center', fontSize: '1.4rem',
                     }}>
-                      🛋️
+                      ☕
                     </div>
                   )}
                 </div>
@@ -139,31 +144,25 @@ export default function AdminProductsPage() {
                   </div>
                   <div style={{ fontSize: 12, color: 'var(--muted)', marginTop: 2 }}>{p.slug}</div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 6, flexWrap: 'wrap' }}>
-                    <span style={{ fontWeight: 700, color: 'var(--accent)', fontSize: 14 }}>₺{price}</span>
+                    <span style={{ fontWeight: 700, color: 'var(--accent)', fontSize: 13 }}>{priceLabel}</span>
                     <span className="badge badge-muted">{p.category}</span>
-                    <span className={`badge ${p.condition === 'Sıfır' ? 'badge-green' : 'badge-orange'}`}>
-                      {p.condition}
-                    </span>
                   </div>
                 </div>
 
                 {/* Actions */}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8, flexShrink: 0, alignItems: 'flex-end' }}>
-                  {/* Stock toggle */}
+                  {/* Active toggle */}
                   <button
-                    onClick={() => handleToggleStock(p)}
-                    disabled={isTogglingStock}
-                    className={`badge ${p.inStock ? 'badge-green' : 'badge-red'}`}
+                    onClick={() => handleToggleActive(p)}
+                    disabled={isTogglingActive}
+                    className={`badge ${active ? 'badge-green' : 'badge-red'}`}
                     style={{
-                      cursor: 'pointer',
-                      border: 'none',
-                      padding: '4px 10px',
-                      fontSize: 12,
-                      opacity: isTogglingStock ? 0.5 : 1,
+                      cursor: 'pointer', border: 'none', padding: '4px 10px',
+                      fontSize: 12, opacity: isTogglingActive ? 0.5 : 1,
                       transition: 'opacity 0.15s',
                     }}
                   >
-                    {isTogglingStock ? '...' : (p.inStock ? 'Stokta' : 'Satıldı')}
+                    {isTogglingActive ? '...' : (active ? 'Aktif' : 'Pasif')}
                   </button>
 
                   {/* Bottom row: featured + edit + delete */}

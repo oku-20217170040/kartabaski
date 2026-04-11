@@ -9,9 +9,19 @@ export function getTitle(p: Product): string {
   return (r.title || r.baslik || r.isim || r.name || '—') as string;
 }
 
-export function getPrice(p: Product): number {
+export function getPriceMin(p: Product): number {
   const r = p as RawProduct;
-  return (r.priceTRY ?? r.price ?? r.fiyat ?? r.Price ?? 0) as number;
+  return ((r.priceMin as number) || (r.priceTRY as number) || (r.price as number) || (r.fiyat as number) || 0);
+}
+
+export function getPriceMax(p: Product): number {
+  const r = p as RawProduct;
+  return ((r.priceMax as number) || (r.priceMin as number) || (r.priceTRY as number) || (r.price as number) || (r.fiyat as number) || 0);
+}
+
+// Eski kodlarla uyumluluk için alias
+export function getPrice(p: Product): number {
+  return getPriceMin(p);
 }
 
 export function getCategory(p: Product): string {
@@ -19,19 +29,19 @@ export function getCategory(p: Product): string {
   return (r.category || r.kategori || r.Category || '') as string;
 }
 
-export function getCondition(p: Product): string {
+export function getActive(p: Product): boolean {
   const r = p as RawProduct;
-  return (r.condition || r.durum || r.kondisyon || '') as string;
+  return (r.active ?? r.inStock ?? r.stok ?? r.stock ?? true) as boolean;
 }
 
+// Eski kodlarla uyumluluk için alias
 export function getInStock(p: Product): boolean {
-  const r = p as RawProduct;
-  return (r.inStock ?? r.stok ?? r.stock ?? true) as boolean;
+  return getActive(p);
 }
 
-export function getTags(p: Product): string[] {
+export function getDeliveryDays(p: Product): number {
   const r = p as RawProduct;
-  return (r.tags || r.etiketler || []) as string[];
+  return (r.deliveryDays ?? 3) as number;
 }
 
 export function getSlug(p: Product): string {
@@ -51,11 +61,6 @@ export function getFeatured(p: Product): boolean {
   return (r.featured ?? false) as boolean;
 }
 
-export function getHasDelivery(p: Product): boolean {
-  const r = p as RawProduct;
-  return (r.nakliye ?? r.delivery ?? false) as boolean;
-}
-
 export function getCreatedAt(p: Product): number {
   return p.createdAt ?? 0;
 }
@@ -72,8 +77,4 @@ export function getDescription(p: Product): string {
 
 export function getFirstImageId(p: Product): string | null {
   return p.images?.[0] ?? null;
-}
-
-export function getSpecs(p: Product): Record<string, string> {
-  return p.specs ?? {};
 }

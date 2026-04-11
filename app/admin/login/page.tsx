@@ -30,7 +30,7 @@ export default function AdminLoginPage() {
       <div style={{ width: '100%', maxWidth: 380 }}>
         <div style={{ textAlign: 'center', marginBottom: 40 }}>
           <div style={{ fontFamily: 'var(--font-display)', fontSize: '2rem', fontWeight: 800, marginBottom: 6 }}>
-            Ümit<span style={{ color: 'var(--accent)' }}>Spot</span>
+            KAR-TA <span style={{ color: 'var(--accent)' }}>BASKI</span>
           </div>
           <p style={{ color: 'var(--muted)', fontSize: 14 }}>Admin paneline giriş yapın</p>
         </div>

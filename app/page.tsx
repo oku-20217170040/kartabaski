@@ -4,10 +4,8 @@ import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import HeroSection from '@/components/HeroSection';
 import ProductsClient from './ProductsClient';
-import { PHONE, PHONE_DISPLAY, WHATSAPP_BASE } from '@/lib/constants';
+import { PHONE, PHONE_DISPLAY, WHATSAPP_BASE, DEFAULT_WA_TEXT } from '@/lib/constants';
 
-// unstable_cache: Next.js Data Cache üzerinde saklar (serverless instance'lar arası paylaşılır)
-// revalidateTag('products') çağrıldığında anında temizlenir
 const getProducts = unstable_cache(
   () => _getProducts(),
   ['products'],
@@ -16,12 +14,13 @@ const getProducts = unstable_cache(
 
 export default async function HomePage() {
   const products = await getProducts();
+  const waHref = `${WHATSAPP_BASE}?text=${encodeURIComponent(DEFAULT_WA_TEXT)}`;
 
   return (
     <>
       <Navbar />
       <main>
-        <HeroSection productCount={products.length} />
+        <HeroSection />
 
         <section className="products-page" style={{ paddingTop: 48 }}>
           <div className="container">
@@ -31,24 +30,24 @@ export default async function HomePage() {
             <section id="iletisim" className="contact-pro">
               <div className="contact-pro-inner">
                 <div className="contact-pro-left">
-                  <span className="contact-pro-eyebrow">📍 Esenyurt, İstanbul</span>
-                  <h2 className="contact-pro-title">Bir ürün mü buldunuz?</h2>
+                  <span className="contact-pro-eyebrow">Türkiye Geneli Online Hizmet</span>
+                  <h2 className="contact-pro-title">Sipariş vermek ister misiniz?</h2>
                   <p className="contact-pro-desc">
-                    Satın almak veya fiyat öğrenmek için WhatsApp&apos;tan yazın.
-                    Aynı gün cevap, aynı gün teslimat.
+                    Tasarımınızı gönderin veya biz tasarlayalım — ücretsiz.
+                    Siparişiniz 3 iş günü içinde kargoya verilir.
                   </p>
                   <div className="contact-pro-meta">
                     <div className="contact-meta-item">
-                      <span className="contact-meta-icon">🕐</span>
-                      <span>Her gün 09:00 – 00:00</span>
+                      <span className="contact-meta-icon">🎨</span>
+                      <span>Ücretsiz tasarım desteği</span>
                     </div>
                     <div className="contact-meta-item">
                       <span className="contact-meta-icon">🚚</span>
-                      <span>Aynı gün teslimat & nakliye</span>
+                      <span>Türkiye geneli kargo</span>
                     </div>
                     <div className="contact-meta-item">
-                      <span className="contact-meta-icon">💬</span>
-                      <span>Fiyat pazarlığı yapılır</span>
+                      <span className="contact-meta-icon">📦</span>
+                      <span>3 iş günü kargoya teslim</span>
                     </div>
                   </div>
                 </div>
@@ -56,9 +55,9 @@ export default async function HomePage() {
                 <div className="contact-pro-right">
                   <div className="contact-pro-card">
                     <div className="contact-pro-card-top">
-                      <div className="contact-pro-avatar">Ü</div>
+                      <div className="contact-pro-avatar">K</div>
                       <div>
-                        <div className="contact-pro-name">Ümit Spot</div>
+                        <div className="contact-pro-name">KAR-TA BASKI</div>
                         <div className="contact-pro-status">
                           <span className="contact-pro-dot" />
                           Çevrimiçi
@@ -66,10 +65,10 @@ export default async function HomePage() {
                       </div>
                     </div>
                     <p className="contact-pro-bubble">
-                      Merhaba! Ürünlerimiz hakkında bilgi almak istiyorum 👋
+                      Merhaba! Kupa baskı siparişi için yazabilirsiniz 👋
                     </p>
                     <a
-                      href={`${WHATSAPP_BASE}?text=Merhaba%2C%20ürünleriniz%20hakkında%20bilgi%20almak%20istiyorum`}
+                      href={waHref}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="contact-pro-wa-btn"
@@ -89,172 +88,6 @@ export default async function HomePage() {
       </main>
       <Footer />
 
-      <style>{`
-        .contact-pro {
-          margin: 80px 0 40px;
-          padding: 60px;
-          background: var(--surface);
-          border: 1px solid var(--border);
-          border-radius: 24px;
-          position: relative;
-          overflow: hidden;
-        }
-        .contact-pro::before {
-          content: '';
-          position: absolute;
-          top: 0; left: 0; right: 0;
-          height: 1px;
-          background: linear-gradient(90deg, transparent, rgba(37,211,102,0.4), transparent);
-        }
-        .contact-pro::after {
-          content: '';
-          position: absolute;
-          top: -200px; right: -200px;
-          width: 400px; height: 400px;
-          background: rgba(37,211,102,0.04);
-          border-radius: 50%;
-          filter: blur(80px);
-          pointer-events: none;
-        }
-        .contact-pro-inner {
-          display: flex;
-          gap: 60px;
-          align-items: center;
-          position: relative;
-          z-index: 1;
-        }
-        .contact-pro-left { flex: 1; }
-        .contact-pro-right { flex-shrink: 0; width: 300px; }
-
-        .contact-pro-eyebrow {
-          display: inline-block;
-          padding: 4px 12px;
-          border-radius: 100px;
-          background: rgba(37,211,102,0.08);
-          border: 1px solid rgba(37,211,102,0.2);
-          color: var(--accent);
-          font-size: 12px;
-          font-weight: 600;
-          margin-bottom: 16px;
-        }
-        .contact-pro-title {
-          font-size: 32px;
-          font-weight: 800;
-          color: var(--text);
-          margin: 0 0 12px;
-          line-height: 1.2;
-        }
-        .contact-pro-desc {
-          color: var(--muted);
-          font-size: 15px;
-          line-height: 1.7;
-          margin-bottom: 24px;
-          max-width: 400px;
-        }
-        .contact-pro-meta {
-          display: flex;
-          flex-direction: column;
-          gap: 10px;
-        }
-        .contact-meta-item {
-          display: flex;
-          align-items: center;
-          gap: 10px;
-          color: var(--muted);
-          font-size: 14px;
-        }
-        .contact-meta-icon { font-size: 16px; }
-
-        /* Card */
-        .contact-pro-card {
-          background: #0d1520;
-          border: 1px solid rgba(255,255,255,0.08);
-          border-radius: 18px;
-          padding: 24px;
-          display: flex;
-          flex-direction: column;
-          gap: 16px;
-        }
-        .contact-pro-card-top {
-          display: flex;
-          align-items: center;
-          gap: 12px;
-        }
-        .contact-pro-avatar {
-          width: 44px; height: 44px;
-          border-radius: 50%;
-          background: linear-gradient(135deg, #25D366, #16a34a);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-size: 20px;
-          font-weight: 800;
-          color: #fff;
-          flex-shrink: 0;
-          box-shadow: 0 0 20px rgba(37,211,102,0.3);
-        }
-        .contact-pro-name {
-          font-weight: 700;
-          color: var(--text);
-          font-size: 15px;
-        }
-        .contact-pro-status {
-          display: flex;
-          align-items: center;
-          gap: 6px;
-          font-size: 12px;
-          color: var(--accent);
-        }
-        .contact-pro-dot {
-          width: 7px; height: 7px;
-          border-radius: 50%;
-          background: var(--accent);
-          box-shadow: 0 0 6px rgba(37,211,102,0.7);
-          animation: dot-blink 2s ease-in-out infinite;
-        }
-        .contact-pro-bubble {
-          background: rgba(255,255,255,0.04);
-          border: 1px solid rgba(255,255,255,0.08);
-          border-radius: 12px 12px 12px 4px;
-          padding: 12px 16px;
-          color: var(--muted);
-          font-size: 14px;
-          font-style: italic;
-          line-height: 1.5;
-          margin: 0;
-        }
-        .contact-pro-wa-btn {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          gap: 10px;
-          padding: 14px;
-          border-radius: 12px;
-          background: linear-gradient(135deg, #25D366, #16a34a);
-          color: #fff;
-          font-weight: 700;
-          font-size: 15px;
-          text-decoration: none;
-          box-shadow: 0 4px 24px rgba(37,211,102,0.35);
-          transition: box-shadow 0.2s, transform 0.15s;
-        }
-        .contact-pro-wa-btn:hover {
-          box-shadow: 0 6px 36px rgba(37,211,102,0.5);
-          transform: translateY(-1px);
-        }
-        .contact-pro-phone {
-          text-align: center;
-          color: var(--muted);
-          font-size: 13px;
-          margin: 0;
-        }
-
-        @media (max-width: 900px) {
-          .contact-pro { padding: 36px 24px; }
-          .contact-pro-inner { flex-direction: column; gap: 32px; }
-          .contact-pro-right { width: 100%; }
-        }
-      `}</style>
     </>
   );
 }

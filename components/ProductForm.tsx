@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
-import { Product, CATEGORIES, CONDITIONS, Category } from '@/types';
+import { Product, CATEGORIES, Category } from '@/types';
 import { cloudinaryUrl } from '@/lib/products';
 
 interface Props {
@@ -22,7 +22,7 @@ async function uploadToCloudinary(file: File): Promise<string> {
 
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
-    throw new Error((err as any).error || 'Upload failed');
+    throw new Error((err as { error?: string }).error || 'Upload failed');
   }
   const data = await res.json();
   return data.public_id as string;
@@ -31,19 +31,15 @@ async function uploadToCloudinary(file: File): Promise<string> {
 export default function ProductForm({ initial, onSubmit, submitLabel }: Props) {
   const [title, setTitle] = useState(initial?.title || '');
   const [slug, setSlug] = useState(initial?.slug || '');
-  const [price, setPrice] = useState(String(initial?.priceTRY || ''));
-  const [category, setCategory] = useState<Category>(initial?.category || 'Mobilya');
-  const [condition, setCondition] = useState<Product['condition']>(initial?.condition || '2. El');
-  const [inStock, setInStock] = useState(initial?.inStock ?? true);
+  const [priceMin, setPriceMin] = useState(String(initial?.priceMin || ''));
+  const [priceMax, setPriceMax] = useState(String(initial?.priceMax || ''));
+  const [category, setCategory] = useState<Category>(initial?.category || 'Sihirli Mat Kupa');
+  const [active, setActive] = useState(initial?.active ?? true);
+  const [deliveryDays, setDeliveryDays] = useState(String(initial?.deliveryDays || '3'));
   const [description, setDescription] = useState(initial?.description || '');
   const [images, setImages] = useState<string[]>(initial?.images || []);
-  const [tags, setTags] = useState<string[]>(initial?.tags || []);
-  const [tagInput, setTagInput] = useState('');
   const [seoTags, setSeoTags] = useState<string[]>(initial?.seoTags || []);
   const [seoTagInput, setSeoTagInput] = useState('');
-  const [specsRaw, setSpecsRaw] = useState(
-    Object.entries(initial?.specs || {}).map(([k, v]) => `${k}:${v}`).join('\n')
-  );
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
@@ -72,7 +68,6 @@ export default function ProductForm({ initial, onSubmit, submitLabel }: Props) {
 
   const fileRef = useRef<HTMLInputElement>(null);
 
-  // Bu session'da yüklenen (henüz kaydedilmemiş) görselleri takip et
   const sessionUploads = useRef<Set<string>>(new Set());
   const savedRef = useRef(false);
 
@@ -82,7 +77,6 @@ export default function ProductForm({ initial, onSubmit, submitLabel }: Props) {
     setCameraReady(false);
     setShowCamera(false);
     setCameraError('');
-    // iOS scroll lock'u geri al
     const top = document.body.style.top;
     document.body.style.position = '';
     document.body.style.top = '';
@@ -91,7 +85,6 @@ export default function ProductForm({ initial, onSubmit, submitLabel }: Props) {
     if (top) window.scrollTo(0, -parseInt(top, 10));
   }, []);
 
-  // Sayfa terk edilince kaydedilmemiş görselleri ve kamerayı kapat
   useEffect(() => {
     return () => {
       stopCamera();
@@ -141,7 +134,6 @@ export default function ProductForm({ initial, onSubmit, submitLabel }: Props) {
     setCameraError('');
     setCameraReady(false);
     setShowCamera(true);
-    // iOS dahil tüm mobil tarayıcılarda sayfayı dondur
     document.body.style.top = `-${window.scrollY}px`;
     document.body.style.position = 'fixed';
     document.body.style.width = '100%';
@@ -186,9 +178,7 @@ export default function ProductForm({ initial, onSubmit, submitLabel }: Props) {
 
   // ── Image reorder (drag & drop) ───────────────────────────────────────────────
 
-  const handleImgDragStart = (index: number) => {
-    dragIndexRef.current = index;
-  };
+  const handleImgDragStart = (index: number) => { dragIndexRef.current = index; };
 
   const handleImgDragOver = (e: React.DragEvent, index: number) => {
     e.preventDefault();
@@ -198,10 +188,7 @@ export default function ProductForm({ initial, onSubmit, submitLabel }: Props) {
   const handleImgDrop = (e: React.DragEvent, dropIndex: number) => {
     e.preventDefault();
     const from = dragIndexRef.current;
-    if (from === null || from === dropIndex) {
-      setDragOverIndex(null);
-      return;
-    }
+    if (from === null || from === dropIndex) { setDragOverIndex(null); return; }
     setImages((prev) => {
       const next = [...prev];
       const [moved] = next.splice(from, 1);
@@ -219,19 +206,15 @@ export default function ProductForm({ initial, onSubmit, submitLabel }: Props) {
 
   // ── Image reorder — touch (mobile) ───────────────────────────────────────────
 
-  // Non-passive touchmove must be added via addEventListener, not React props
   useEffect(() => {
     const grid = imgGridRef.current;
     if (!grid) return;
 
     const onTouchMove = (e: TouchEvent) => {
       if (touchDragIndexRef.current === null) return;
-      e.preventDefault(); // block page scroll while reordering
-
+      e.preventDefault();
       const touch = e.touches[0];
       setTouchGhostPos({ x: touch.clientX, y: touch.clientY });
-
-      // Ghost has pointer-events:none so elementFromPoint sees through it
       const el = document.elementFromPoint(touch.clientX, touch.clientY);
       const item = el?.closest('[data-img-index]') as HTMLElement | null;
       if (item) {
@@ -242,7 +225,7 @@ export default function ProductForm({ initial, onSubmit, submitLabel }: Props) {
 
     grid.addEventListener('touchmove', onTouchMove, { passive: false });
     return () => grid.removeEventListener('touchmove', onTouchMove);
-  }, []); // empty — reads from refs only
+  }, []);
 
   const handleImgTouchStart = (e: React.TouchEvent, index: number) => {
     touchDragIndexRef.current = index;
@@ -271,14 +254,6 @@ export default function ProductForm({ initial, onSubmit, submitLabel }: Props) {
 
   // ─────────────────────────────────────────────────────────────────────────────
 
-  const addTag = () => {
-    const t = tagInput.trim();
-    if (t && !tags.includes(t)) setTags((prev) => [...prev, t]);
-    setTagInput('');
-  };
-
-  const removeTag = (t: string) => setTags((prev) => prev.filter((x) => x !== t));
-
   const addSeoTag = () => {
     const t = seoTagInput.trim();
     if (t && !seoTags.includes(t)) setSeoTags((prev) => [...prev, t]);
@@ -287,18 +262,9 @@ export default function ProductForm({ initial, onSubmit, submitLabel }: Props) {
 
   const removeSeoTag = (t: string) => setSeoTags((prev) => prev.filter((x) => x !== t));
 
-  const parseSpecs = (): Record<string, string> => {
-    const specs: Record<string, string> = {};
-    specsRaw.split('\n').forEach((line) => {
-      const [k, ...rest] = line.split(':');
-      if (k && rest.length) specs[k.trim()] = rest.join(':').trim();
-    });
-    return specs;
-  };
-
   const handleSubmit = async () => {
-    if (!title || !slug || !price) {
-      setError('Başlık, slug ve fiyat zorunludur.');
+    if (!title || !slug) {
+      setError('Başlık ve slug zorunludur.');
       return;
     }
     setSaving(true);
@@ -307,21 +273,20 @@ export default function ProductForm({ initial, onSubmit, submitLabel }: Props) {
       await onSubmit({
         title,
         slug,
-        priceTRY: Number(price),
+        priceMin: Number(priceMin) || 0,
+        priceMax: Number(priceMax) || 0,
         category,
-        condition,
-        inStock,
+        active,
         shortDesc: initial?.shortDesc || '',
         description,
         images,
-        tags,
+        deliveryDays: Number(deliveryDays) || 3,
         seoTags,
-        specs: parseSpecs(),
       });
       savedRef.current = true;
       sessionUploads.current.clear();
-    } catch (e: any) {
-      setError(e.message || 'Bir hata oluştu.');
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : 'Bir hata oluştu.');
     } finally {
       setSaving(false);
     }
@@ -329,7 +294,7 @@ export default function ProductForm({ initial, onSubmit, submitLabel }: Props) {
 
   return (
     <>
-      {/* ── Camera Modal — portal: body'e render, video position:absolute ile tam ekran ── */}
+      {/* ── Camera Modal ── */}
       {showCamera && mounted && createPortal(
         <div
           style={{
@@ -340,12 +305,10 @@ export default function ProductForm({ initial, onSubmit, submitLabel }: Props) {
             background: '#000',
             overflow: 'hidden',
             touchAction: 'none',
-            // GPU layer — admin-sidebar-mobile'ın transform'undan izole eder
             transform: 'translateZ(0)',
           }}
         >
           {cameraError ? (
-            /* Hata durumu */
             <div style={{
               position: 'absolute', inset: 0,
               display: 'flex', flexDirection: 'column',
@@ -362,8 +325,6 @@ export default function ProductForm({ initial, onSubmit, submitLabel }: Props) {
             </div>
           ) : (
             <>
-              {/* Video — position:absolute ile container'ı tamamen doldurur.
-                  Flex/height:auto CSS kurallarından tamamen bağımsız. */}
               <video
                 ref={videoRef}
                 autoPlay
@@ -380,7 +341,6 @@ export default function ProductForm({ initial, onSubmit, submitLabel }: Props) {
               />
               <canvas ref={canvasRef} style={{ display: 'none' }} />
 
-              {/* Sağ üst X */}
               <button
                 onClick={stopCamera}
                 style={{
@@ -395,7 +355,6 @@ export default function ProductForm({ initial, onSubmit, submitLabel }: Props) {
                 aria-label="Kamerayı kapat"
               >✕</button>
 
-              {/* Alt orta — çekim butonu */}
               <div style={{
                 position: 'absolute', bottom: 0, left: 0, right: 0, zIndex: 10,
                 display: 'flex', justifyContent: 'center', alignItems: 'center',
@@ -438,25 +397,34 @@ export default function ProductForm({ initial, onSubmit, submitLabel }: Props) {
 
             <div className="form-group">
               <label className="form-label">Başlık *</label>
-              <input className="form-input" value={title} onChange={(e) => handleTitleChange(e.target.value)} placeholder="L Köşe Koltuk Gri" />
+              <input className="form-input" value={title} onChange={(e) => handleTitleChange(e.target.value)} placeholder="Sihirli Mat Kupa - 330ml" />
             </div>
 
             <div className="form-group">
               <label className="form-label">Slug *</label>
-              <input className="form-input" value={slug} onChange={(e) => setSlug(e.target.value)} placeholder="l-kose-koltuk-gri" />
+              <input className="form-input" value={slug} onChange={(e) => setSlug(e.target.value)} placeholder="sihirli-mat-kupa-330ml" />
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 16 }}>
               <div className="form-group">
-                <label className="form-label">Fiyat (TL) *</label>
-                <input className="form-input" type="number" value={price} onChange={(e) => setPrice(e.target.value)} placeholder="14900" />
+                <label className="form-label">Min Fiyat (TL)</label>
+                <input className="form-input" type="number" value={priceMin} onChange={(e) => setPriceMin(e.target.value)} placeholder="150" />
               </div>
               <div className="form-group">
-                <label className="form-label">Kategori</label>
-                <select className="form-select" value={category} onChange={(e) => setCategory(e.target.value as Category)}>
-                  {CATEGORIES.map((c) => <option key={c}>{c}</option>)}
-                </select>
+                <label className="form-label">Max Fiyat (TL)</label>
+                <input className="form-input" type="number" value={priceMax} onChange={(e) => setPriceMax(e.target.value)} placeholder="350" />
               </div>
+              <div className="form-group">
+                <label className="form-label">Teslimat (iş günü)</label>
+                <input className="form-input" type="number" value={deliveryDays} onChange={(e) => setDeliveryDays(e.target.value)} placeholder="3" />
+              </div>
+            </div>
+
+            <div className="form-group">
+              <label className="form-label">Kategori</label>
+              <select className="form-select" value={category} onChange={(e) => setCategory(e.target.value as Category)}>
+                {CATEGORIES.map((c) => <option key={c}>{c}</option>)}
+              </select>
             </div>
 
             <div className="form-group">
@@ -465,24 +433,10 @@ export default function ProductForm({ initial, onSubmit, submitLabel }: Props) {
             </div>
           </div>
 
-          {/* Specs */}
-          <div className="card" style={{ padding: 28, marginBottom: 20 }}>
-            <h2 style={{ fontFamily: 'var(--font-display)', marginBottom: 8 }}>Özellikler</h2>
-            <p style={{ fontSize: 13, color: 'var(--muted)', marginBottom: 16 }}>Her satıra bir özellik: <code style={{ background: 'var(--bg)', padding: '2px 6px', borderRadius: 4 }}>Anahtar:Değer</code></p>
-            <textarea
-              className="form-textarea"
-              value={specsRaw}
-              onChange={(e) => setSpecsRaw(e.target.value)}
-              placeholder={"Renk:Gri\nDurum:2.El\nTeslimat:Aynı Gün"}
-              style={{ minHeight: 130, fontFamily: 'monospace', fontSize: 13 }}
-            />
-          </div>
-
           {/* Images */}
           <div className="card" style={{ padding: 28 }}>
             <h2 style={{ fontFamily: 'var(--font-display)', marginBottom: 16 }}>Görseller</h2>
 
-            {/* Upload zone + Camera button */}
             <div style={{ display: 'flex', gap: 10, marginBottom: images.length > 0 ? 0 : undefined }}>
               <div
                 className={`img-upload-zone ${dragOver ? 'drag-over' : ''}`}
@@ -501,21 +455,18 @@ export default function ProductForm({ initial, onSubmit, submitLabel }: Props) {
                 disabled={uploading}
                 style={{
                   display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-                  gap: 4,
-                  padding: '12px 18px',
+                  gap: 4, padding: '12px 18px',
                   border: '2px dashed var(--border)',
                   borderRadius: 'var(--radius-sm)',
                   background: 'transparent',
                   color: 'var(--muted)',
-                  fontSize: 12,
-                  cursor: 'pointer',
+                  fontSize: 12, cursor: 'pointer',
                   transition: 'all 0.2s',
-                  whiteSpace: 'nowrap',
-                  flexShrink: 0,
+                  whiteSpace: 'nowrap', flexShrink: 0,
                 }}
                 onMouseOver={(e) => {
-                  (e.currentTarget as HTMLButtonElement).style.borderColor = 'var(--accent2)';
-                  (e.currentTarget as HTMLButtonElement).style.color = 'var(--accent2)';
+                  (e.currentTarget as HTMLButtonElement).style.borderColor = 'var(--accent)';
+                  (e.currentTarget as HTMLButtonElement).style.color = 'var(--accent)';
                 }}
                 onMouseOut={(e) => {
                   (e.currentTarget as HTMLButtonElement).style.borderColor = 'var(--border)';
@@ -543,20 +494,16 @@ export default function ProductForm({ initial, onSubmit, submitLabel }: Props) {
                     Sıralamak için görselleri sürükleyin — ilk görsel ürün kapak fotoğrafı olur
                   </p>
                 )}
-                {/* Touch ghost — follows finger on mobile */}
                 {touchGhostPos && touchDragIndex !== null && (
                   <div style={{
                     position: 'fixed',
                     left: touchGhostPos.x - 45,
                     top: touchGhostPos.y - 38,
                     width: 90, height: 75,
-                    borderRadius: 8,
-                    overflow: 'hidden',
-                    border: '2px solid var(--accent2)',
+                    borderRadius: 8, overflow: 'hidden',
+                    border: '2px solid var(--accent)',
                     boxShadow: '0 8px 24px rgba(0,0,0,0.5)',
-                    opacity: 0.9,
-                    pointerEvents: 'none',
-                    zIndex: 999,
+                    opacity: 0.9, pointerEvents: 'none', zIndex: 999,
                     transform: 'scale(1.08)',
                   }}>
                     <img
@@ -583,7 +530,7 @@ export default function ProductForm({ initial, onSubmit, submitLabel }: Props) {
                       style={{
                         cursor: 'grab',
                         outline: dragOverIndex === i && (dragIndexRef.current !== i && touchDragIndex !== i)
-                          ? '2px solid var(--accent2)'
+                          ? '2px solid var(--accent)'
                           : undefined,
                         opacity: dragIndexRef.current === i || touchDragIndex === i ? 0.35 : 1,
                         transition: 'outline 0.1s, opacity 0.1s',
@@ -591,16 +538,13 @@ export default function ProductForm({ initial, onSubmit, submitLabel }: Props) {
                     >
                       <img src={cloudinaryUrl(id, 'f_auto,q_auto,w_200,h_160,c_fill')} alt={`img-${i}`} draggable={false} />
 
-                      {/* Order badge */}
                       <span style={{
                         position: 'absolute', bottom: 4, left: 4,
                         background: i === 0 ? 'var(--accent)' : 'rgba(0,0,0,0.65)',
-                        color: i === 0 ? '#000' : '#fff',
+                        color: i === 0 ? '#0a0a0a' : '#fff',
                         fontSize: 10, fontWeight: 700,
                         padding: '1px 5px', borderRadius: 4,
-                        lineHeight: '16px',
-                        userSelect: 'none',
-                        pointerEvents: 'none',
+                        lineHeight: '16px', userSelect: 'none', pointerEvents: 'none',
                       }}>
                         {i === 0 ? 'Kapak' : `#${i + 1}`}
                       </span>
@@ -634,46 +578,18 @@ export default function ProductForm({ initial, onSubmit, submitLabel }: Props) {
             <h2 style={{ fontFamily: 'var(--font-display)', marginBottom: 16 }}>Durum</h2>
 
             <div className="form-group">
-              <label className="form-label">Kondisyon</label>
-              <select className="form-select" value={condition} onChange={(e) => setCondition(e.target.value as Product['condition'])}>
-                {CONDITIONS.map((c) => <option key={c}>{c}</option>)}
+              <label className="form-label">Ürün Durumu</label>
+              <select className="form-select" value={String(active)} onChange={(e) => setActive(e.target.value === 'true')}>
+                <option value="true">Aktif (Sitede görünür)</option>
+                <option value="false">Pasif (Gizli)</option>
               </select>
             </div>
-
-            <div className="form-group">
-              <label className="form-label">Stok Durumu</label>
-              <select className="form-select" value={String(inStock)} onChange={(e) => setInStock(e.target.value === 'true')}>
-                <option value="true">Stokta</option>
-                <option value="false">Satıldı</option>
-              </select>
-            </div>
-          </div>
-
-          {/* Tags */}
-          <div className="card" style={{ padding: 24 }}>
-            <h2 style={{ fontFamily: 'var(--font-display)', marginBottom: 12 }}>Etiketler</h2>
-            <div className="tags-wrap">
-              {tags.map((t) => (
-                <span key={t} className="tag-chip">
-                  {t}
-                  <button onClick={() => removeTag(t)}>×</button>
-                </span>
-              ))}
-              <input
-                className="tags-input"
-                placeholder="Etiket ekle..."
-                value={tagInput}
-                onChange={(e) => setTagInput(e.target.value)}
-                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ',') { e.preventDefault(); addTag(); } }}
-              />
-            </div>
-            <p style={{ fontSize: 11, color: 'var(--muted)', marginTop: 8 }}>Enter veya virgül ile ekle. Örn: Nakliye Var, Aynı Gün Teslim</p>
           </div>
 
           {/* SEO Tags */}
           <div className="card" style={{ padding: 24 }}>
             <h2 style={{ fontFamily: 'var(--font-display)', marginBottom: 4 }}>SEO Etiketleri 🔍</h2>
-            <p style={{ fontSize: 12, color: 'var(--muted)', marginBottom: 12 }}>Müşterilere gösterilmez — sadece arama motorları için JSON-LD'ye gömülür.</p>
+            <p style={{ fontSize: 12, color: 'var(--muted)', marginBottom: 12 }}>Müşterilere gösterilmez — sadece arama motorları için JSON-LD&apos;ye gömülür.</p>
             <div className="tags-wrap">
               {seoTags.map((t) => (
                 <span key={t} className="tag-chip" style={{ opacity: 0.75 }}>
@@ -689,7 +605,7 @@ export default function ProductForm({ initial, onSubmit, submitLabel }: Props) {
                 onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ',') { e.preventDefault(); addSeoTag(); } }}
               />
             </div>
-            <p style={{ fontSize: 11, color: 'var(--muted)', marginTop: 8 }}>Örn: ikinci el koltuk esenyurt, spot mobilya istanbul</p>
+            <p style={{ fontSize: 11, color: 'var(--muted)', marginTop: 8 }}>Örn: kişiye özel kupa, sihirli kupa baskı, hediye kupa</p>
           </div>
 
           {/* Submit */}

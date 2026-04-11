@@ -9,6 +9,6 @@ export default function robots(): MetadataRoute.Robots {
         disallow: ['/admin/', '/api/'],
       },
     ],
-    sitemap: 'https://umitspot.com/sitemap.xml',
+    sitemap: 'https://kartabaski.com/sitemap.xml',
   };
 }

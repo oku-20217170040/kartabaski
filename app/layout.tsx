@@ -1,103 +1,75 @@
 import type { Metadata } from 'next';
-import { unstable_cache } from 'next/cache';
 import './globals.css';
 import { AuthProvider } from '@/lib/auth-context';
 import WhatsAppFloat from '@/components/WhatsAppFloat';
 import ErrorBoundary from '@/components/ErrorBoundary';
 import { PHONE } from '@/lib/constants';
-import { getSeoSettings } from '@/lib/seo-settings';
 
-const getCachedSeoSettings = unstable_cache(
-  getSeoSettings,
-  ['seo-settings'],
-  { tags: ['seo-settings'] }
-);
-
-const SITE_NAME = 'Ümit Spot';
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.umitspot.com';
-const DESCRIPTION = 'Esenyurt\'un en yakın spotçusu. İkinci el ve sıfır spot mobilya, beyaz eşya alım satım. Esenyurt, Beylikdüzü, Avcılar, Büyükçekmece bölgelerine aynı gün teslimat. 0542 644 72 96';
+const SITE_NAME = 'KAR-TA BASKI';
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://kartabaski.com';
+const DESCRIPTION = 'Kişiye özel kupa baskı. Türkiye geneli hızlı kargo. Bireysel ve kurumsal siparişler. Ücretsiz tasarım desteği.';
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   icons: {
     icon: [
-      { url: '/favicon-16x16.png', sizes: '16x16', type: 'image/png' },
-      { url: '/favicon-32x32.png', sizes: '32x32', type: 'image/png' },
-      { url: '/favicon.svg', type: 'image/svg+xml' },
+      { url: '/favicon.png', type: 'image/png' },
     ],
-    apple: { url: '/apple-touch-icon.png', sizes: '512x512' },
+    apple: { url: '/apple-touch-icon.png' },
+    shortcut: '/favicon.png',
   },
   title: {
-    default: `${SITE_NAME} – İkinci El Mobilya & Beyaz Eşya | Esenyurt`,
+    default: `${SITE_NAME} – Kişiye Özel Kupa Baskı`,
     template: `%s | ${SITE_NAME}`,
   },
   description: DESCRIPTION,
   keywords: [
-    'ikinci el mobilya esenyurt', 'spot mobilya esenyurt', 'esenyurt spot',
-    'ikinci el beyaz eşya esenyurt', 'spot eşya istanbul', 'ikinci el koltuk esenyurt',
-    'ikinci el buzdolabı esenyurt', 'ikinci el çamaşır makinesi esenyurt',
-    'beylikdüzü ikinci el mobilya', 'avcılar ikinci el eşya',
-    'büyükçekmece spot mobilya', 'ümit spot esenyurt',
-    'ucuz mobilya esenyurt', 'sıfır spot mobilya istanbul',
-    'ikinci el eşya alan yerler esenyurt', 'spot alım satım esenyurt',
+    'kupa baskı', 'kişiye özel kupa', 'sihirli kupa', 'hediye kupa',
+    'kurumsal kupa baskı', 'özel tasarım kupa', 'kupa baskı sipariş',
+    'sihirli mat kupa', 'sihirli konik kupa', 'seramik kupa baskı',
+    'Türkiye kupa baskı', 'online kupa baskı', 'kupa baskı kargo',
   ],
-  authors: [{ name: 'Ümit Spot', url: SITE_URL }],
+  authors: [{ name: SITE_NAME, url: SITE_URL }],
   robots: { index: true, follow: true },
   openGraph: {
     type: 'website',
     locale: 'tr_TR',
     url: SITE_URL,
     siteName: SITE_NAME,
-    title: `${SITE_NAME} – İkinci El Mobilya & Beyaz Eşya | Esenyurt`,
+    title: `${SITE_NAME} – Kişiye Özel Kupa Baskı`,
     description: DESCRIPTION,
   },
   twitter: {
     card: 'summary_large_image',
-    title: `${SITE_NAME} – İkinci El Mobilya & Beyaz Eşya`,
+    title: `${SITE_NAME} – Kişiye Özel Kupa Baskı`,
     description: DESCRIPTION,
   },
 };
 
-function buildLocalBusinessSchema(seo: Awaited<ReturnType<typeof getCachedSeoSettings>>) {
-  return {
-    '@context': 'https://schema.org',
-    '@type': 'FurnitureStore',
-    name: 'Ümit Spot',
-    alternateName: ['Ümit Spot Esenyurt', 'Esenyurt Spot', 'Ümit İkinci El'],
-    description: seo.extraDescription || DESCRIPTION,
-    url: SITE_URL,
-    telephone: `+${PHONE}`,
-    priceRange: '₺₺',
-    currenciesAccepted: 'TRY',
-    paymentAccepted: 'Cash, Credit Card',
-    address: {
-      '@type': 'PostalAddress',
-      streetAddress: 'Mehmet Akif Ersoy Mahallesi 1824 Sokak 11A',
-      addressLocality: 'Esenyurt',
-      addressRegion: 'İstanbul',
-      postalCode: '34515',
-      addressCountry: 'TR',
-    },
-    geo: {
-      '@type': 'GeoCoordinates',
-      latitude: 41.0082,
-      longitude: 28.6726,
-    },
-    openingHours: seo.workingHours || 'Mo-Su 09:00-00:00',
-    areaServed: seo.serviceAreas.map(name => ({ '@type': 'City', name })),
-    knowsAbout: seo.services,
-    keywords: seo.keywords.join(', '),
-    hasOfferCatalog: {
-      '@type': 'OfferCatalog',
-      name: 'İkinci El & Sıfır Spot Ürünler',
-      itemListElement: seo.featuredCategories.map(name => ({
-        '@type': 'Offer',
-        itemOffered: { '@type': 'Product', name },
-      })),
-    },
-    sameAs: ['https://www.google.com/maps?cid=esenyurt-spot'],
-  };
-}
+const localBusinessSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'OnlineStore',
+  name: SITE_NAME,
+  description: DESCRIPTION,
+  url: SITE_URL,
+  telephone: `+${PHONE}`,
+  priceRange: '₺₺',
+  currenciesAccepted: 'TRY',
+  paymentAccepted: 'Cash, Credit Card',
+  areaServed: { '@type': 'Country', name: 'Turkey' },
+  knowsAbout: ['Kupa baskı', 'Kişiye özel hediye', 'Sihirli kupa', 'Kurumsal hediye', 'Sublimation baskı'],
+  hasOfferCatalog: {
+    '@type': 'OfferCatalog',
+    name: 'Kupa Baskı Ürünleri',
+    itemListElement: [
+      { '@type': 'Offer', itemOffered: { '@type': 'Product', name: 'Sihirli Mat Kupa' } },
+      { '@type': 'Offer', itemOffered: { '@type': 'Product', name: 'Sihirli Konik Kupa' } },
+      { '@type': 'Offer', itemOffered: { '@type': 'Product', name: 'Seramik Nescafe Fincanı' } },
+      { '@type': 'Offer', itemOffered: { '@type': 'Product', name: 'Sihirli Renkli Kupa' } },
+      { '@type': 'Offer', itemOffered: { '@type': 'Product', name: 'Özel Tasarım' } },
+    ],
+  },
+};
 
 const faqSchema = {
   '@context': 'https://schema.org',
@@ -105,42 +77,34 @@ const faqSchema = {
   mainEntity: [
     {
       '@type': 'Question',
-      name: 'Esenyurt\'ta ikinci el mobilya nereden alınır?',
+      name: 'Kupa baskı siparişi nasıl verilir?',
       acceptedAnswer: {
         '@type': 'Answer',
-        text: 'Esenyurt\'ta Ümit Spot\'tan ikinci el ve sıfır spot mobilya satın alabilirsiniz. Mehmet Akif Ersoy Mahallesi 1824 Sokak 11A adresinde hizmet vermekteyiz. 0542 644 72 96 numaralı telefondan veya WhatsApp üzerinden ulaşabilirsiniz.',
+        text: 'Katalogumuzdan istediğiniz kupa modelini seçin, ardından WhatsApp üzerinden bize ulaşın. Tasarımınızı gönderin veya ücretsiz tasarım desteğimizden yararlanın.',
       },
     },
     {
       '@type': 'Question',
-      name: 'Aynı gün mobilya teslimatı yapıyor musunuz?',
+      name: 'Kupa baskı kaç günde teslim edilir?',
       acceptedAnswer: {
         '@type': 'Answer',
-        text: 'Evet, Esenyurt ve çevre ilçelere (Beylikdüzü, Avcılar, Büyükçekmece) aynı gün teslimat ve nakliye hizmeti sunuyoruz.',
+        text: 'Siparişiniz onaylandıktan sonra 3 iş günü içinde kargoya verilir. Türkiye\'nin her yerine kargo hizmeti sunmaktayız.',
       },
     },
     {
       '@type': 'Question',
-      name: 'İkinci el eşyalarınızı nasıl satın alabilirim?',
+      name: 'Tasarımım yoksa ne yapmalıyım?',
       acceptedAnswer: {
         '@type': 'Answer',
-        text: 'Sitemizdeki ürünleri inceleyip WhatsApp üzerinden bizimle iletişime geçebilirsiniz. Her ürün sayfasında WhatsApp butonu bulunmaktadır.',
+        text: 'Endişelenmeyin! Ücretsiz tasarım desteği sunuyoruz. İsteğinizi WhatsApp üzerinden bize iletin, biz tasarlayalım.',
       },
     },
     {
       '@type': 'Question',
-      name: 'İkinci el eşya alıyor musunuz?',
+      name: 'Kurumsal sipariş verebilir miyim?',
       acceptedAnswer: {
         '@type': 'Answer',
-        text: 'Evet, kullanılmış mobilya ve beyaz eşya alımı yapıyoruz. Fiyat teklifi için 0542 644 72 96 numaralı telefondan bize ulaşabilirsiniz.',
-      },
-    },
-    {
-      '@type': 'Question',
-      name: 'Hangi bölgelere teslimat yapıyorsunuz?',
-      acceptedAnswer: {
-        '@type': 'Answer',
-        text: 'Esenyurt, Beylikdüzü, Avcılar, Büyükçekmece, Bahçeşehir ve Başakşehir bölgelerine teslimat yapıyoruz.',
+        text: 'Evet, bireysel ve kurumsal siparişler alıyoruz. Toplu sipariş için özel fiyatlandırma için WhatsApp üzerinden iletişime geçin.',
       },
     },
   ],
@@ -148,10 +112,7 @@ const faqSchema = {
 
 const GA_ID = process.env.NEXT_PUBLIC_GA_ID || '';
 
-export default async function RootLayout({ children }: { children: React.ReactNode }) {
-  const seo = await getCachedSeoSettings();
-  const localBusinessSchema = buildLocalBusinessSchema(seo);
-
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="tr" suppressHydrationWarning>
       <body suppressHydrationWarning>

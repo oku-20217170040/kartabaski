@@ -1,0 +1,21 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(sed -i 's/color: #0a0a0a;/color: #ffffff;/g' \"c:/Users/serha/OneDrive/Masaüstü/Projeler/KartaBaski/components/HeroSection.tsx\")",
+      "Bash(sed -i \"s/color: '#0a0a0a'/color: '#ffffff'/g\" \"c:/Users/serha/OneDrive/Masaüstü/Projeler/KartaBaski/components/Navbar.tsx\")",
+      "Bash(sed -i \"s/background: #111111;/background: var\\(--surface\\);/g; s/color: #0a0a0a;/color: #ffffff;/g\" \"c:/Users/serha/OneDrive/Masaüstü/Projeler/KartaBaski/app/page.tsx\")",
+      "Bash(grep -n \"<style>\\\\|}\\\\`}</style>\" \"c:/Users/serha/OneDrive/Masaüstü/Projeler/KartaBaski/app/page.tsx\")",
+      "Bash(grep -n \"\\\\`}</style>\" \"c:/Users/serha/OneDrive/Masaüstü/Projeler/KartaBaski/app/page.tsx\" \"c:/Users/serha/OneDrive/Masaüstü/Projeler/KartaBaski/components/ProductCard.tsx\" \"c:/Users/serha/OneDrive/Masaüstü/Projeler/KartaBaski/components/Navbar.tsx\" \"c:/Users/serha/OneDrive/Masaüstü/Projeler/KartaBaski/components/FilterBar.tsx\" \"c:/Users/serha/OneDrive/Masaüstü/Projeler/KartaBaski/components/Footer.tsx\" \"c:/Users/serha/OneDrive/Masaüstü/Projeler/KartaBaski/components/WhatsAppFloat.tsx\" \"c:/Users/serha/OneDrive/Masaüstü/Projeler/KartaBaski/app/urun/[slug]/ProductDetailClient.tsx\" \"c:/Users/serha/OneDrive/Masaüstü\\\\Projeler/KartaBaski/app/kategoriler/page.tsx\" \"c:/Users/serha/OneDrive/Masaüstü/Projeler/KartaBaski/app/nasil-siparis-verilir/page.tsx\")",
+      "Bash(sed -n '132,319p' \"c:/Users/serha/OneDrive/Masaüstü/Projeler/KartaBaski/components/ProductCard.tsx\")",
+      "Bash(sed -n '267,276p' \"c:/Users/serha/OneDrive/Masaüstü/Projeler/KartaBaski/components/Navbar.tsx\")",
+      "Bash(sed -n '189,241p' \"c:/Users/serha/OneDrive/Masaüstü/Projeler/KartaBaski/components/FilterBar.tsx\")",
+      "Bash(sed -n '114,264p' \"c:/Users/serha/OneDrive/Masaüstü/Projeler/KartaBaski/components/Footer.tsx\")",
+      "Bash(sed -n '33,74p' \"c:/Users/serha/OneDrive/Masaüstü/Projeler/KartaBaski/components/WhatsAppFloat.tsx\")",
+      "Bash(sed -n '111,252p' \"c:/Users/serha/OneDrive/Masaüstü/Projeler/KartaBaski/app/nasil-siparis-verilir/page.tsx\")",
+      "Bash(sed -n '173,245p' \"c:/Users/serha/OneDrive/Masaüstü/Projeler/KartaBaski/app/kategoriler/page.tsx\")"
+    ],
+    "additionalDirectories": [
+      "c:\\Users\\serha\\Downloads"
+    ]
+  }
+}

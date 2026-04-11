@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { WHATSAPP_BASE } from '@/lib/constants';
+import { WHATSAPP_BASE, DEFAULT_WA_TEXT } from '@/lib/constants';
 import LogoSVG from '@/components/LogoSVG';
 
 const WA_ICON = (
@@ -14,11 +14,13 @@ const WA_ICON = (
 );
 
 const NAV_LINKS = [
-  { href: '/',            label: 'Ürünler',     icon: '🛋️',  exact: true  },
-  { href: '/kategoriler', label: 'Kategoriler', icon: '🗂️',  exact: true  },
-  { href: '/urun-sat',    label: 'Eşya Sat',    icon: '🏷️',  exact: true,  highlight: true },
-  { href: '/#iletisim',   label: 'İletişim',    icon: '📍',  exact: false },
+  { href: '/',                      label: 'Ürünler',         icon: '☕', exact: true  },
+  { href: '/kategoriler',           label: 'Kategoriler',     icon: '🗂️', exact: true  },
+  { href: '/nasil-siparis-verilir', label: 'Nasıl Sipariş?',  icon: '📋', exact: true  },
+  { href: '/#iletisim',             label: 'İletişim',        icon: '📞', exact: false },
 ];
+
+const WA_HREF = `${WHATSAPP_BASE}?text=${encodeURIComponent(DEFAULT_WA_TEXT)}`;
 
 export default function Navbar() {
   const path = usePathname();
@@ -46,19 +48,22 @@ export default function Navbar() {
       <motion.nav
         className="nav"
         animate={{
-          backgroundColor: scrolled ? 'rgba(11,15,20,0.97)' : 'rgba(11,15,20,0.85)',
+          backgroundColor: scrolled ? 'rgba(255,255,255,1)' : 'rgba(255,255,255,0.95)',
           boxShadow: scrolled
-            ? '0 1px 0 rgba(30,45,61,0.8), 0 8px 32px rgba(0,0,0,0.4)'
-            : '0 1px 0 rgba(30,45,61,0.4)',
+            ? '0 2px 12px rgba(0,0,0,0.10)'
+            : '0 1px 0 rgba(0,0,0,0.08)',
         }}
         transition={{ duration: 0.25 }}
-        style={{ backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)' }}
+        style={{ backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)' }}
       >
         <div className="container nav-inner">
 
           {/* Logo */}
-          <Link href="/" className="nav-logo" style={{ display: 'flex', alignItems: 'center' }}>
-            <LogoSVG height={36} />
+          <Link href="/" className="nav-logo" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <LogoSVG height={44} />
+            <span style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: '1.1rem', letterSpacing: '-0.01em', color: 'var(--text)' }}>
+              KAR-TA <span style={{ color: 'var(--accent)' }}>BASKI</span>
+            </span>
           </Link>
 
           {/* Desktop nav links */}
@@ -74,8 +79,8 @@ export default function Navbar() {
                       borderRadius: 8,
                       fontSize: 14,
                       fontWeight: active ? 600 : 500,
-                      color: l.highlight ? '#f59e0b' : active ? 'var(--text)' : 'var(--muted)',
-                      background: active ? 'rgba(255,255,255,0.06)' : 'transparent',
+                      color: active ? 'var(--text)' : 'var(--muted)',
+                      background: active ? 'rgba(201,168,76,0.08)' : 'transparent',
                       display: 'block',
                       transition: 'color 0.15s, background 0.15s',
                       position: 'relative',
@@ -88,7 +93,7 @@ export default function Navbar() {
                         style={{
                           position: 'absolute', bottom: -2, left: 10, right: 10,
                           height: 2, borderRadius: 2,
-                          background: l.highlight ? '#f59e0b' : 'var(--accent)',
+                          background: 'var(--accent)',
                         }}
                         transition={{ type: 'spring', stiffness: 500, damping: 35 }}
                       />
@@ -102,22 +107,22 @@ export default function Navbar() {
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             {/* Desktop WhatsApp */}
             <motion.a
-              href={`${WHATSAPP_BASE}?text=Merhaba%2C%20ürünleriniz%20hakkında%20bilgi%20almak%20istiyorum`}
+              href={WA_HREF}
               target="_blank" rel="noopener noreferrer"
               className="nav-wa-btn"
               whileHover={{ scale: 1.04 }}
               whileTap={{ scale: 0.97 }}
               style={{
                 display: 'flex', alignItems: 'center', gap: 7,
-                background: 'linear-gradient(135deg, #25D366, #16a34a)',
-                color: '#fff', fontWeight: 700, fontSize: 13,
+                background: 'var(--accent)',
+                color: '#ffffff', fontWeight: 700, fontSize: 13,
                 padding: '8px 16px', borderRadius: 8, border: 'none',
-                boxShadow: '0 2px 12px rgba(37,211,102,0.3)',
+                boxShadow: '0 2px 12px rgba(201,168,76,0.3)',
                 textDecoration: 'none',
               }}
             >
               {WA_ICON}
-              WhatsApp
+              Sipariş Ver
             </motion.a>
 
             {/* Hamburger */}
@@ -184,8 +189,11 @@ export default function Navbar() {
               display: 'flex', alignItems: 'center', justifyContent: 'space-between',
               padding: '18px 20px', borderBottom: '1px solid var(--border)',
             }}>
-              <span className="nav-logo" style={{ display: 'flex', alignItems: 'center' }}>
-                <LogoSVG height={36} />
+              <span className="nav-logo" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <LogoSVG height={40} />
+                <span style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: '1rem', color: 'var(--text)' }}>
+                  KAR-TA <span style={{ color: 'var(--accent)' }}>BASKI</span>
+                </span>
               </span>
               <motion.button
                 whileTap={{ scale: 0.9 }}
@@ -215,9 +223,9 @@ export default function Navbar() {
                       style={{
                         display: 'flex', alignItems: 'center', gap: 12,
                         padding: '14px 20px', fontSize: 15, fontWeight: active ? 700 : 500,
-                        color: l.highlight ? '#f59e0b' : active ? 'var(--text)' : 'var(--muted)',
-                        borderLeft: `3px solid ${active ? (l.highlight ? '#f59e0b' : 'var(--accent)') : 'transparent'}`,
-                        background: active ? 'rgba(255,255,255,0.04)' : 'transparent',
+                        color: active ? 'var(--text)' : 'var(--muted)',
+                        borderLeft: `3px solid ${active ? 'var(--accent)' : 'transparent'}`,
+                        background: active ? 'rgba(201,168,76,0.06)' : 'transparent',
                         transition: 'all 0.15s',
                       }}
                     >
@@ -232,41 +240,29 @@ export default function Navbar() {
             {/* Footer */}
             <div style={{ padding: '16px 20px 32px', borderTop: '1px solid var(--border)' }}>
               <motion.a
-                href={`${WHATSAPP_BASE}?text=Merhaba%2C%20ürünleriniz%20hakkında%20bilgi%20almak%20istiyorum`}
+                href={WA_HREF}
                 target="_blank" rel="noopener noreferrer"
                 whileTap={{ scale: 0.97 }}
                 onClick={() => setOpen(false)}
                 style={{
                   display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
                   width: '100%', padding: '13px 0', borderRadius: 10,
-                  background: 'linear-gradient(135deg, #25D366, #16a34a)',
-                  color: '#fff', fontWeight: 700, fontSize: 15,
-                  boxShadow: '0 4px 20px rgba(37,211,102,0.3)',
+                  background: 'var(--accent)',
+                  color: '#ffffff', fontWeight: 700, fontSize: 15,
+                  boxShadow: '0 4px 20px rgba(201,168,76,0.3)',
                   textDecoration: 'none',
                 }}
               >
-                {WA_ICON} WhatsApp ile İletişim
+                {WA_ICON} WhatsApp ile Sipariş Ver
               </motion.a>
               <p style={{ textAlign: 'center', color: 'var(--muted)', fontSize: 12, marginTop: 12 }}>
-                📞 0542 644 72 96 · Her gün 09:00–00:00
+                0505 087 47 26
               </p>
             </div>
           </motion.div>
         )}
       </AnimatePresence>
 
-      <style>{`
-        .nav-links a:hover { color: var(--text) !important; background: rgba(255,255,255,0.05) !important; }
-        @media (max-width: 760px) {
-          .hamburger { display: flex !important; }
-          .nav-wa-btn { display: none !important; }
-          .nav-links { display: none !important; }
-        }
-        .ham-line { display: block; height: 2px; background: var(--text); border-radius: 2px; transition: all 0.25s; transform-origin: center; }
-        .ham-line:nth-child(1).open { transform: translateY(7px) rotate(45deg); }
-        .ham-line:nth-child(2).open { opacity: 0; transform: scaleX(0); }
-        .ham-line:nth-child(3).open { transform: translateY(-7px) rotate(-45deg); }
-      `}</style>
     </>
   );
 }

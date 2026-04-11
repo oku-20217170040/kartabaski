@@ -1,11 +1,133 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 460 100">
-  <rect width="460" height="100" fill="#0B0F14"/>
-  <polygon points="50,10 82,50 50,90 18,50" fill="#1DB954"/>
-  <polygon points="62,22 86,50 62,78 38,50" fill="#0B0F14"/>
-  <polygon points="62,36 72,50 62,64 52,50" fill="#1DB954"/>
-  <text x="106" y="66"
-    font-family="'Arial Black','Helvetica Neue',Helvetica,sans-serif"
-    font-weight="900" font-size="50" letter-spacing="-2.5">
-    <tspan fill="#FFFFFF">Ümit</tspan><tspan fill="#1DB954">Spot</tspan>
-  </text>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 570" width="480" height="570">
+
+  <!--
+    RE-ANALYSIS OF ORIGINAL:
+
+    Looking very carefully at the original image:
+
+    The LOWER PORTION of the logo (below the cup) consists of:
+    - A thick band that comes down from the CENTER-BOTTOM of the cup
+    - This band goes DOWN then curves to the RIGHT (like the bottom of letter "g" or "9")
+    - It forms a rightward-opening loop/hook
+    - The hook curls under itself
+    - Then a HORIZONTAL thick bar extends to the LEFT (the saucer)
+    - The saucer bar has the same gold/black treatment
+
+    Actually looking more carefully:
+    The shape below the cup is like the BOTTOM PART OF THE LETTER "g" in bold:
+    - Center stem goes down
+    - Curves RIGHT making a hook/loop
+    - The bottom saucer bar extends full width LEFT
+
+    The loop opens to the LEFT, like ⌒ rotated.
+    
+    Let me try: the stem comes down, then makes a right-curving spiral,
+    the rightmost part of the spiral connects to the base bar on the right,
+    and the base bar extends far to the left.
+  -->
+
+  <!-- ══════════ CUP BODY ══════════ -->
+  <rect fill="#1A1A1A" x="80" y="46" width="238" height="216" rx="36"/>
+  <rect fill="#8C6D1F" x="95" y="60" width="208" height="188" rx="24"/>
+
+  <!-- Handle outer -->
+  <rect fill="#1A1A1A" x="318" y="92" width="64" height="28" rx="8"/>
+  <rect fill="#1A1A1A" x="356" y="92" width="30" height="126" rx="8"/>
+  <rect fill="#1A1A1A" x="318" y="190" width="64" height="28" rx="8"/>
+  <!-- Handle gold -->
+  <rect fill="#8C6D1F" x="318" y="104" width="50" height="16" rx="4"/>
+  <rect fill="#8C6D1F" x="360" y="104" width="18" height="102" rx="4"/>
+  <rect fill="#8C6D1F" x="318" y="190" width="50" height="16" rx="4"/>
+  <!-- Handle cream -->
+  <rect fill="#EAE4D4" x="318" y="120" width="44" height="70" rx="4"/>
+
+  <!-- ══════════ HEART ══════════ -->
+  <path fill="#1A1A1A" d="M 199,80 C 183,80 160,88 151,116 C 143,142 156,168 174,184 L 199,206 L 224,184 C 242,168 255,142 247,116 C 238,88 215,80 199,80 Z"/>
+  <path fill="#8C6D1F" d="M 199,92 L 199,198 L 177,182 C 163,170 151,150 158,126 C 164,106 181,92 199,92 Z"/>
+  <path fill="#8C6D1F" d="M 199,92 L 199,198 L 221,182 C 235,170 247,150 240,126 C 234,106 217,92 199,92 Z"/>
+  <path fill="#EAE4D4" d="M 199,104 L 199,192 L 181,178 C 170,167 160,150 166,130 C 171,114 184,104 199,104 Z"/>
+  <path fill="#EAE4D4" d="M 199,104 L 199,192 L 217,178 C 228,167 238,150 232,130 C 227,114 214,104 199,104 Z"/>
+  <rect fill="#1A1A1A" x="194" y="78" width="10" height="28" rx="4"/>
+
+  <!-- ══════════ SPIRAL STEM ══════════
+    The original shows:
+    - A thick "stem" hangs from center of cup bottom (~x=175-225)
+    - Goes down about 30px
+    - Then the stem widens and curves to form a BACKWARDS C / D shape
+    - The D opens to the LEFT
+    - The curved part sits centered below the cup
+    - Then a thick horizontal saucer bar goes the full width
+
+    I'll model the spiral as:
+    outer black = large rounded D shape (open left)
+    inner gold = same but smaller
+    cream fill = the hollow inside
+
+    The D shape:
+    - Right side: straight vertical x=230-260 from y=260 to y=390
+    - Top: curves left from x=230 to x=130 at y=260-280
+    - Left arc: big curve from top-left down to bottom-left
+    - Bottom: curves right from x=130 to x=230 at y=370-390
+  ══════════════════════ -->
+
+  <!-- Stem connector (from cup bottom to spiral top) -->
+  <rect fill="#1A1A1A" x="170" y="258" width="64" height="20" rx="4"/>
+  <rect fill="#8C6D1F" x="182" y="262" width="40" height="14" rx="3"/>
+
+  <!-- SPIRAL outer BLACK — large D facing left -->
+  <path fill="#1A1A1A" d="
+    M 170,272
+    L 244,272
+    L 244,296
+    C 244,296 278,298 290,326
+    C 300,350 288,374 262,382
+    L 118,382
+    C 94,376 82,358 90,334
+    C 96,312 120,298 150,294
+    L 150,272
+    Z
+  "/>
+
+  <!-- SPIRAL inner GOLD -->
+  <path fill="#8C6D1F" d="
+    M 176,282
+    L 232,282
+    L 232,298
+    C 232,298 264,302 274,326
+    C 282,346 272,366 250,374
+    L 120,374
+    C 100,370 90,354 96,334
+    C 102,316 122,304 150,300
+    L 150,282
+    Z
+  "/>
+
+  <!-- SPIRAL inner CREAM (hollow of D) -->
+  <path fill="#EAE4D4" d="
+    M 152,298
+    C 128,304 112,318 116,340
+    C 119,356 132,368 152,372
+    L 244,372
+    C 264,368 270,352 264,334
+    C 258,316 240,304 232,300
+    L 232,298
+    Z
+  "/>
+
+  <!-- ══════════ SAUCER BAR ══════════ -->
+  <path fill="#1A1A1A" d="M 78,384 L 78,412 Q 78,426 94,426 L 320,426 Q 334,426 334,412 L 334,384 Z"/>
+  <path fill="#8C6D1F" d="M 92,396 L 92,410 Q 92,414 96,414 L 316,414 Q 320,414 320,410 L 320,396 Z"/>
+
+  <!-- ══════════ TEXT ══════════ -->
+  <text
+    x="206"
+    y="518"
+    text-anchor="middle"
+    font-family="'Arial Black', Arial, sans-serif"
+    font-weight="900"
+    font-size="48"
+    letter-spacing="1.5"
+    fill="#1A1A1A"
+  >KAR-TA BASKI</text>
+
 </svg>

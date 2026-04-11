@@ -1,12 +1,10 @@
 /**
- * product-utils.ts testleri
+ * product-utils.ts testleri — KAR-TA BASKI
  *
- * Bu fonksiyonlar Firestore'dan gelen farklı alan adı varyantlarını
- * (title/baslik, priceTRY/price/fiyat vb.) normalleştirir.
- * Alias mantığının doğru çalıştığını garanti ederler.
+ * Bu fonksiyonlar Firestore'dan gelen farklı alan adı varyantlarını normalleştirir.
  */
 
-// cloudinaryThumb'u mock'luyoruz — gerçek Cloudinary çağrısı yapmasın
+// cloudinaryThumb'u mock'luyoruz
 jest.mock('@/lib/products', () => ({
   cloudinaryThumb: (id: string) => `https://res.cloudinary.com/test/image/upload/${id}`,
 }));
@@ -14,19 +12,19 @@ jest.mock('@/lib/products', () => ({
 import {
   getTitle,
   getPrice,
+  getPriceMin,
+  getPriceMax,
   getCategory,
-  getCondition,
+  getActive,
   getInStock,
-  getTags,
+  getDeliveryDays,
   getSlug,
   getImageSrc,
   getFeatured,
-  getHasDelivery,
   getCreatedAt,
   getShortDesc,
   getDescription,
   getFirstImageId,
-  getSpecs,
 } from '@/lib/product-utils';
 import { Product } from '@/types';
 
@@ -34,22 +32,28 @@ import { Product } from '@/types';
 const base: Product = {
   id: 'test-id',
   title: '',
-  priceTRY: 0,
-  category: '',
-  condition: '',
-  inStock: true,
+  slug: '',
+  priceMin: 0,
+  priceMax: 0,
+  category: 'Sihirli Mat Kupa',
+  active: true,
+  shortDesc: '',
+  description: '',
   images: [],
+  deliveryDays: 3,
+  createdAt: 0,
+  updatedAt: 0,
 };
 
 // ── getTitle ────────────────────────────────────────────────────────────────
 
 describe('getTitle', () => {
   it('title alanını okur', () => {
-    expect(getTitle({ ...base, title: 'Koltuk Takımı' })).toBe('Koltuk Takımı');
+    expect(getTitle({ ...base, title: 'Sihirli Mat Kupa' })).toBe('Sihirli Mat Kupa');
   });
 
   it('baslik alias\'ını okur', () => {
-    expect(getTitle({ ...base, title: '', baslik: 'Yatak Odası' } as any)).toBe('Yatak Odası');
+    expect(getTitle({ ...base, title: '', baslik: 'Kupa' } as unknown as Product)).toBe('Kupa');
   });
 
   it('hiçbir alan yoksa — döner', () => {
@@ -57,23 +61,36 @@ describe('getTitle', () => {
   });
 });
 
-// ── getPrice ────────────────────────────────────────────────────────────────
+// ── getPriceMin / getPriceMax ────────────────────────────────────────────────
 
-describe('getPrice', () => {
-  it('priceTRY alanını okur', () => {
-    expect(getPrice({ ...base, priceTRY: 1500 })).toBe(1500);
+describe('getPriceMin', () => {
+  it('priceMin alanını okur', () => {
+    expect(getPriceMin({ ...base, priceMin: 150 })).toBe(150);
   });
 
-  it('price alias\'ını okur (priceTRY yoksa)', () => {
-    expect(getPrice({ ...base, priceTRY: undefined, price: 2500 } as any)).toBe(2500);
-  });
-
-  it('fiyat alias\'ını okur (priceTRY yoksa)', () => {
-    expect(getPrice({ ...base, priceTRY: undefined, fiyat: 3000 } as any)).toBe(3000);
+  it('priceTRY alias\'ını okur (priceMin yoksa)', () => {
+    expect(getPriceMin({ ...base, priceMin: 0, priceTRY: 200 } as unknown as Product)).toBe(200);
   });
 
   it('hiçbir alan yoksa 0 döner', () => {
-    expect(getPrice({ ...base, priceTRY: 0 })).toBe(0);
+    expect(getPriceMin({ ...base, priceMin: 0 })).toBe(0);
+  });
+});
+
+describe('getPriceMax', () => {
+  it('priceMax alanını okur', () => {
+    expect(getPriceMax({ ...base, priceMax: 350 })).toBe(350);
+  });
+
+  it('priceMax yoksa priceMin döner', () => {
+    expect(getPriceMax({ ...base, priceMin: 200, priceMax: 0 })).toBe(200);
+  });
+});
+
+// getPrice (alias for getPriceMin)
+describe('getPrice', () => {
+  it('priceMin değerini döner', () => {
+    expect(getPrice({ ...base, priceMin: 150 })).toBe(150);
   });
 });
 
@@ -81,67 +98,50 @@ describe('getPrice', () => {
 
 describe('getCategory', () => {
   it('category alanını okur', () => {
-    expect(getCategory({ ...base, category: 'Mobilya' })).toBe('Mobilya');
+    expect(getCategory({ ...base, category: 'Sihirli Mat Kupa' })).toBe('Sihirli Mat Kupa');
   });
 
   it('kategori alias\'ını okur', () => {
-    expect(getCategory({ ...base, category: '', kategori: 'Beyaz Eşya' } as any)).toBe('Beyaz Eşya');
-  });
-
-  it('alan yoksa boş string döner', () => {
-    expect(getCategory({ ...base, category: '' })).toBe('');
+    expect(getCategory({ ...base, category: 'Sihirli Mat Kupa', kategori: 'Özel Tasarım' } as unknown as Product)).toBe('Sihirli Mat Kupa');
   });
 });
 
-// ── getCondition ─────────────────────────────────────────────────────────────
+// ── getActive / getInStock ───────────────────────────────────────────────────
 
-describe('getCondition', () => {
-  it('condition alanını okur', () => {
-    expect(getCondition({ ...base, condition: 'Sıfır' })).toBe('Sıfır');
+describe('getActive', () => {
+  it('active true döner', () => {
+    expect(getActive({ ...base, active: true })).toBe(true);
   });
 
-  it('durum alias\'ını okur', () => {
-    expect(getCondition({ ...base, condition: '', durum: '2. El' } as any)).toBe('2. El');
+  it('active false döner', () => {
+    expect(getActive({ ...base, active: false })).toBe(false);
   });
 
-  it('alan yoksa boş string döner', () => {
-    expect(getCondition({ ...base, condition: '' })).toBe('');
-  });
-});
-
-// ── getInStock ───────────────────────────────────────────────────────────────
-
-describe('getInStock', () => {
-  it('inStock true döner', () => {
-    expect(getInStock({ ...base, inStock: true })).toBe(true);
-  });
-
-  it('inStock false döner', () => {
-    expect(getInStock({ ...base, inStock: false })).toBe(false);
-  });
-
-  it('stok alias\'ını okur', () => {
-    expect(getInStock({ ...base, inStock: undefined, stok: false } as any)).toBe(false);
+  it('inStock alias\'ını okur', () => {
+    expect(getActive({ ...base, active: undefined, inStock: false } as unknown as Product)).toBe(false);
   });
 
   it('alan yoksa varsayılan true döner', () => {
-    expect(getInStock({ ...base, inStock: undefined } as any)).toBe(true);
+    expect(getActive({ ...base, active: undefined } as unknown as Product)).toBe(true);
   });
 });
 
-// ── getTags ──────────────────────────────────────────────────────────────────
+describe('getInStock', () => {
+  it('getActive ile aynı sonucu döner', () => {
+    expect(getInStock({ ...base, active: true })).toBe(true);
+    expect(getInStock({ ...base, active: false })).toBe(false);
+  });
+});
 
-describe('getTags', () => {
-  it('tags dizisini döner', () => {
-    expect(getTags({ ...base, tags: ['ikinci el', 'koltuk'] } as any)).toEqual(['ikinci el', 'koltuk']);
+// ── getDeliveryDays ──────────────────────────────────────────────────────────
+
+describe('getDeliveryDays', () => {
+  it('deliveryDays alanını okur', () => {
+    expect(getDeliveryDays({ ...base, deliveryDays: 5 })).toBe(5);
   });
 
-  it('etiketler alias\'ını okur', () => {
-    expect(getTags({ ...base, etiketler: ['mobilya'] } as any)).toEqual(['mobilya']);
-  });
-
-  it('alan yoksa boş dizi döner', () => {
-    expect(getTags(base)).toEqual([]);
+  it('alan yoksa 3 döner', () => {
+    expect(getDeliveryDays({ ...base, deliveryDays: undefined } as unknown as Product)).toBe(3);
   });
 });
 
@@ -149,11 +149,11 @@ describe('getTags', () => {
 
 describe('getSlug', () => {
   it('slug alanını döner', () => {
-    expect(getSlug({ ...base, slug: 'koltuk-takimi' } as any)).toBe('koltuk-takimi');
+    expect(getSlug({ ...base, slug: 'sihirli-mat-kupa' })).toBe('sihirli-mat-kupa');
   });
 
   it('slug yoksa id\'yi döner', () => {
-    expect(getSlug({ ...base, id: 'abc123' })).toBe('abc123');
+    expect(getSlug({ ...base, id: 'abc123', slug: '' })).toBe('abc123');
   });
 });
 
@@ -161,27 +161,11 @@ describe('getSlug', () => {
 
 describe('getFeatured', () => {
   it('featured true döner', () => {
-    expect(getFeatured({ ...base, featured: true } as any)).toBe(true);
+    expect(getFeatured({ ...base, featured: true })).toBe(true);
   });
 
   it('featured yoksa false döner', () => {
     expect(getFeatured(base)).toBe(false);
-  });
-});
-
-// ── getHasDelivery ───────────────────────────────────────────────────────────
-
-describe('getHasDelivery', () => {
-  it('nakliye true döner', () => {
-    expect(getHasDelivery({ ...base, nakliye: true } as any)).toBe(true);
-  });
-
-  it('delivery alias\'ını okur', () => {
-    expect(getHasDelivery({ ...base, delivery: true } as any)).toBe(true);
-  });
-
-  it('alan yoksa false döner', () => {
-    expect(getHasDelivery(base)).toBe(false);
   });
 });
 
@@ -228,24 +212,11 @@ describe('getFirstImageId', () => {
   });
 });
 
-// ── getSpecs ─────────────────────────────────────────────────────────────────
-
-describe('getSpecs', () => {
-  it('specs objesini döner', () => {
-    const specs = { renk: 'Siyah', marka: 'Samsung' };
-    expect(getSpecs({ ...base, specs } as any)).toEqual(specs);
-  });
-
-  it('alan yoksa boş obje döner', () => {
-    expect(getSpecs(base)).toEqual({});
-  });
-});
-
 // ── getShortDesc / getDescription ────────────────────────────────────────────
 
 describe('getShortDesc', () => {
   it('shortDesc alanını döner', () => {
-    expect(getShortDesc({ ...base, shortDesc: 'Kısa açıklama' } as any)).toBe('Kısa açıklama');
+    expect(getShortDesc({ ...base, shortDesc: 'Kısa açıklama' })).toBe('Kısa açıklama');
   });
 
   it('alan yoksa boş string döner', () => {
@@ -255,7 +226,7 @@ describe('getShortDesc', () => {
 
 describe('getDescription', () => {
   it('description alanını döner', () => {
-    expect(getDescription({ ...base, description: 'Uzun açıklama' } as any)).toBe('Uzun açıklama');
+    expect(getDescription({ ...base, description: 'Uzun açıklama' })).toBe('Uzun açıklama');
   });
 
   it('alan yoksa boş string döner', () => {

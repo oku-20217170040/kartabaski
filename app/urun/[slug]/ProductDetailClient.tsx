@@ -2,12 +2,12 @@
 
 import { useEffect, useState } from 'react';
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.umitspot.com';
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://kartabaski.com';
 
 function ShareButton({ title, slug }: { title: string; slug: string }) {
   const [copied, setCopied] = useState(false);
   const url = `${SITE_URL}/urun/${slug}`;
-  const waShareText = `${title} – Ümit Spot'ta bu ürüne bak!\n${url}`;
+  const waShareText = `${title} – KAR-TA BASKI'da bu ürüne bak!\n${url}`;
   const waShareUrl = `https://wa.me/?text=${encodeURIComponent(waShareText)}`;
 
   const handleCopy = async () => {
@@ -45,12 +45,13 @@ function ShareButton({ title, slug }: { title: string; slug: string }) {
     </>
   );
 }
-import { getProductBySlug, getProductById, getProducts, cloudinaryUrl, cloudinaryThumb, whatsappLink } from '@/lib/products';
+
+import { getProductBySlug, getProductById, getProducts, cloudinaryUrl, cloudinaryThumb, whatsappLink, formatPriceRange } from '@/lib/products';
 import { Product } from '@/types';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import Link from 'next/link';
-import { getTitle, getPrice, getCategory, getCondition, getInStock, getTags, getSlug, getDescription, getSpecs } from '@/lib/product-utils';
+import { getTitle, getPriceMin, getPriceMax, getCategory, getActive, getSlug, getDescription } from '@/lib/product-utils';
 
 export default function ProductDetailClient({ slug }: { slug: string }) {
   const [product, setProduct] = useState<Product | null>(null);
@@ -70,7 +71,7 @@ export default function ProductDetailClient({ slug }: { slug: string }) {
           const cat = getCategory(p);
           const all = await getProducts();
           const sim = all
-            .filter((x) => x.id !== p.id && getCategory(x) === cat && getInStock(x))
+            .filter((x) => x.id !== p.id && getCategory(x) === cat && getActive(x))
             .slice(0, 4);
           setSimilar(sim);
         }
@@ -132,21 +133,19 @@ export default function ProductDetailClient({ slug }: { slug: string }) {
   }
 
   const title       = getTitle(product);
-  const priceNum    = getPrice(product);
+  const priceMin    = getPriceMin(product);
+  const priceMax    = getPriceMax(product);
   const category    = getCategory(product);
-  const condition   = getCondition(product);
-  const inStock     = getInStock(product);
-  const tags        = getTags(product);
   const description = getDescription(product);
-  const specs       = getSpecs(product);
   const productSlug = getSlug(product);
+  const deliveryDays = product.deliveryDays ?? 3;
 
   const rawImages: string[] = product.images || [];
   const images = rawImages.length
     ? rawImages.map((id) => id.startsWith('http') ? id : cloudinaryUrl(id))
     : null;
 
-  const price = priceNum ? new Intl.NumberFormat('tr-TR').format(priceNum) : null;
+  const priceLabel = formatPriceRange(priceMin, priceMax);
 
   return (
     <>
@@ -198,10 +197,9 @@ export default function ProductDetailClient({ slug }: { slug: string }) {
                     </div>
                   </>
                 ) : (
-                  <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '5rem', opacity: 0.15 }}>🛋️</div>
+                  <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '5rem', opacity: 0.15 }}>☕</div>
                 )}
               </div>
-
 
               {/* Mobil: nokta göstergesi */}
               {images && images.length > 1 && (
@@ -240,7 +238,6 @@ export default function ProductDetailClient({ slug }: { slug: string }) {
                   padding: 16,
                 }}
               >
-                {/* Kapat */}
                 <button onClick={() => setLightbox(null)} style={{
                   position: 'absolute', top: 16, right: 16,
                   background: 'rgba(255,255,255,0.1)', border: 'none',
@@ -248,7 +245,6 @@ export default function ProductDetailClient({ slug }: { slug: string }) {
                   fontSize: 20, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center'
                 }}>✕</button>
 
-                {/* Önceki */}
                 {images.length > 1 && (
                   <button
                     onClick={(e) => { e.stopPropagation(); setLightbox((lightbox - 1 + images.length) % images.length); }}
@@ -261,7 +257,6 @@ export default function ProductDetailClient({ slug }: { slug: string }) {
                   >‹</button>
                 )}
 
-                {/* Görsel */}
                 <img
                   src={images[lightbox]}
                   alt={title}
@@ -269,7 +264,6 @@ export default function ProductDetailClient({ slug }: { slug: string }) {
                   style={{ maxWidth: '90vw', maxHeight: '90vh', objectFit: 'contain', borderRadius: 8 }}
                 />
 
-                {/* Sonraki */}
                 {images.length > 1 && (
                   <button
                     onClick={(e) => { e.stopPropagation(); setLightbox((lightbox + 1) % images.length); }}
@@ -282,7 +276,6 @@ export default function ProductDetailClient({ slug }: { slug: string }) {
                   >›</button>
                 )}
 
-                {/* Sayaç */}
                 {images.length > 1 && (
                   <div style={{
                     position: 'absolute', bottom: 20, left: '50%', transform: 'translateX(-50%)',
@@ -295,43 +288,40 @@ export default function ProductDetailClient({ slug }: { slug: string }) {
             {/* Bilgiler */}
             <div className="product-info">
               <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
-                {condition && <span className={`badge ${condition === 'Sıfır' ? 'badge-green' : 'badge-orange'}`}>{condition}</span>}
                 {category && <span className="badge badge-muted">{category}</span>}
-                {inStock ? <span className="badge badge-green">✓ Stokta</span> : <span className="badge badge-red">Satıldı</span>}
-                {tags?.map((t: string) => <span key={t} className="badge badge-blue">{t}</span>)}
               </div>
 
               <h1 className="product-title">{title}</h1>
-              {price && <div className="product-price">₺{price}</div>}
 
-              <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                <a href={whatsappLink(title, productSlug)} target="_blank" rel="noopener noreferrer" className="btn-whatsapp btn-sm">
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
-                  </svg>
-                  WhatsApp ile Satın Al
-                </a>
+              {/* Fiyat */}
+              <div className="product-price-block">
+                <div className="product-price">{priceLabel}</div>
+                <div className="product-delivery-info">
+                  📦 Sipariş sonrası {deliveryDays} iş günü içinde kargoya verilir
+                </div>
+              </div>
+
+              {/* WhatsApp CTA */}
+              <a
+                href={whatsappLink(title)}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="btn-whatsapp-detail"
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+                </svg>
+                WhatsApp&apos;tan Sipariş Ver
+              </a>
+
+              <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginTop: 8 }}>
                 <ShareButton title={title} slug={productSlug} />
               </div>
 
               {description && (
-                <div style={{ borderTop: '1px solid var(--border)', paddingTop: 20 }}>
+                <div style={{ borderTop: '1px solid var(--border)', paddingTop: 20, marginTop: 8 }}>
                   <h3 style={{ fontFamily: 'var(--font-display)', marginBottom: 10, fontSize: '1.1rem' }}>Açıklama</h3>
                   <p style={{ color: 'var(--muted)', lineHeight: 1.8, fontSize: 14 }}>{description}</p>
-                </div>
-              )}
-
-              {specs && Object.keys(specs).length > 0 && (
-                <div style={{ borderTop: '1px solid var(--border)', paddingTop: 20 }}>
-                  <h3 style={{ fontFamily: 'var(--font-display)', marginBottom: 12, fontSize: '1.1rem' }}>Özellikler</h3>
-                  <div className="product-specs">
-                    {Object.entries(specs).map(([k, v]) => (
-                      <div key={k} className="spec-row">
-                        <div className="spec-key">{k}</div>
-                        <div className="spec-val">{String(v)}</div>
-                      </div>
-                    ))}
-                  </div>
                 </div>
               )}
             </div>
@@ -352,28 +342,23 @@ export default function ProductDetailClient({ slug }: { slug: string }) {
               <div className="products-grid">
                 {similar.map((p) => {
                   const t     = getTitle(p);
-                  const pr    = getPrice(p);
-                  const cond  = getCondition(p);
+                  const pMin  = getPriceMin(p);
+                  const pMax  = getPriceMax(p);
                   const imgId = p.images?.[0] ?? null;
                   const thumb = imgId ? (imgId.startsWith('http') ? imgId : cloudinaryThumb(imgId)) : null;
-                  const stok  = getInStock(p);
                   return (
                     <Link key={p.id} href={`/urun/${getSlug(p)}`} className="product-card">
                       <div className="product-card-img">
                         {thumb
                           ? <img src={thumb} alt={t} loading="lazy" />
-                          : <div className="product-card-no-img">🛋️</div>
+                          : <div className="product-card-no-img">☕</div>
                         }
-                        <div className="product-card-badges">
-                          <span className={`badge ${cond === 'Sıfır' ? 'badge-blue' : 'badge-orange'}`}>{cond}</span>
-                          <span className={`badge ${stok ? 'badge-green' : 'badge-red'}`}>{stok ? 'Stokta' : 'Satıldı'}</span>
-                        </div>
                       </div>
                       <div className="product-card-body">
                         <div className="product-card-title">{t}</div>
-                        {pr != null && (
-                          <div className="product-card-price">₺{new Intl.NumberFormat('tr-TR').format(pr)}</div>
-                        )}
+                        <div className="product-card-price" style={{ color: 'var(--accent)', fontSize: 14 }}>
+                          {formatPriceRange(pMin, pMax)}
+                        </div>
                       </div>
                     </Link>
                   );
@@ -384,6 +369,7 @@ export default function ProductDetailClient({ slug }: { slug: string }) {
         </div>
       </main>
       <Footer />
+
     </>
   );
 }

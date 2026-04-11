@@ -12,57 +12,53 @@ npm run start         # Start production server
 npm test              # Run Jest unit tests
 npm run test:watch    # Jest in watch mode
 npm run test:coverage # Jest with coverage report
-npm test -- --testPathPattern=product-utils  # Run a single test file
 ```
 
 ## Architecture
 
-**Ümit Spot** is a second-hand electronics marketplace (Next.js 14 App Router + Firebase + Cloudinary).
+**KAR-TA BASKI** is an online mug printing (kupa baskı) catalog and order site (Next.js 14 App Router + Firebase + Cloudinary).
+No cart or checkout — all sales happen via WhatsApp.
 
 ### Data Flow
 
-- `app/page.tsx` (Server Component) calls `lib/products.ts` → Firestore, wrapped with `unstable_cache` (tags: `['products']`) for serverless-safe caching
-- When a product is created/updated/deleted, `revalidateTag('products')` is called via Server Actions in `lib/actions.ts` — cache invalidates instantly
+- `app/page.tsx` (Server Component) calls `lib/products.ts` → Firestore, wrapped with `unstable_cache` (tags: `['products']`)
+- When a product is created/updated/deleted, `revalidateTag('products')` is called via Server Actions in `lib/actions.ts`
 - Product images are hosted on Cloudinary; use `cloudinaryUrl()` and `cloudinaryThumb()` helpers from `lib/products.ts`
-- WhatsApp inquiry links are generated via `whatsappLink()` in `lib/products.ts`
+- WhatsApp order links are generated via `whatsappLink()` in `lib/products.ts`
 - Client-side filtering/sorting/pagination (12 items/page) is handled in `app/ProductsClient.tsx`
 
 ### Data Validation
 
 - All Firestore documents are validated at runtime using **Zod** schemas defined in `lib/schemas.ts`
-- `ProductSchema` uses `.passthrough()` to allow alias fields (baslik, fiyat, etc.) and `.catch()/.default()` to tolerate missing/invalid values
-- `safeParse()` is used throughout — invalid documents are logged with `console.warn` and skipped, never crash the app
-- Never use `as any` to read product fields — use the typed helpers from `lib/product-utils.ts` (`getTitle`, `getPrice`, `getCategory`, etc.)
+- `ProductSchema` uses `.passthrough()` to allow alias fields and `.catch()/.default()` to tolerate missing/invalid values
+- `safeParse()` is used throughout — invalid documents are logged with `console.warn` and skipped
+- Never use `as any` to read product fields — use the typed helpers from `lib/product-utils.ts`
 
 ### Auth & Admin
 
 - `lib/auth-context.tsx` provides `AuthProvider` + `useAuth()` hook — wraps the entire app in `app/layout.tsx`
-- On login, Firebase ID token is stored in an HttpOnly cookie via `POST /api/auth/session`; cleared on logout via `DELETE /api/auth/session`
-- `middleware.ts` protects all `/admin/*` routes server-side — checks for `__session` cookie before rendering, redirects to `/admin/login` if missing
-- Admin role is stored in Firestore `users/{uid}` collection (not Firebase Custom Claims)
-- Admin routes live under `app/admin/` — check `useAuth().isAdmin` for access control
-- Login is email/password via Firebase Auth
+- On login, Firebase ID token is stored in an HttpOnly cookie via `POST /api/auth/session`
+- `middleware.ts` protects all `/admin/*` routes server-side
+- Admin role is stored in Firestore `users/{uid}` collection
+- Admin routes live under `app/admin/`
 
 ### Server Actions
 
-- All product/satış talebi mutations go through `lib/actions.ts` (`'use server'`)
-- Each action calls the underlying Firebase function then `revalidateTag('products')` or `revalidateTag('satis-talepleri')`
-- Admin client components import and call these actions directly — never call Firebase mutation functions directly from client code
-- Available actions: `createProductAction`, `updateProductAction`, `deleteProductAction`, `toggleFeaturedAction`, `deleteSatisTalebiAction`, `updateSatisTalebiStatusAction`
+- All product mutations go through `lib/actions.ts` (`'use server'`)
+- Each action calls the underlying Firebase function then `revalidateTag('products')`
+- Available actions: `createProductAction`, `updateProductAction`, `deleteProductAction`, `toggleFeaturedAction`
 
 ### Image Uploads & Deletion
 
-- File uploads go through `POST /api/upload` (server-side) — never upload directly from the client
-- Image deletion goes through `POST /api/cloudinary-delete` (server-side) — never call Cloudinary delete API from the client
-- The API route validates file type (image only) and size (max 10 MB), then signs the request with `CLOUDINARY_API_SECRET` before forwarding to Cloudinary
-- Never add `NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET` — preset is handled server-side only
-- `lib/products-admin.ts` (`'server-only'`) contains admin-specific Firestore operations that also handle Cloudinary image cleanup on product deletion
+- File uploads go through `POST /api/upload` (server-side)
+- Image deletion goes through `POST /api/cloudinary-delete` (server-side)
+- `lib/products-admin.ts` (`'server-only'`) contains admin-specific Firestore operations
 
 ### Error Handling
 
-- `components/ErrorBoundary.tsx` — React class component, wraps the app in `app/layout.tsx`
-- `app/error.tsx` — Next.js global error page, reports to Sentry via `captureException`
-- `app/not-found.tsx` — Custom 404 page with navigation options
+- `components/ErrorBoundary.tsx` — React class component, wraps the app
+- `app/error.tsx` — Next.js global error page
+- `app/not-found.tsx` — Custom 404 page
 - Sentry is configured in `sentry.client.config.ts`, `sentry.server.config.ts`, `sentry.edge.config.ts`
 
 ### Firestore Collections
@@ -71,42 +67,60 @@ npm test -- --testPathPattern=product-utils  # Run a single test file
 |---|---|
 | `products` | All product listings |
 | `users` | Admin role assignments |
-| `satis_talepleri` | Customer sell requests |
-| `seo_settings` | Single document `main` — editable SEO config (service areas, keywords, etc.) managed via `lib/seo-settings.ts` |
 
 ### Styling
 
 - Hybrid approach: **CSS custom properties** (defined in `app/globals.css`) + **Tailwind CSS** classes
-- Tailwind's `preflight` is disabled — existing CSS is not reset
-- Dark industrial theme; use CSS vars like `--accent` (`#25D366`), `--accent2` (`#2f81f7`), `--surface` (`#101824`)
-- Tailwind color tokens map to these CSS vars (e.g., `bg-accent`, `text-surface`)
+- Dark gold theme; use CSS vars like `--accent` (`#C9A84C` — gold), `--accent2` (`#ffffff`), `--surface` (`#111111`)
+- Tailwind color tokens map to these CSS vars
 - Use `cn()` from `lib/utils.ts` for conditional class merging
 
 ### Product Data Fields
 
-Products support multilingual/alias fields: `title` or `baslik`, `priceTRY`/`price`/`fiyat`, `category`/`kategori`, `condition`/`durum`, `inStock`/`stok`.
+| Field | Type | Description |
+|---|---|---|
+| `title` | string | Ürün adı |
+| `slug` | string | URL slug |
+| `priceMin` | number | Minimum fiyat (TL) |
+| `priceMax` | number | Maksimum fiyat (TL) |
+| `category` | Category | Kupa kategorisi |
+| `active` | boolean | Sitede görünür mü? |
+| `featured` | boolean? | Öne çıkan ürün |
+| `shortDesc` | string | Kısa açıklama |
+| `description` | string | Detaylı açıklama |
+| `images` | string[] | Cloudinary public_id listesi |
+| `deliveryDays` | number | Kargo süresi (iş günü, varsayılan: 3) |
+| `seoTags` | string[]? | Gizli SEO etiketleri |
 
-Valid categories: `Mobilya`, `Beyaz Eşya`, `Elektronik`, `Ofis`, `Yatak`, `Baza`, `Dekorasyon`, `Aydınlatma`, `Bahçe`, `Ev Eşyaları`, `Diğer`.
+Valid categories: `Sihirli Mat Kupa`, `Sihirli Konik Kupa`, `Seramik Nescafe Fincanı`, `Sihirli Renkli Kupa`, `Özel Tasarım`
 
-Valid conditions: `Sıfır`, `Sıfır Gibi`, `Az Kullanılmış`, `2. El`, `İyi Durumda`, `Normal Durumda`, `Parasına Göre`, `Hasarlı/Onarım Gerekli`.
+### Price Helpers
 
-Zod schemas in `lib/schemas.ts` handle normalization at the data layer. Typed helpers in `lib/product-utils.ts` handle alias resolution at the UI layer.
+- `formatPriceRange(priceMin, priceMax)` — "150₺'den başlayan" veya "150₺ – 350₺" formatında döndürür
+- `getPriceMin(p)` / `getPriceMax(p)` — alias-tolerant helpers from `lib/product-utils.ts`
+
+### WhatsApp
+
+- `whatsappLink(productTitle?)` — ürüne özel veya genel sipariş mesajı linki oluşturur
+- `DEFAULT_WA_TEXT` ve `PHONE` constants `lib/constants.ts`'de tanımlı
+- Telefon: `905050874726`
 
 ### Constants
 
-Phone number and WhatsApp base URL live in `lib/constants.ts` (reads from `NEXT_PUBLIC_PHONE` env var). Never hardcode `905426447296` anywhere in the codebase.
+Phone number and WhatsApp base URL live in `lib/constants.ts` (reads from `NEXT_PUBLIC_PHONE` env var).
+Never hardcode `905050874726` anywhere in the codebase.
 
 ### Environment Variables
 
 Copy `.env.local.example` to `.env.local` and fill in:
 - `NEXT_PUBLIC_FIREBASE_*` — Firebase web SDK config
-- `NEXT_PUBLIC_PHONE` — Contact phone number (e.g. `905426447296`)
-- `NEXT_PUBLIC_PHONE_DISPLAY` — Human-readable display (e.g. `0542 644 72 96`)
+- `NEXT_PUBLIC_PHONE` — Contact phone number (`905050874726`)
+- `NEXT_PUBLIC_PHONE_DISPLAY` — Human-readable display (`0505 087 47 26`)
+- `NEXT_PUBLIC_SITE_NAME` — Site name (`KAR-TA BASKI`)
 - `NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME` — Cloudinary cloud name
 - `CLOUDINARY_API_KEY` — Cloudinary API key (server-side)
-- `CLOUDINARY_API_SECRET` — Cloudinary API secret (server-side, required for signed uploads)
+- `CLOUDINARY_API_SECRET` — Cloudinary API secret (server-side)
 - `NEXT_PUBLIC_SENTRY_DSN` — Sentry DSN for error tracking
-- `SENTRY_ORG` / `SENTRY_PROJECT` — Sentry organization and project slugs
 
 ### Public Pages
 
@@ -114,19 +128,22 @@ Copy `.env.local.example` to `.env.local` and fill in:
 |---|---|
 | `/` | Home — product listing with filters/pagination |
 | `/urun/[slug]` | Product detail page (SSR, slug is Firestore doc ID) |
-| `/urun-sat` | Customer sell request form (writes to `satis_talepleri`) |
 | `/kategoriler` | Category index page |
+| `/nasil-siparis-verilir` | 3-step order guide page |
 | `/hakkimizda` | About page |
 
 `app/sitemap.ts` and `app/robots.ts` auto-generate SEO sitemap and robots.txt.
 
+### Admin Panel
+
+| Route | Purpose |
+|---|---|
+| `/admin` | Dashboard with stats |
+| `/admin/products` | Product list & management |
+| `/admin/products/new` | Add new product |
+| `/admin/products/[id]` | Edit existing product |
+| `/admin/login` | Admin login |
+
 ### Image Optimization
 
 `next.config.js` allows remote images only from `res.cloudinary.com/dshbqbtpb/**`.
-
-### Testing
-
-- Jest + React Testing Library configured in `jest.config.ts`
-- Unit tests live in `__tests__/` mirroring the `lib/` structure
-- `__tests__/lib/product-utils.test.ts` — 40 tests, 100% statement coverage for all typed helpers
-- Run `npm test` before pushing changes that touch `lib/product-utils.ts` or `lib/schemas.ts`
