@@ -88,8 +88,10 @@ export async function toggleFeatured(id: string, featured: boolean): Promise<voi
 
 // ── Cloudinary ───────────────────────────────────────────────────────────────
 
+const CLOUD_NAME = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || 'dwulzfmlu';
+
 export function cloudinaryUrl(publicId: string, opts = 'f_auto,q_auto,w_1200,c_limit'): string {
-  return `https://res.cloudinary.com/dshbqbtpb/image/upload/${opts}/${publicId}`;
+  return `https://res.cloudinary.com/${CLOUD_NAME}/image/upload/${opts}/${publicId}`;
 }
 
 export function cloudinaryThumb(publicId: string): string {
