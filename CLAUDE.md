@@ -1,6 +1,6 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+This file provides guidance to AI coding assistants when working with code in this repository.
 
 ## Commands
 
@@ -38,8 +38,8 @@ No cart or checkout — all sales happen via WhatsApp.
 
 - `lib/auth-context.tsx` provides `AuthProvider` + `useAuth()` hook — wraps the entire app in `app/layout.tsx`
 - On login, Firebase ID token is stored in an HttpOnly cookie via `POST /api/auth/session`
-- `middleware.ts` protects all `/admin/*` routes server-side
-- Admin role is stored in Firestore `users/{uid}` collection
+- `middleware.ts` protects all `/admin/*` routes server-side (redirects to `/admin/login` if no `__session` cookie)
+- Admin role is stored in Firestore `users/{uid}` collection — `role: 'admin'`
 - Admin routes live under `app/admin/`
 
 ### Server Actions
@@ -50,8 +50,9 @@ No cart or checkout — all sales happen via WhatsApp.
 
 ### Image Uploads & Deletion
 
-- File uploads go through `POST /api/upload` (server-side)
+- File uploads go through `POST /api/upload` (server-side, signed Cloudinary upload)
 - Image deletion goes through `POST /api/cloudinary-delete` (server-side)
+- Images are stored in Cloudinary folder: `karta-baski/urunler/`
 - `lib/products-admin.ts` (`'server-only'`) contains admin-specific Firestore operations
 
 ### Error Handling
@@ -66,7 +67,12 @@ No cart or checkout — all sales happen via WhatsApp.
 | Collection | Purpose |
 |---|---|
 | `products` | All product listings |
-| `users` | Admin role assignments |
+| `users` | Admin role assignments (`role: 'admin'`) |
+
+### Firestore Security Rules
+
+Rules are defined in `firestore.rules`. The `isAdmin()` helper checks `users/{uid}.role == 'admin'`.
+These rules must be deployed via Firebase Console (Firestore → Rules tab).
 
 ### Styling
 
@@ -117,10 +123,11 @@ Copy `.env.local.example` to `.env.local` and fill in:
 - `NEXT_PUBLIC_PHONE` — Contact phone number (`905050874726`)
 - `NEXT_PUBLIC_PHONE_DISPLAY` — Human-readable display (`0505 087 47 26`)
 - `NEXT_PUBLIC_SITE_NAME` — Site name (`KAR-TA BASKI`)
-- `NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME` — Cloudinary cloud name
+- `NEXT_PUBLIC_SITE_URL` — Production URL (`https://kartabaski.com`)
+- `NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME` — Cloudinary cloud name (`dwulzfmlu`)
 - `CLOUDINARY_API_KEY` — Cloudinary API key (server-side)
 - `CLOUDINARY_API_SECRET` — Cloudinary API secret (server-side)
-- `NEXT_PUBLIC_SENTRY_DSN` — Sentry DSN for error tracking
+- `NEXT_PUBLIC_SENTRY_DSN` — Sentry DSN for error tracking (optional)
 
 ### Public Pages
 
@@ -146,4 +153,16 @@ Copy `.env.local.example` to `.env.local` and fill in:
 
 ### Image Optimization
 
-`next.config.js` allows remote images only from `res.cloudinary.com/dshbqbtpb/**`.
+`next.config.js` allows remote images from `res.cloudinary.com/${NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/**`.
+Cloudinary cloud name is read from env variable, with fallback to `dwulzfmlu`.
+
+### Deployment
+
+| Platform | Purpose |
+|---|---|
+| **Vercel** | Primary production hosting (`kartabaski.com`) |
+| **Railway** | Alternative deployment option |
+| **Firebase** | Auth + Firestore database (project: `kartabaski-fcf0e`) |
+| **Cloudinary** | Image hosting & optimization (cloud: `dwulzfmlu`) |
+| **Porkbun** | Domain registrar (`kartabaski.com`) |
+| **GitHub** | Source code (`oku-20217170040/kartabaski`) |
