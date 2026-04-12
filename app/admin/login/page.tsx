@@ -18,11 +18,8 @@ export default function AdminLoginPage() {
     try {
       await login(email, password);
       router.push('/admin');
-    } catch (err: unknown) {
-      const firebaseError = err as { code?: string; message?: string };
-      const code = firebaseError?.code || 'unknown';
-      const msg = firebaseError?.message || 'Bilinmeyen hata';
-      setError(`Hata [${code}]: ${msg}`);
+    } catch {
+      setError('E-posta veya şifre hatalı.');
     } finally {
       setLoading(false);
     }
