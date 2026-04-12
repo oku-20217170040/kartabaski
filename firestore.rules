@@ -12,7 +12,7 @@ service cloud.firestore {
     function isAdmin() {
       return isSignedIn() &&
         exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true;
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
     }
 
     // ── products koleksiyonu ──────────────────────────────────────────────────
