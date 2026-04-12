@@ -17,12 +17,11 @@ service cloud.firestore {
 
     // ── products koleksiyonu ──────────────────────────────────────────────────
     match /products/{productId} {
-      // Herkes aktif ürünleri okuyabilir
-      allow read: if resource.data.active == true;
-      // Admin tüm ürünleri okuyabilir (aktif olmayanlar dahil)
+      // Admin paneli client SDK kullandığından tüm ürünleri okuyabilmeli
       allow read: if isAdmin();
       // Sadece admin yazabilir
       allow create, update, delete: if isAdmin();
+      // NOT: Public site server-side Admin SDK ile okur (kural atlanır)
     }
 
     // ── users koleksiyonu ─────────────────────────────────────────────────────

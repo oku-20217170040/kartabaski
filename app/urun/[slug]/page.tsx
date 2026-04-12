@@ -1,5 +1,6 @@
 import { Metadata } from 'next';
-import { getProductBySlug, getProductById, cloudinaryUrl, formatPriceRange } from '@/lib/products';
+import { getProductBySlugServer as getProductBySlug } from '@/lib/products-server';
+import { cloudinaryUrl, formatPriceRange } from '@/lib/products';
 import ProductDetailClient from './ProductDetailClient';
 import { PHONE, SITE_NAME } from '@/lib/constants';
 import { getTitle, getPriceMin, getPriceMax, getCategory, getActive, getFirstImageId, getShortDesc, getDescription } from '@/lib/product-utils';
@@ -12,8 +13,7 @@ interface Props {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = params;
-  const product = await getProductBySlug(slug).catch(() => null)
-    || await getProductById(slug).catch(() => null);
+  const product = await getProductBySlug(slug).catch(() => null);
 
   if (!product) return { title: 'Ürün Bulunamadı' };
 
@@ -54,8 +54,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function ProductDetailPage({ params }: Props) {
   const { slug } = params;
 
-  const product = await getProductBySlug(slug).catch(() => null)
-    || await getProductById(slug).catch(() => null);
+  const product = await getProductBySlug(slug).catch(() => null);
 
   let productSchema = null;
   if (product) {

@@ -1,5 +1,5 @@
 import { unstable_cache } from 'next/cache';
-import { getProducts as _getProducts } from '@/lib/products';
+import { getProductsServer } from '@/lib/products-server';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import HeroSection from '@/components/HeroSection';
@@ -7,7 +7,7 @@ import ProductsClient from './ProductsClient';
 import { PHONE, PHONE_DISPLAY, WHATSAPP_BASE, DEFAULT_WA_TEXT } from '@/lib/constants';
 
 const getProducts = unstable_cache(
-  () => _getProducts(),
+  () => getProductsServer(),
   ['products'],
   { tags: ['products'] }
 );
