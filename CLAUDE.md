@@ -14,6 +14,10 @@ npm run test:watch    # Jest in watch mode
 npm run test:coverage # Jest with coverage report
 ```
 
+## Kurallar
+
+- **Commit mesajları her zaman Türkçe yazılmalıdır.** Örnek: `git commit -m "Ürün detay sayfasına zoom özelliği eklendi"`
+
 ## Architecture
 
 **KAR-TA BASKI** is an online mug printing (kupa baskı) catalog and order site (Next.js 14 App Router + Firebase + Cloudinary).
