@@ -80,7 +80,7 @@ export default function Navbar() {
                       fontSize: 14,
                       fontWeight: active ? 600 : 500,
                       color: active ? 'var(--text)' : 'var(--muted)',
-                      background: active ? 'rgba(201,168,76,0.08)' : 'transparent',
+                      background: active ? 'rgba(22,101,52,0.07)' : 'transparent',
                       display: 'block',
                       transition: 'color 0.15s, background 0.15s',
                       position: 'relative',
@@ -93,7 +93,7 @@ export default function Navbar() {
                         style={{
                           position: 'absolute', bottom: -2, left: 10, right: 10,
                           height: 2, borderRadius: 2,
-                          background: 'var(--accent)',
+                          background: 'var(--primary)',
                         }}
                         transition={{ type: 'spring', stiffness: 500, damping: 35 }}
                       />
@@ -224,8 +224,8 @@ export default function Navbar() {
                         display: 'flex', alignItems: 'center', gap: 12,
                         padding: '14px 20px', fontSize: 15, fontWeight: active ? 700 : 500,
                         color: active ? 'var(--text)' : 'var(--muted)',
-                        borderLeft: `3px solid ${active ? 'var(--accent)' : 'transparent'}`,
-                        background: active ? 'rgba(201,168,76,0.06)' : 'transparent',
+                        borderLeft: `3px solid ${active ? 'var(--primary)' : 'transparent'}`,
+                        background: active ? 'rgba(22,101,52,0.06)' : 'transparent',
                         transition: 'all 0.15s',
                       }}
                     >

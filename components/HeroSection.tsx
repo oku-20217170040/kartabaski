@@ -85,7 +85,7 @@ export default function HeroSection() {
             target="_blank"
             rel="noopener noreferrer"
             className="hero-cta-primary"
-            whileHover={{ scale: 1.04, boxShadow: '0 8px 40px rgba(37,211,102,0.5)' }}
+            whileHover={{ scale: 1.03, boxShadow: '0 8px 40px rgba(37,211,102,0.5)' }}
             whileTap={{ scale: 0.97 }}
           >
             {WA_ICON}
