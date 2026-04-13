@@ -1599,7 +1599,45 @@ body::before { display: none; }
   .footer-brand { grid-column: 1 / -1; }
 }
 @media (max-width: 640px) {
-  .footer-top { grid-template-columns: 1fr; gap: 28px; }
+  /* Footer genel */
+  .pro-footer { padding-top: 40px; margin-top: 48px; }
+  .footer-top {
+    grid-template-columns: 1fr 1fr;
+    gap: 24px 16px;
+  }
+  /* Brand tam genişlik */
+  .footer-brand {
+    grid-column: 1 / -1;
+  }
+  .footer-brand-desc {
+    max-width: 100%;
+    font-size: 13px;
+    margin-bottom: 16px;
+  }
+  /* Sosyal butonlar yan yana, eşit genişlik */
+  .footer-social-row {
+    flex-wrap: nowrap;
+    gap: 8px;
+    margin-bottom: 14px;
+  }
+  .footer-wa-btn,
+  .footer-ig-btn {
+    flex: 1;
+    justify-content: center;
+    padding: 11px 12px;
+    font-size: 13px;
+  }
+  /* Nav linkleri daha kompakt */
+  .footer-nav { gap: 8px; }
+  .footer-nav a { font-size: 13px; }
+  .footer-col-head { font-size: 10px; margin-bottom: 12px; padding-bottom: 8px; }
+  /* İletişim */
+  .footer-contact-list { gap: 10px; }
+  .footer-contact-list li { font-size: 12px; }
+  /* Bottom */
+  .footer-bottom { flex-direction: column; align-items: flex-start; gap: 8px; padding: 16px 0 24px; }
+  .footer-bottom p { font-size: 12px; }
+  .footer-location-pill { font-size: 11px; }
 }
 .footer-logo-link {
   display: inline-flex;
