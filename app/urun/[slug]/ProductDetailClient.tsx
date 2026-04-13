@@ -19,72 +19,67 @@ function ShareButton({ title, slug }: { title: string; slug: string }) {
   };
 
   return (
-    <>
+    <div style={{ display: 'flex', gap: 8 }}>
       <a
         href={waShareUrl}
-        target='_blank' rel='noopener noreferrer'
-        className='btn btn-secondary btn-sm'
+        target="_blank" rel="noopener noreferrer"
+        style={chipStyle}
         title="WhatsApp'ta Paylaş"
       >
-        <svg width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2'>
-          <circle cx='18' cy='5' r='3'/><circle cx='6' cy='12' r='3'/><circle cx='18' cy='19' r='3'/>
-          <line x1='8.59' y1='13.51' x2='15.42' y2='17.49'/>
-          <line x1='15.41' y1='6.51' x2='8.59' y2='10.49'/>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/>
+          <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/>
+          <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
         </svg>
+        Paylaş
       </a>
       <button
         onClick={handleCopy}
-        className='btn btn-secondary btn-sm'
-        title='Linki Kopyala'
+        style={chipStyle}
+        title="Linki Kopyala"
       >
-        {copied
-          ? <svg width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='var(--accent)' strokeWidth='2.5'><polyline points='20 6 9 17 4 12'/></svg>
-          : <svg width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2'><rect x='9' y='9' width='13' height='13' rx='2'/><path d='M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1'/></svg>
-        }
+        {copied ? (
+          <><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#006D2F" strokeWidth="2.5"><polyline points="20 6 9 17 4 12"/></svg> Kopyalandı</>
+        ) : (
+          <><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg> Kopyala</>
+        )}
       </button>
-    </>
+    </div>
   );
 }
 
-import { getProductBySlug, getProductById, getProducts, cloudinaryUrl, cloudinaryThumb, whatsappLink, formatPriceRange } from '@/lib/products';
+const chipStyle: React.CSSProperties = {
+  display: 'inline-flex', alignItems: 'center', gap: 6,
+  padding: '7px 14px', borderRadius: 8,
+  border: '1px solid var(--border)', background: 'var(--card)',
+  color: 'var(--text-sub)', fontSize: 13, fontWeight: 500,
+  cursor: 'pointer', textDecoration: 'none', transition: 'border-color 0.15s',
+};
+
+import { cloudinaryUrl, cloudinaryThumb, whatsappLink, formatPriceRange } from '@/lib/products';
 import { Product } from '@/types';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import Link from 'next/link';
-import { getTitle, getPriceMin, getPriceMax, getCategory, getActive, getSlug, getDescription } from '@/lib/product-utils';
+import { getTitle, getPriceMin, getPriceMax, getCategory, getSlug, getDescription } from '@/lib/product-utils';
 
-export default function ProductDetailClient({ slug }: { slug: string }) {
-  const [product, setProduct] = useState<Product | null>(null);
-  const [similar, setSimilar] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [activeImg, setActiveImg] = useState(0);
-  const [lightbox, setLightbox] = useState<number | null>(null);
+interface Props {
+  slug: string;
+  product: Product | null;
+  similar: Product[];
+}
+
+export default function ProductDetailClient({ slug, product, similar }: Props) {
+  const [activeImg, setActiveImg]   = useState(0);
+  const [lightbox, setLightbox]     = useState<number | null>(null);
   const [touchStartX, setTouchStartX] = useState<number | null>(null);
-
-  useEffect(() => {
-    if (!slug || slug === 'undefined') { setLoading(false); return; }
-    getProductBySlug(slug)
-      .then(async (p) => p || getProductById(slug))
-      .then(async (p) => {
-        setProduct(p);
-        if (p) {
-          const cat = getCategory(p);
-          const all = await getProducts();
-          const sim = all
-            .filter((x) => x.id !== p.id && getCategory(x) === cat && getActive(x))
-            .slice(0, 4);
-          setSimilar(sim);
-        }
-      })
-      .finally(() => setLoading(false));
-  }, [slug]);
 
   useEffect(() => {
     if (lightbox === null) return;
     const handler = (e: KeyboardEvent) => {
       if (e.key === 'Escape') setLightbox(null);
       if (e.key === 'ArrowRight') setLightbox(i => i !== null ? (i + 1) : null);
-      if (e.key === 'ArrowLeft') setLightbox(i => i !== null ? (i - 1) : null);
+      if (e.key === 'ArrowLeft')  setLightbox(i => i !== null ? (i - 1) : null);
     };
     window.addEventListener('keydown', handler);
     document.body.style.overflow = 'hidden';
@@ -106,17 +101,6 @@ export default function ProductDetailClient({ slug }: { slug: string }) {
     );
   }
 
-  if (loading) {
-    return (
-      <>
-        <Navbar />
-        <div style={{ paddingTop: 120, display: 'flex', justifyContent: 'center' }}>
-          <div className="spinner" />
-        </div>
-      </>
-    );
-  }
-
   if (!product) {
     return (
       <>
@@ -132,17 +116,17 @@ export default function ProductDetailClient({ slug }: { slug: string }) {
     );
   }
 
-  const title       = getTitle(product);
-  const priceMin    = getPriceMin(product);
-  const priceMax    = getPriceMax(product);
-  const category    = getCategory(product);
-  const description = getDescription(product);
-  const productSlug = getSlug(product);
+  const title        = getTitle(product);
+  const priceMin     = getPriceMin(product);
+  const priceMax     = getPriceMax(product);
+  const category     = getCategory(product);
+  const description  = getDescription(product);
+  const productSlug  = getSlug(product);
   const deliveryDays = product.deliveryDays ?? 3;
 
   const rawImages: string[] = product.images || [];
   const images = rawImages.length
-    ? rawImages.map((id) => id.startsWith('http') ? id : cloudinaryUrl(id))
+    ? rawImages.map(id => id.startsWith('http') ? id : cloudinaryUrl(id))
     : null;
 
   const priceLabel = formatPriceRange(priceMin, priceMax);
@@ -150,44 +134,50 @@ export default function ProductDetailClient({ slug }: { slug: string }) {
   return (
     <>
       <Navbar />
-      <main className="product-detail">
+      <main style={{ paddingTop: 'calc(var(--nav-h) + 40px)', paddingBottom: 80 }}>
         <div className="container">
-          {/* Breadcrumb */}
-          <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 32, fontSize: 13, color: 'var(--muted)' }}>
-            <Link href="/" style={{ color: 'var(--muted)' }}>Ürünler</Link>
-            {category && <><span>›</span><Link href={`/kategoriler`} style={{ color: 'var(--muted)' }}>{category}</Link></>}
-            <span>›</span>
-            <span style={{ color: 'var(--text)' }}>{title}</span>
-          </div>
 
-          {/* Ana ürün grid */}
-          <div className="product-detail-grid">
-            {/* Galeri */}
-            <div>
+          {/* Breadcrumb */}
+          <nav style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 36, fontSize: 13, color: 'var(--muted)' }}>
+            <Link href="/" style={{ color: 'var(--muted)' }}>Ürünler</Link>
+            {category && (
+              <><span>›</span>
+              <Link href="/kategoriler" style={{ color: 'var(--muted)' }}>{category}</Link></>
+            )}
+            <span>›</span>
+            <span style={{ color: 'var(--text)', fontWeight: 500 }}>{title}</span>
+          </nav>
+
+          {/* Ana layout — stitch 12-col grid */}
+          <div className="detail-grid">
+
+            {/* Sol: Galeri (7/12) */}
+            <div className="detail-gallery">
+              {/* Ana görsel — 4:5 */}
               <div
-                className="product-gallery-main"
+                className="detail-main-img"
                 onClick={() => images && setLightbox(activeImg)}
-                style={{ cursor: images ? 'zoom-in' : 'default', position: 'relative' }}
-                onTouchStart={(e) => setTouchStartX(e.touches[0].clientX)}
-                onTouchEnd={(e) => {
+                style={{ cursor: images ? 'zoom-in' : 'default' }}
+                onTouchStart={e => setTouchStartX(e.touches[0].clientX)}
+                onTouchEnd={e => {
                   if (touchStartX === null || !images || images.length < 2) return;
                   const diff = touchStartX - e.changedTouches[0].clientX;
                   if (Math.abs(diff) < 40) return;
                   setActiveImg(diff > 0
                     ? (activeImg + 1) % images.length
-                    : (activeImg - 1 + images.length) % images.length
-                  );
+                    : (activeImg - 1 + images.length) % images.length);
                   setTouchStartX(null);
                 }}
               >
                 {images ? (
                   <>
-                    <img src={images[activeImg]} alt={title} />
+                    <img src={images[activeImg]} alt={title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                     <div style={{
-                      position: 'absolute', bottom: 10, right: 10,
-                      background: 'rgba(0,0,0,0.5)', borderRadius: 6,
-                      padding: '4px 8px', fontSize: 12, color: '#fff',
-                      display: 'flex', alignItems: 'center', gap: 4, pointerEvents: 'none'
+                      position: 'absolute', bottom: 12, right: 12,
+                      background: 'rgba(26,28,28,0.55)', backdropFilter: 'blur(8px)',
+                      borderRadius: 8, padding: '5px 10px',
+                      fontSize: 12, color: '#fff',
+                      display: 'flex', alignItems: 'center', gap: 4,
                     }}>
                       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                         <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
@@ -201,112 +191,128 @@ export default function ProductDetailClient({ slug }: { slug: string }) {
                 )}
               </div>
 
-              {/* Mobil: nokta göstergesi */}
+              {/* Thumbnail grid (stitch: 3 square thumbs) */}
+              {images && images.length > 1 && (
+                <div className="detail-thumbs">
+                  {images.slice(0, 3).map((src, i) => (
+                    <button
+                      key={i}
+                      onClick={() => setActiveImg(i)}
+                      style={{
+                        padding: 0, border: 'none', borderRadius: 12,
+                        overflow: 'hidden', cursor: 'pointer',
+                        aspectRatio: '1',
+                        outline: i === activeImg ? '2.5px solid var(--primary)' : '2px solid transparent',
+                        outlineOffset: 2,
+                        transition: 'outline-color 0.15s',
+                        background: 'var(--surface)',
+                      }}
+                    >
+                      <img src={src} alt={`${title} ${i + 1}`} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              {/* Mobil nokta göstergesi */}
               {images && images.length > 1 && (
                 <div className="gallery-dots">
                   {images.map((_, i) => (
                     <button
                       key={i}
                       className={`gallery-dot ${i === activeImg ? 'gallery-dot--active' : ''}`}
-                      onClick={(e) => { e.stopPropagation(); setActiveImg(i); }}
+                      onClick={e => { e.stopPropagation(); setActiveImg(i); }}
                       aria-label={`Fotoğraf ${i + 1}`}
                     />
                   ))}
                 </div>
               )}
-
-              {/* Masaüstü: thumbnail strip */}
-              {images && images.length > 1 && (
-                <div className="product-gallery-thumbs">
-                  {images.map((src, i) => (
-                    <div key={i} className={`product-gallery-thumb ${i === activeImg ? 'active' : ''}`} onClick={() => setActiveImg(i)}>
-                      <img src={src} alt={`${title} ${i + 1}`} />
-                    </div>
-                  ))}
-                </div>
-              )}
             </div>
 
-            {/* Lightbox */}
-            {lightbox !== null && images && (
-              <div
-                onClick={() => setLightbox(null)}
-                style={{
-                  position: 'fixed', inset: 0, zIndex: 1000,
-                  background: 'rgba(0,0,0,0.92)',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  padding: 16,
-                }}
-              >
-                <button onClick={() => setLightbox(null)} style={{
-                  position: 'absolute', top: 16, right: 16,
-                  background: 'rgba(255,255,255,0.1)', border: 'none',
-                  color: '#fff', width: 40, height: 40, borderRadius: '50%',
-                  fontSize: 20, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center'
-                }}>✕</button>
+            {/* Sağ: Info panel — sticky (5/12) */}
+            <div className="detail-info">
 
-                {images.length > 1 && (
-                  <button
-                    onClick={(e) => { e.stopPropagation(); setLightbox((lightbox - 1 + images.length) % images.length); }}
-                    style={{
-                      position: 'absolute', left: 16, top: '50%', transform: 'translateY(-50%)',
-                      background: 'rgba(255,255,255,0.1)', border: 'none', color: '#fff',
-                      width: 44, height: 44, borderRadius: '50%', fontSize: 20, cursor: 'pointer',
-                      display: 'flex', alignItems: 'center', justifyContent: 'center'
-                    }}
-                  >‹</button>
-                )}
+              {/* Kategori etiketi */}
+              {category && (
+                <span style={{
+                  fontSize: 11, fontWeight: 700, letterSpacing: '0.06em',
+                  textTransform: 'uppercase', color: 'var(--secondary)',
+                  fontFamily: 'var(--font-body)',
+                }}>
+                  {category}
+                </span>
+              )}
 
-                <img
-                  src={images[lightbox]}
-                  alt={title}
-                  onClick={e => e.stopPropagation()}
-                  style={{ maxWidth: '90vw', maxHeight: '90vh', objectFit: 'contain', borderRadius: 8 }}
-                />
-
-                {images.length > 1 && (
-                  <button
-                    onClick={(e) => { e.stopPropagation(); setLightbox((lightbox + 1) % images.length); }}
-                    style={{
-                      position: 'absolute', right: 16, top: '50%', transform: 'translateY(-50%)',
-                      background: 'rgba(255,255,255,0.1)', border: 'none', color: '#fff',
-                      width: 44, height: 44, borderRadius: '50%', fontSize: 20, cursor: 'pointer',
-                      display: 'flex', alignItems: 'center', justifyContent: 'center'
-                    }}
-                  >›</button>
-                )}
-
-                {images.length > 1 && (
-                  <div style={{
-                    position: 'absolute', bottom: 20, left: '50%', transform: 'translateX(-50%)',
-                    color: 'rgba(255,255,255,0.6)', fontSize: 13
-                  }}>{lightbox + 1} / {images.length}</div>
-                )}
-              </div>
-            )}
-
-            {/* Bilgiler */}
-            <div className="product-info">
-              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
-                {category && <span className="badge badge-muted">{category}</span>}
-              </div>
-
-              <h1 className="product-title">{title}</h1>
+              {/* Başlık */}
+              <h1 style={{
+                fontFamily: 'var(--font-display)',
+                fontSize: 'clamp(28px, 3vw, 44px)',
+                fontWeight: 800,
+                letterSpacing: '-0.04em',
+                lineHeight: 1.1,
+                color: 'var(--text)',
+                margin: '10px 0 0',
+              }}>{title}</h1>
 
               {/* Fiyat */}
-              <div className="product-price-block">
-                <div className="product-price">{priceLabel}</div>
-                <div className="product-delivery-info">
-                  📦 Sipariş sonrası {deliveryDays} iş günü içinde kargoya verilir
-                </div>
+              <div style={{ display: 'flex', alignItems: 'baseline', gap: 12, margin: '20px 0 0' }}>
+                <span style={{
+                  fontFamily: 'var(--font-display)',
+                  fontSize: 32, fontWeight: 800,
+                  color: 'var(--primary)',
+                  letterSpacing: '-0.03em',
+                }}>
+                  {priceLabel}
+                </span>
               </div>
 
-              {/* WhatsApp CTA */}
+              {/* Açıklama */}
+              {description && (
+                <p style={{
+                  fontSize: 16, lineHeight: 1.7,
+                  color: 'var(--text-sub)',
+                  margin: '20px 0 0',
+                  maxWidth: 480,
+                }}>
+                  {description}
+                </p>
+              )}
+
+              {/* Kargo bilgisi */}
+              <div style={{
+                display: 'flex', alignItems: 'center', gap: 8,
+                margin: '20px 0 0',
+                padding: '10px 14px',
+                borderRadius: 10,
+                background: 'var(--surface)',
+                border: '1px solid var(--border)',
+                fontSize: 13, color: 'var(--muted)',
+              }}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" strokeWidth="2">
+                  <rect x="1" y="3" width="15" height="13" rx="2"/>
+                  <path d="M16 8h4l3 3v5h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/>
+                </svg>
+                Sipariş sonrası {deliveryDays} iş günü içinde kargoya verilir
+              </div>
+
+              {/* WhatsApp CTA — gradient button (stitch) */}
               <a
                 href={whatsappLink(title, slug)}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="btn-whatsapp-detail"
+                style={{
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
+                  width: '100%', padding: '16px',
+                  borderRadius: 14, marginTop: 28,
+                  background: 'linear-gradient(135deg, var(--primary), var(--primary-container))',
+                  color: '#fff', fontWeight: 700, fontSize: 17,
+                  fontFamily: 'var(--font-display)',
+                  textDecoration: 'none',
+                  boxShadow: '0 10px 40px rgba(0,109,47,0.2)',
+                  transition: 'opacity 0.2s, transform 0.15s',
+                }}
+                onMouseEnter={e => { (e.currentTarget as HTMLElement).style.opacity = '0.9'; }}
+                onMouseLeave={e => { (e.currentTarget as HTMLElement).style.opacity = '1'; }}
               >
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
@@ -314,51 +320,113 @@ export default function ProductDetailClient({ slug }: { slug: string }) {
                 WhatsApp&apos;tan Sipariş Ver
               </a>
 
-              <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginTop: 8 }}>
-                <ShareButton title={title} slug={productSlug} />
+              {/* Güvenceler */}
+              <div style={{ display: 'flex', justifyContent: 'center', gap: 24, marginTop: 16 }}>
+                {[
+                  { icon: '🎨', label: 'Ücretsiz Tasarım' },
+                  { icon: '✅', label: 'Kalite Garantisi' },
+                ].map(item => (
+                  <div key={item.label} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: 'var(--muted)' }}>
+                    <span>{item.icon}</span>
+                    <span>{item.label}</span>
+                  </div>
+                ))}
               </div>
 
-              {description && (
-                <div style={{ borderTop: '1px solid var(--border)', paddingTop: 20, marginTop: 8 }}>
-                  <h3 style={{ fontFamily: 'var(--font-display)', marginBottom: 10, fontSize: '1.1rem' }}>Açıklama</h3>
-                  <p style={{ color: 'var(--muted)', lineHeight: 1.8, fontSize: 14 }}>{description}</p>
-                </div>
-              )}
+              {/* Paylaş */}
+              <div style={{ marginTop: 24, paddingTop: 20, borderTop: '1px solid var(--border)' }}>
+                <ShareButton title={title} slug={productSlug} />
+              </div>
             </div>
           </div>
 
-          {/* Benzer Ürünler */}
+          {/* Lightbox */}
+          {lightbox !== null && images && (
+            <div
+              onClick={() => setLightbox(null)}
+              style={{
+                position: 'fixed', inset: 0, zIndex: 1000,
+                background: 'rgba(26,28,28,0.92)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16,
+              }}
+            >
+              <button onClick={() => setLightbox(null)} style={{
+                position: 'absolute', top: 16, right: 16,
+                background: 'rgba(255,255,255,0.1)', border: 'none',
+                color: '#fff', width: 40, height: 40, borderRadius: '50%',
+                fontSize: 20, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+              }}>✕</button>
+              {images.length > 1 && (
+                <button onClick={e => { e.stopPropagation(); setLightbox((lightbox - 1 + images.length) % images.length); }} style={{
+                  position: 'absolute', left: 16, top: '50%', transform: 'translateY(-50%)',
+                  background: 'rgba(255,255,255,0.1)', border: 'none', color: '#fff',
+                  width: 44, height: 44, borderRadius: '50%', fontSize: 20, cursor: 'pointer',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                }}>‹</button>
+              )}
+              <img src={images[lightbox]} alt={title} onClick={e => e.stopPropagation()}
+                style={{ maxWidth: '90vw', maxHeight: '90vh', objectFit: 'contain', borderRadius: 12 }} />
+              {images.length > 1 && (
+                <button onClick={e => { e.stopPropagation(); setLightbox((lightbox + 1) % images.length); }} style={{
+                  position: 'absolute', right: 16, top: '50%', transform: 'translateY(-50%)',
+                  background: 'rgba(255,255,255,0.1)', border: 'none', color: '#fff',
+                  width: 44, height: 44, borderRadius: '50%', fontSize: 20, cursor: 'pointer',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                }}>›</button>
+              )}
+              {images.length > 1 && (
+                <div style={{ position: 'absolute', bottom: 20, left: '50%', transform: 'translateX(-50%)', color: 'rgba(255,255,255,0.6)', fontSize: 13 }}>
+                  {lightbox + 1} / {images.length}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Benzer Ürünler — stitch "Pairs well with" */}
           {similar.length > 0 && (
-            <section style={{ marginTop: 72, marginBottom: 60 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
-                <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '1.3rem', margin: 0 }}>
-                  Bunlara da bak
-                </h2>
-                <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
-                <Link href={`/?category=${encodeURIComponent(category)}`} className="btn btn-ghost btn-sm">
-                  Tümünü gör →
+            <section style={{ marginTop: 96 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 40 }}>
+                <div>
+                  <h2 style={{
+                    fontFamily: 'var(--font-display)',
+                    fontSize: 'clamp(22px, 2.5vw, 32px)',
+                    fontWeight: 800,
+                    letterSpacing: '-0.03em',
+                    color: 'var(--text)',
+                    margin: 0,
+                  }}>Bunlara da bak</h2>
+                  <p style={{ color: 'var(--muted)', fontSize: 14, marginTop: 6 }}>
+                    Aynı kategorideki diğer modellerle tamamlayın.
+                  </p>
+                </div>
+                <Link href={`/?category=${encodeURIComponent(category)}`} style={{
+                  fontSize: 12, fontWeight: 700, letterSpacing: '0.06em',
+                  textTransform: 'uppercase', color: 'var(--secondary)',
+                  textDecoration: 'none',
+                }}>
+                  Tümünü Gör →
                 </Link>
               </div>
+
               <div className="products-grid">
-                {similar.map((p) => {
+                {similar.map(p => {
                   const t     = getTitle(p);
                   const pMin  = getPriceMin(p);
                   const pMax  = getPriceMax(p);
                   const imgId = p.images?.[0] ?? null;
                   const thumb = imgId ? (imgId.startsWith('http') ? imgId : cloudinaryThumb(imgId)) : null;
                   return (
-                    <Link key={p.id} href={`/urun/${getSlug(p)}`} className="product-card">
-                      <div className="product-card-img">
+                    <Link key={p.id} href={`/urun/${getSlug(p)}`} className="tcard">
+                      <div className="tcard-img-wrap">
                         {thumb
-                          ? <img src={thumb} alt={t} loading="lazy" />
-                          : <div className="product-card-no-img">☕</div>
+                          ? <img src={thumb} alt={t} loading="lazy" className="tcard-img" style={{ opacity: 1 }} />
+                          : <div className="tcard-no-img">☕</div>
                         }
                       </div>
-                      <div className="product-card-body">
-                        <div className="product-card-title">{t}</div>
-                        <div className="product-card-price" style={{ color: 'var(--accent)', fontSize: 14 }}>
-                          {formatPriceRange(pMin, pMax)}
-                        </div>
+                      <div className="tcard-body">
+                        <p className="tcard-cat">{getCategory(p)}</p>
+                        <h3 className="tcard-title">{t}</h3>
+                        <p className="tcard-price">{formatPriceRange(pMin, pMax)}</p>
                       </div>
                     </Link>
                   );
@@ -366,10 +434,10 @@ export default function ProductDetailClient({ slug }: { slug: string }) {
               </div>
             </section>
           )}
+
         </div>
       </main>
       <Footer />
-
     </>
   );
 }

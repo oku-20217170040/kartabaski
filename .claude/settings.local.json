@@ -12,7 +12,8 @@
       "Bash(sed -n '114,264p' \"c:/Users/serha/OneDrive/Masaüstü/Projeler/KartaBaski/components/Footer.tsx\")",
       "Bash(sed -n '33,74p' \"c:/Users/serha/OneDrive/Masaüstü/Projeler/KartaBaski/components/WhatsAppFloat.tsx\")",
       "Bash(sed -n '111,252p' \"c:/Users/serha/OneDrive/Masaüstü/Projeler/KartaBaski/app/nasil-siparis-verilir/page.tsx\")",
-      "Bash(sed -n '173,245p' \"c:/Users/serha/OneDrive/Masaüstü/Projeler/KartaBaski/app/kategoriler/page.tsx\")"
+      "Bash(sed -n '173,245p' \"c:/Users/serha/OneDrive/Masaüstü/Projeler/KartaBaski/app/kategoriler/page.tsx\")",
+      "Bash(npm run:*)"
     ],
     "additionalDirectories": [
       "c:\\Users\\serha\\Downloads"
