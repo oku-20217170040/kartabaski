@@ -11,7 +11,7 @@ const WA_ICON = (
 );
 
 const STAR_ICON = (
-  <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+  <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
     <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
   </svg>
 );
@@ -31,9 +31,22 @@ const STATS = [
   { icon: '🌍', value: 'TR',       label: 'Geneli Kargo'  },
 ];
 
+// Polaroid kart: pozisyon + rotasyon
+const CARD_STYLES = [
+  { top: '8%',  left: '4%',   rotate: -5, zIndex: 3, delay: 0.2,  size: 210 },
+  { top: '4%',  right: '2%',  rotate:  6, zIndex: 1, delay: 0.38, size: 178 },
+  { bottom: '8%', right: '8%', rotate: -2, zIndex: 2, delay: 0.54, size: 188 },
+];
+
 const WA_HREF = `${WHATSAPP_BASE}?text=${encodeURIComponent(DEFAULT_WA_TEXT)}`;
 
-export default function HeroSection() {
+interface Props {
+  heroImages?: string[];
+}
+
+export default function HeroSection({ heroImages = [] }: Props) {
+  const hasPhotos = heroImages.length > 0;
+
   return (
     <section className="hero-section">
       <div className="hero-grid" aria-hidden />
@@ -127,53 +140,73 @@ export default function HeroSection() {
           </motion.div>
         </div>
 
-        {/* Sağ — görsel / dekoratif kutu */}
+        {/* Sağ — polaroid fotoğraf stack veya dekoratif kutu */}
         <motion.div
           className="hero-visual"
           initial={{ opacity: 0, x: 32 }}
           animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.7, ease: 'easeOut', delay: 0.15 }}
+          transition={{ duration: 0.7, ease: 'easeOut', delay: 0.1 }}
         >
-          {/* Ürün görseli yoksa dekoratif kutu göster */}
-          <div className="hero-deco-box">
-            <div className="hero-deco-inner">
-              <span className="hero-deco-icon">☕</span>
-              <span className="hero-deco-label">Kişiye Özel<br />Kupa Baskı</span>
+          {hasPhotos ? (
+            <div className="hero-photo-stack">
+              {heroImages.slice(0, 3).map((src, i) => {
+                const cs = CARD_STYLES[i];
+                return (
+                  <motion.div
+                    key={i}
+                    className={`hero-photo-card hero-photo-card--${i + 1}`}
+                    style={{
+                      top: cs.top,
+                      left: cs.left,
+                      right: cs.right,
+                      bottom: cs.bottom,
+                      zIndex: cs.zIndex,
+                      width: cs.size,
+                    } as React.CSSProperties}
+                    initial={{ opacity: 0, scale: 0.75, rotate: cs.rotate - 12 }}
+                    animate={{ opacity: 1, scale: 1, rotate: cs.rotate }}
+                    transition={{ delay: cs.delay, duration: 0.65, ease: [0.22, 1, 0.36, 1] }}
+                  >
+                    <div className="hero-photo-img-wrap">
+                      <img src={src} alt={`Ürün ${i + 1}`} />
+                    </div>
+                  </motion.div>
+                );
+              })}
 
-              {/* Floating chip'ler */}
-              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'center', marginTop: 8 }}>
-                {['Sihirli Mat', 'Sihirli Konik', 'Renkli Kupa'].map((tag) => (
-                  <span key={tag} style={{
-                    padding: '5px 12px',
-                    borderRadius: '100px',
-                    background: 'rgba(0,109,47,0.1)',
-                    color: 'var(--primary)',
-                    fontSize: 12,
-                    fontWeight: 600,
-                    border: '1px solid rgba(0,109,47,0.2)',
-                  }}>{tag}</span>
-                ))}
+              {/* Rating badge */}
+              <motion.div
+                className="hero-photo-badge"
+                initial={{ opacity: 0, y: 12, scale: 0.9 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                transition={{ delay: 0.85, duration: 0.45 }}
+              >
+                <div className="hero-photo-badge-stars">
+                  {[...Array(5)].map((_, i) => (
+                    <span key={i} style={{ color: '#F59E0B' }}>{STAR_ICON}</span>
+                  ))}
+                </div>
+                <span className="hero-photo-badge-text">500+ mutlu sipariş</span>
+              </motion.div>
+            </div>
+          ) : (
+            /* Fallback: dekoratif kutu */
+            <div className="hero-deco-box">
+              <div className="hero-deco-inner">
+                <span className="hero-deco-icon">☕</span>
+                <span className="hero-deco-label">Kişiye Özel<br />Kupa Baskı</span>
+                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'center', marginTop: 8 }}>
+                  {['Sihirli Mat', 'Sihirli Konik', 'Renkli Kupa'].map((tag) => (
+                    <span key={tag} style={{
+                      padding: '5px 12px', borderRadius: '100px',
+                      background: 'rgba(0,109,47,0.1)', color: 'var(--primary)',
+                      fontSize: 12, fontWeight: 600, border: '1px solid rgba(0,109,47,0.2)',
+                    }}>{tag}</span>
+                  ))}
+                </div>
               </div>
             </div>
-          </div>
-
-          {/* Floating değerlendirme kartı */}
-          <motion.div
-            className="hero-float-card"
-            initial={{ opacity: 0, y: 16, x: -8 }}
-            animate={{ opacity: 1, y: 0, x: 0 }}
-            transition={{ delay: 0.6, duration: 0.5 }}
-          >
-            <div className="hero-float-stars">
-              {[...Array(5)].map((_, i) => (
-                <span key={i} style={{ color: '#755B00' }}>{STAR_ICON}</span>
-              ))}
-            </div>
-            <p className="hero-float-text">
-              &ldquo;Kupalar muhteşem geldi, tasarım tam istediğimiz gibi!&rdquo;
-            </p>
-            <span className="hero-float-sub">— Müşteri Yorumu</span>
-          </motion.div>
+          )}
         </motion.div>
 
       </div>

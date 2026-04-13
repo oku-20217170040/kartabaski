@@ -1,5 +1,6 @@
 import { unstable_cache } from 'next/cache';
 import { getProductsServer } from '@/lib/products-server';
+import { cloudinaryThumb } from '@/lib/products';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import HeroSection from '@/components/HeroSection';
@@ -16,11 +17,21 @@ export default async function HomePage() {
   const products = await getProducts();
   const waHref = `${WHATSAPP_BASE}?text=${encodeURIComponent(DEFAULT_WA_TEXT)}`;
 
+  // Hero için: önce featured, sonra diğerleri — ilk 3 ürünün görseli
+  const heroImages = products
+    .filter(p => p.images && p.images.length > 0)
+    .sort((a, b) => (b.featured ? 1 : 0) - (a.featured ? 1 : 0))
+    .slice(0, 3)
+    .map(p => {
+      const id = p.images![0];
+      return id.startsWith('http') ? id : cloudinaryThumb(id);
+    });
+
   return (
     <>
       <Navbar />
       <main>
-        <HeroSection />
+        <HeroSection heroImages={heroImages} />
 
         <section className="products-page" style={{ paddingTop: 48 }}>
           <div className="container">
