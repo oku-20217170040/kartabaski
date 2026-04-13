@@ -2211,7 +2211,7 @@ body::before { display: none; }
 @media (max-width: 768px) {
   .products-grid { grid-template-columns: repeat(2, 1fr) !important; gap: 12px !important; }
 }
-@media (max-width: 400px) {
+@media (max-width: 300px) {
   .products-grid { grid-template-columns: 1fr !important; }
 }
 
