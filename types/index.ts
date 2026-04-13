@@ -12,6 +12,7 @@ export interface Product {
   images: string[]; // Cloudinary public_ids
   deliveryDays: number; // varsayılan: 3
   seoTags?: string[]; // Gizli SEO etiketleri — müşteri görmez, JSON-LD'ye gömülür
+  productCode?: string; // Sadece admin panelinde görünür, ürün yönetimi için
   createdAt: number;
   updatedAt: number;
 }

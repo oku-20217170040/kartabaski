@@ -38,6 +38,7 @@ export default function ProductForm({ initial, onSubmit, submitLabel }: Props) {
   const [deliveryDays, setDeliveryDays] = useState(String(initial?.deliveryDays || '3'));
   const [description, setDescription] = useState(initial?.description || '');
   const [images, setImages] = useState<string[]>(initial?.images || []);
+  const [productCode, setProductCode] = useState(initial?.productCode || '');
   const [seoTags, setSeoTags] = useState<string[]>(initial?.seoTags || []);
   const [seoTagInput, setSeoTagInput] = useState('');
   const [uploading, setUploading] = useState(false);
@@ -282,6 +283,7 @@ export default function ProductForm({ initial, onSubmit, submitLabel }: Props) {
         images,
         deliveryDays: Number(deliveryDays) || 3,
         seoTags,
+        productCode: productCode.trim() || undefined,
       });
       savedRef.current = true;
       sessionUploads.current.clear();
@@ -583,6 +585,23 @@ export default function ProductForm({ initial, onSubmit, submitLabel }: Props) {
                 <option value="true">Aktif (Sitede görünür)</option>
                 <option value="false">Pasif (Gizli)</option>
               </select>
+            </div>
+          </div>
+
+          {/* Admin Bilgileri */}
+          <div className="card" style={{ padding: 24 }}>
+            <h2 style={{ fontFamily: 'var(--font-display)', marginBottom: 4 }}>Admin Bilgileri 🔒</h2>
+            <p style={{ fontSize: 12, color: 'var(--muted)', marginBottom: 12 }}>Bu alan yalnızca admin panelinde görünür, müşterilere gösterilmez.</p>
+            <div className="form-group" style={{ marginBottom: 0 }}>
+              <label className="form-label">Ürün Kodu</label>
+              <input
+                className="form-input"
+                value={productCode}
+                onChange={(e) => setProductCode(e.target.value)}
+                placeholder="KB-001"
+                style={{ fontFamily: 'monospace', letterSpacing: '0.05em' }}
+              />
+              <p style={{ fontSize: 11, color: 'var(--muted)', marginTop: 6 }}>Örn: KB-001, SMK-02, KNK-03 — sipariş takibi ve stok yönetimi için</p>
             </div>
           </div>
 

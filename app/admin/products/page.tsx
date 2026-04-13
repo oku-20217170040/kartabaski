@@ -25,7 +25,10 @@ export default function AdminProductsPage() {
   const filtered = products
     .filter((p) => {
       const q = search.toLowerCase();
-      return !q || p.title.toLowerCase().includes(q) || p.category.toLowerCase().includes(q);
+      return !q
+        || p.title.toLowerCase().includes(q)
+        || p.category.toLowerCase().includes(q)
+        || (p.productCode?.toLowerCase().includes(q) ?? false);
     })
     .sort((a, b) => (getActive(a) === getActive(b) ? 0 : getActive(a) ? -1 : 1));
 
@@ -142,7 +145,19 @@ export default function AdminProductsPage() {
                       {p.title}
                     </span>
                   </div>
-                  <div style={{ fontSize: 12, color: 'var(--muted)', marginTop: 2 }}>{p.slug}</div>
+                  <div style={{ fontSize: 12, color: 'var(--muted)', marginTop: 2, display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <span>{p.slug}</span>
+                    {p.productCode && (
+                      <span style={{
+                        fontFamily: 'monospace', fontSize: 11, fontWeight: 700,
+                        background: 'rgba(201,168,76,0.12)', color: 'var(--accent)',
+                        border: '1px solid rgba(201,168,76,0.25)',
+                        borderRadius: 4, padding: '1px 6px', letterSpacing: '0.04em',
+                      }}>
+                        {p.productCode}
+                      </span>
+                    )}
+                  </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 6, flexWrap: 'wrap' }}>
                     <span style={{ fontWeight: 700, color: 'var(--accent)', fontSize: 13 }}>{priceLabel}</span>
                     <span className="badge badge-muted">{p.category}</span>

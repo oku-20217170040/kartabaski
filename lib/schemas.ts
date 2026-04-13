@@ -29,6 +29,7 @@ export const ProductSchema = z.object({
   images:       z.array(z.string()).default([]),
   deliveryDays: z.number().default(3),
   seoTags:      z.array(z.string()).optional(),
+  productCode:  z.string().optional(), // Sadece admin panelinde görünür
   createdAt:    z.number().default(0),
   updatedAt:    z.number().default(0),
 }).passthrough();
