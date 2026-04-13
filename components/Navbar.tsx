@@ -14,10 +14,10 @@ const WA_ICON = (
 );
 
 const NAV_LINKS = [
-  { href: '/',                      label: 'Ürünler',         icon: '☕', exact: true  },
-  { href: '/kategoriler',           label: 'Kategoriler',     icon: '🗂️', exact: true  },
-  { href: '/nasil-siparis-verilir', label: 'Nasıl Sipariş?',  icon: '📋', exact: true  },
-  { href: '/#iletisim',             label: 'İletişim',        icon: '📞', exact: false },
+  { href: '/',                      label: 'Ürünler',        exact: true  },
+  { href: '/kategoriler',           label: 'Kategoriler',    exact: true  },
+  { href: '/nasil-siparis-verilir', label: 'Nasıl Sipariş?', exact: true  },
+  { href: '/#iletisim',             label: 'İletişim',       exact: false },
 ];
 
 const WA_HREF = `${WHATSAPP_BASE}?text=${encodeURIComponent(DEFAULT_WA_TEXT)}`;
@@ -28,12 +28,10 @@ export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => { setOpen(false); }, [path]);
-
   useEffect(() => {
     document.body.style.overflow = open ? 'hidden' : '';
     return () => { document.body.style.overflow = ''; };
   }, [open]);
-
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 12);
     window.addEventListener('scroll', onScroll, { passive: true });
@@ -48,26 +46,30 @@ export default function Navbar() {
       <motion.nav
         className="nav"
         animate={{
-          backgroundColor: scrolled ? 'rgba(255,255,255,1)' : 'rgba(255,255,255,0.95)',
           boxShadow: scrolled
-            ? '0 2px 12px rgba(0,0,0,0.10)'
-            : '0 1px 0 rgba(0,0,0,0.08)',
+            ? '0px 10px 40px rgba(26,28,28,0.08)'
+            : '0px 1px 0px rgba(0,0,0,0.05)',
         }}
-        transition={{ duration: 0.25 }}
-        style={{ backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)' }}
+        transition={{ duration: 0.2 }}
       >
         <div className="container nav-inner">
 
           {/* Logo */}
-          <Link href="/" className="nav-logo" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <LogoSVG height={44} />
-            <span style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: '1.1rem', letterSpacing: '-0.01em', color: 'var(--text)' }}>
-              KAR-TA <span style={{ color: 'var(--accent)' }}>BASKI</span>
+          <Link href="/" className="nav-logo">
+            <LogoSVG height={40} />
+            <span style={{
+              fontFamily: 'var(--font-display)',
+              fontWeight: 800,
+              fontSize: '1.15rem',
+              letterSpacing: '-0.03em',
+              color: '#1A3C28',
+            }}>
+              KAR-TA <span style={{ color: 'var(--primary)' }}>BASKI</span>
             </span>
           </Link>
 
           {/* Desktop nav links */}
-          <ul className="nav-links" style={{ display: 'flex', gap: 2, listStyle: 'none' }}>
+          <ul className="nav-links" style={{ display: 'flex', gap: 4, listStyle: 'none', margin: 0, padding: 0 }}>
             {NAV_LINKS.map((l) => {
               const active = isActive(l.href, l.exact ?? true);
               return (
@@ -78,12 +80,15 @@ export default function Navbar() {
                       padding: '6px 14px',
                       borderRadius: 8,
                       fontSize: 14,
-                      fontWeight: active ? 600 : 500,
-                      color: active ? 'var(--text)' : 'var(--muted)',
-                      background: active ? 'rgba(22,101,52,0.07)' : 'transparent',
+                      fontFamily: 'var(--font-display)',
+                      fontWeight: active ? 700 : 500,
+                      letterSpacing: '-0.01em',
+                      color: active ? '#006D2F' : '#52525B',
+                      background: 'transparent',
                       display: 'block',
-                      transition: 'color 0.15s, background 0.15s',
+                      transition: 'color 0.15s',
                       position: 'relative',
+                      paddingBottom: active ? 8 : 6,
                     }}
                   >
                     {l.label}
@@ -91,9 +96,12 @@ export default function Navbar() {
                       <motion.span
                         layoutId="nav-underline"
                         style={{
-                          position: 'absolute', bottom: -2, left: 10, right: 10,
-                          height: 2, borderRadius: 2,
-                          background: 'var(--primary)',
+                          position: 'absolute',
+                          bottom: 0,
+                          left: 10, right: 10,
+                          height: 2,
+                          borderRadius: 2,
+                          background: '#006D2F',
                         }}
                         transition={{ type: 'spring', stiffness: 500, damping: 35 }}
                       />
@@ -105,20 +113,22 @@ export default function Navbar() {
           </ul>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            {/* Desktop WhatsApp */}
+            {/* Desktop WhatsApp CTA — gradient button like stitch */}
             <motion.a
               href={WA_HREF}
               target="_blank" rel="noopener noreferrer"
               className="nav-wa-btn"
-              whileHover={{ scale: 1.04 }}
-              whileTap={{ scale: 0.97 }}
+              whileHover={{ scale: 1.03, opacity: 0.9 }}
+              whileTap={{ scale: 0.96 }}
               style={{
                 display: 'flex', alignItems: 'center', gap: 7,
-                background: '#25D366',
-                color: '#ffffff', fontWeight: 700, fontSize: 13,
-                padding: '8px 16px', borderRadius: 8, border: 'none',
-                boxShadow: '0 2px 12px rgba(37,211,102,0.3)',
+                background: 'var(--primary)',
+                color: '#fff', fontWeight: 700, fontSize: 13,
+                fontFamily: 'var(--font-display)',
+                padding: '8px 18px', borderRadius: 10, border: 'none',
+                boxShadow: '0 4px 16px rgba(0,109,47,0.25)',
                 textDecoration: 'none',
+                letterSpacing: '-0.01em',
               }}
             >
               {WA_ICON}
@@ -134,7 +144,7 @@ export default function Navbar() {
                 display: 'none',
                 flexDirection: 'column', justifyContent: 'center', gap: 5,
                 width: 36, height: 36,
-                background: 'rgba(255,255,255,0.05)',
+                background: 'transparent',
                 border: '1px solid var(--border)',
                 borderRadius: 8, cursor: 'pointer', padding: 8,
               }}
@@ -159,7 +169,7 @@ export default function Navbar() {
             onClick={() => setOpen(false)}
             style={{
               position: 'fixed', inset: 0,
-              background: 'rgba(0,0,0,0.65)',
+              background: 'rgba(26,28,28,0.5)',
               backdropFilter: 'blur(4px)',
               zIndex: 299,
             }}
@@ -179,7 +189,7 @@ export default function Navbar() {
             style={{
               position: 'fixed', top: 0, right: 0, bottom: 0,
               width: 'min(300px, 85vw)',
-              background: 'var(--surface)',
+              background: '#fff',
               borderLeft: '1px solid var(--border)',
               zIndex: 300, display: 'flex', flexDirection: 'column',
             }}
@@ -189,17 +199,21 @@ export default function Navbar() {
               display: 'flex', alignItems: 'center', justifyContent: 'space-between',
               padding: '18px 20px', borderBottom: '1px solid var(--border)',
             }}>
-              <span className="nav-logo" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <LogoSVG height={40} />
-                <span style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: '1rem', color: 'var(--text)' }}>
-                  KAR-TA <span style={{ color: 'var(--accent)' }}>BASKI</span>
+              <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <LogoSVG height={36} />
+                <span style={{
+                  fontFamily: 'var(--font-display)',
+                  fontWeight: 800, fontSize: '1rem',
+                  letterSpacing: '-0.02em', color: '#1A3C28',
+                }}>
+                  KAR-TA <span style={{ color: 'var(--primary)' }}>BASKI</span>
                 </span>
               </span>
               <motion.button
                 whileTap={{ scale: 0.9 }}
                 onClick={() => setOpen(false)}
                 style={{
-                  background: 'rgba(255,255,255,0.05)', border: '1px solid var(--border)',
+                  background: 'var(--surface)', border: '1px solid var(--border)',
                   color: 'var(--muted)', fontSize: 16,
                   cursor: 'pointer', padding: '4px 10px', borderRadius: 6,
                 }}
@@ -221,15 +235,17 @@ export default function Navbar() {
                       href={l.href}
                       onClick={() => setOpen(false)}
                       style={{
-                        display: 'flex', alignItems: 'center', gap: 12,
-                        padding: '14px 20px', fontSize: 15, fontWeight: active ? 700 : 500,
-                        color: active ? 'var(--text)' : 'var(--muted)',
+                        display: 'flex', alignItems: 'center',
+                        padding: '14px 20px', fontSize: 15,
+                        fontFamily: 'var(--font-display)',
+                        fontWeight: active ? 700 : 500,
+                        letterSpacing: '-0.01em',
+                        color: active ? 'var(--primary)' : '#52525B',
                         borderLeft: `3px solid ${active ? 'var(--primary)' : 'transparent'}`,
-                        background: active ? 'rgba(22,101,52,0.06)' : 'transparent',
+                        background: active ? 'rgba(0,109,47,0.05)' : 'transparent',
                         transition: 'all 0.15s',
                       }}
                     >
-                      <span style={{ fontSize: 18, lineHeight: 1 }}>{l.icon}</span>
                       {l.label}
                     </Link>
                   </motion.div>
@@ -246,23 +262,20 @@ export default function Navbar() {
                 onClick={() => setOpen(false)}
                 style={{
                   display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-                  width: '100%', padding: '13px 0', borderRadius: 10,
-                  background: '#25D366',
-                  color: '#ffffff', fontWeight: 700, fontSize: 15,
-                  boxShadow: '0 4px 20px rgba(37,211,102,0.3)',
+                  width: '100%', padding: '13px 0', borderRadius: 12,
+                  background: 'var(--primary)',
+                  color: '#fff', fontWeight: 700, fontSize: 15,
+                  fontFamily: 'var(--font-display)',
+                  boxShadow: '0 4px 20px rgba(0,109,47,0.25)',
                   textDecoration: 'none',
                 }}
               >
                 {WA_ICON} WhatsApp ile Sipariş Ver
               </motion.a>
-              <p style={{ textAlign: 'center', color: 'var(--muted)', fontSize: 12, marginTop: 12 }}>
-                0505 087 47 26
-              </p>
             </div>
           </motion.div>
         )}
       </AnimatePresence>
-
     </>
   );
 }

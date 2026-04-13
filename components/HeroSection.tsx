@@ -10,20 +10,25 @@ const WA_ICON = (
   </svg>
 );
 
+const STAR_ICON = (
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+  </svg>
+);
+
 const fadeUp = {
-  hidden: { opacity: 0, y: 32 },
+  hidden: { opacity: 0, y: 28 },
   visible: (i = 0) => ({
-    opacity: 1,
-    y: 0,
-    transition: { delay: i * 0.1, duration: 0.6, ease: 'easeOut' as const },
+    opacity: 1, y: 0,
+    transition: { delay: i * 0.1, duration: 0.55, ease: 'easeOut' as const },
   }),
 };
 
 const STATS = [
-  { value: '500+',       label: 'Sipariş'         },
-  { value: 'Türkiye',    label: 'Geneli Kargo'     },
-  { value: 'Ücretsiz',   label: 'Tasarım'          },
-  { value: '3 İş Günü',  label: 'Teslimat'         },
+  { value: '500+',      label: 'Sipariş'      },
+  { value: 'Ücretsiz', label: 'Tasarım'       },
+  { value: '3 Gün',    label: 'Teslimat'      },
+  { value: 'TR',       label: 'Geneli Kargo'  },
 ];
 
 const WA_HREF = `${WHATSAPP_BASE}?text=${encodeURIComponent(DEFAULT_WA_TEXT)}`;
@@ -31,100 +36,146 @@ const WA_HREF = `${WHATSAPP_BASE}?text=${encodeURIComponent(DEFAULT_WA_TEXT)}`;
 export default function HeroSection() {
   return (
     <section className="hero-section">
-      {/* Grid background */}
       <div className="hero-grid" aria-hidden />
-
-      {/* Glow orbs */}
       <div className="hero-orb hero-orb-1" aria-hidden />
       <div className="hero-orb hero-orb-2" aria-hidden />
 
       <div className="container hero-inner">
-        {/* Eyebrow badge */}
-        <motion.div variants={fadeUp} initial="hidden" animate="visible" custom={0}>
-          <span className="hero-eyebrow">
-            <span className="hero-eyebrow-dot" />
-            Hayal Et, Biz Basalım
-          </span>
-        </motion.div>
 
-        {/* Title */}
-        <motion.h1
-          className="hero-title"
-          variants={fadeUp}
-          initial="hidden"
-          animate="visible"
-          custom={1}
-        >
-          Kişiye Özel{' '}
-          <span className="hero-title-accent">Kupa Baskı</span>
-        </motion.h1>
+        {/* Sol — metin içeriği */}
+        <div className="hero-content">
+          <motion.div variants={fadeUp} initial="hidden" animate="visible" custom={0}>
+            <span className="hero-eyebrow">
+              <span className="hero-eyebrow-dot" />
+              Hayal Et, Biz Basalım
+            </span>
+          </motion.div>
 
-        {/* Subtitle */}
-        <motion.p
-          className="hero-subtitle"
-          variants={fadeUp}
-          initial="hidden"
-          animate="visible"
-          custom={2}
-        >
-          Hayal Et, Biz Basalım — Türkiye&apos;nin Her Yerine Kargo
-          <br className="hidden sm:block" />
-          Bireysel ve kurumsal siparişler · Ücretsiz tasarım desteği
-        </motion.p>
-
-        {/* CTA Buttons */}
-        <motion.div
-          className="hero-ctas"
-          variants={fadeUp}
-          initial="hidden"
-          animate="visible"
-          custom={3}
-        >
-          <motion.a
-            href={WA_HREF}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="hero-cta-primary"
-            whileHover={{ scale: 1.03, boxShadow: '0 8px 40px rgba(37,211,102,0.5)' }}
-            whileTap={{ scale: 0.97 }}
+          <motion.h1
+            className="hero-title"
+            variants={fadeUp}
+            initial="hidden"
+            animate="visible"
+            custom={1}
           >
-            {WA_ICON}
-            WhatsApp&apos;tan Sipariş Ver
-          </motion.a>
+            Kişiye Özel{' '}
+            <span className="hero-title-accent">Kupa Baskı</span>
+            {' '}ile Markanı Yaşat
+          </motion.h1>
 
-          <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
-            <Link href="/nasil-siparis-verilir" className="hero-cta-secondary">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/>
-              </svg>
-              Nasıl Sipariş Verilir?
-            </Link>
+          <motion.p
+            className="hero-subtitle"
+            variants={fadeUp}
+            initial="hidden"
+            animate="visible"
+            custom={2}
+          >
+            Bireysel ve kurumsal siparişler · Ücretsiz tasarım desteği ·
+            Türkiye&apos;nin her yerine hızlı kargo.
+          </motion.p>
+
+          <motion.div
+            className="hero-ctas"
+            variants={fadeUp}
+            initial="hidden"
+            animate="visible"
+            custom={3}
+          >
+            <motion.a
+              href={WA_HREF}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hero-cta-primary"
+              whileHover={{ scale: 1.03 }}
+              whileTap={{ scale: 0.97 }}
+            >
+              {WA_ICON}
+              WhatsApp&apos;tan Sipariş Ver
+            </motion.a>
+
+            <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}>
+              <Link href="/nasil-siparis-verilir" className="hero-cta-secondary">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/>
+                </svg>
+                Nasıl Çalışır?
+              </Link>
+            </motion.div>
+          </motion.div>
+
+          {/* İstatistikler */}
+          <motion.div
+            className="hero-stats"
+            variants={fadeUp}
+            initial="hidden"
+            animate="visible"
+            custom={4}
+          >
+            {STATS.map((s, i) => (
+              <motion.div
+                key={s.label}
+                className="hero-stat"
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.55 + i * 0.07, duration: 0.4 }}
+              >
+                <span className="hero-stat-value">{s.value}</span>
+                <span className="hero-stat-label">{s.label}</span>
+              </motion.div>
+            ))}
+          </motion.div>
+        </div>
+
+        {/* Sağ — görsel / dekoratif kutu */}
+        <motion.div
+          className="hero-visual"
+          initial={{ opacity: 0, x: 32 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.7, ease: 'easeOut', delay: 0.15 }}
+        >
+          {/* Ürün görseli yoksa dekoratif kutu göster */}
+          <div className="hero-deco-box">
+            <div className="hero-deco-inner">
+              <span className="hero-deco-icon">☕</span>
+              <span className="hero-deco-label">Kişiye Özel<br />Kupa Baskı</span>
+
+              {/* Floating chip'ler */}
+              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'center', marginTop: 8 }}>
+                {['Sihirli Mat', 'Sihirli Konik', 'Renkli Kupa'].map((tag) => (
+                  <span key={tag} style={{
+                    padding: '5px 12px',
+                    borderRadius: '100px',
+                    background: 'rgba(0,109,47,0.1)',
+                    color: 'var(--primary)',
+                    fontSize: 12,
+                    fontWeight: 600,
+                    border: '1px solid rgba(0,109,47,0.2)',
+                  }}>{tag}</span>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Floating değerlendirme kartı */}
+          <motion.div
+            className="hero-float-card"
+            initial={{ opacity: 0, y: 16, x: -8 }}
+            animate={{ opacity: 1, y: 0, x: 0 }}
+            transition={{ delay: 0.6, duration: 0.5 }}
+          >
+            <div className="hero-float-stars">
+              {[...Array(5)].map((_, i) => (
+                <span key={i} style={{ color: '#755B00' }}>{STAR_ICON}</span>
+              ))}
+            </div>
+            <p className="hero-float-text">
+              &ldquo;Kupalar muhteşem geldi, tasarım tam istediğimiz gibi!&rdquo;
+            </p>
+            <span className="hero-float-sub">— Müşteri Yorumu</span>
           </motion.div>
         </motion.div>
 
-        {/* Stats */}
-        <motion.div
-          className="hero-stats"
-          variants={fadeUp}
-          initial="hidden"
-          animate="visible"
-          custom={4}
-        >
-          {STATS.map((s, i) => (
-            <motion.div
-              key={s.label}
-              className="hero-stat"
-              initial={{ opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.5 + i * 0.08, duration: 0.5 }}
-            >
-              <span className="hero-stat-value">{s.value}</span>
-              <span className="hero-stat-label">{s.label}</span>
-            </motion.div>
-          ))}
-        </motion.div>
       </div>
-
     </section>
   );
 }
