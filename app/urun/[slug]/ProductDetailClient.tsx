@@ -303,7 +303,7 @@ export default function ProductDetailClient({ slug }: { slug: string }) {
 
               {/* WhatsApp CTA */}
               <a
-                href={whatsappLink(title)}
+                href={whatsappLink(title, slug)}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="btn-whatsapp-detail"

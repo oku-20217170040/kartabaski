@@ -118,7 +118,7 @@ export default function ProductCard({ product }: Props) {
       {/* WhatsApp buton */}
       <div style={{ padding: '0 16px 16px' }}>
         <a
-          href={whatsappLink(title)}
+          href={whatsappLink(title, slug)}
           target="_blank"
           rel="noopener noreferrer"
           className="pro-card-wa-btn"
