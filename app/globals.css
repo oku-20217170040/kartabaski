@@ -31,6 +31,12 @@
   --accent2:      #1A1A1A;
   --accent-dim:   rgba(201,168,76,0.12);
 
+  /* WhatsApp */
+  --wa:           #25D366;
+  --wa-hover:     #20BA5A;
+  --wa-dark:      #128C7E;
+  --wa-shadow:    rgba(37,211,102,0.3);
+
   /* Durum */
   --danger:   #DC2626;
   --success:  #16A34A;
@@ -126,7 +132,7 @@ input, select, textarea { font-family: var(--font-body); }
 
 /* ── WHATSAPP BUTTON ── */
 .btn-whatsapp {
-  background: #25D366;
+  background: var(--wa);
   color: #fff;
   font-size: 13px;
   padding: 7px 14px;
@@ -137,13 +143,13 @@ input, select, textarea { font-family: var(--font-body); }
   align-items: center;
   gap: 6px;
   transition: all 0.2s;
-  box-shadow: 0 2px 8px rgba(37,211,102,0.2);
+  box-shadow: 0 2px 8px var(--wa-shadow);
   white-space: nowrap;
 }
 .btn-whatsapp:hover {
-  background: #20c75c;
+  background: var(--wa-hover);
   transform: translateY(-2px);
-  box-shadow: 0 6px 28px rgba(37,211,102,0.4);
+  box-shadow: 0 6px 28px rgba(37,211,102,0.45);
 }
 
 /* ── FORM ELEMENTS ── */
@@ -1059,17 +1065,17 @@ body::before { display: none; }
   gap: 8px;
   padding: 13px 24px;
   border-radius: 12px;
-  background: var(--accent);
+  background: var(--wa);
   color: #fff;
   font-weight: 700;
   font-size: 15px;
   text-decoration: none;
-  box-shadow: 0 4px 24px rgba(201,168,76,0.35);
+  box-shadow: 0 4px 24px var(--wa-shadow);
   transition: background 0.2s, box-shadow 0.2s;
 }
 .hero-cta-primary:hover {
-  background: var(--accent-hover);
-  box-shadow: 0 6px 32px rgba(201,168,76,0.45);
+  background: var(--wa-hover);
+  box-shadow: 0 6px 32px rgba(37,211,102,0.45);
 }
 .hero-cta-secondary {
   display: inline-flex;
@@ -1318,16 +1324,18 @@ body::before { display: none; }
   width: 100%;
   padding: 9px 0;
   border-radius: 10px;
-  background: var(--accent);
+  background: var(--wa);
   color: #fff;
   font-weight: 700;
   font-size: 13px;
   text-decoration: none;
-  transition: opacity 0.2s, transform 0.15s;
+  transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
+  box-shadow: 0 2px 8px var(--wa-shadow);
 }
 .pro-card-wa-btn:hover {
-  opacity: 0.88;
+  background: var(--wa-hover);
   transform: translateY(-1px);
+  box-shadow: 0 4px 16px rgba(37,211,102,0.4);
 }
 
 /* ══════════════════════════════════════
@@ -1433,17 +1441,18 @@ body::before { display: none; }
   gap: 8px;
   padding: 10px 20px;
   border-radius: 10px;
-  background: var(--accent);
+  background: var(--wa);
   color: #fff;
   font-weight: 700;
   font-size: 14px;
   text-decoration: none;
-  box-shadow: 0 4px 20px rgba(201,168,76,0.3);
+  box-shadow: 0 4px 20px var(--wa-shadow);
   margin-bottom: 16px;
   transition: box-shadow 0.2s, transform 0.15s;
 }
 .footer-wa-btn:hover {
-  box-shadow: 0 6px 30px rgba(201,168,76,0.45);
+  background: var(--wa-hover);
+  box-shadow: 0 6px 30px rgba(37,211,102,0.45);
   transform: translateY(-1px);
 }
 .footer-badges {
@@ -1536,14 +1545,14 @@ body::before { display: none; }
   bottom: 28px;
   right: 28px;
   z-index: 999;
-  background: var(--accent);
+  background: var(--wa);
   color: #fff;
   border-radius: 50px;
   display: flex;
   align-items: center;
   gap: 10px;
   padding: 14px 20px 14px 16px;
-  box-shadow: 0 4px 24px rgba(201,168,76,0.4);
+  box-shadow: 0 4px 24px var(--wa-shadow);
   font-weight: 700;
   font-size: 14px;
   font-family: var(--font-body);
@@ -1559,9 +1568,9 @@ body::before { display: none; }
   pointer-events: auto;
 }
 .wa-float:hover {
-  background: var(--accent-hover);
+  background: var(--wa-hover);
   transform: translateY(-3px) scale(1.04);
-  box-shadow: 0 8px 32px rgba(201,168,76,0.5);
+  box-shadow: 0 8px 32px rgba(37,211,102,0.5);
 }
 .wa-float-label { white-space: nowrap; }
 @media (max-width: 480px) {
@@ -1590,17 +1599,18 @@ body::before { display: none; }
   width: 100%;
   padding: 14px;
   border-radius: 12px;
-  background: var(--accent);
+  background: var(--wa);
   color: #fff;
   font-weight: 700;
   font-size: 16px;
   text-decoration: none;
-  box-shadow: 0 4px 24px rgba(201,168,76,0.35);
-  transition: box-shadow 0.2s, transform 0.15s;
+  box-shadow: 0 4px 24px var(--wa-shadow);
+  transition: background 0.2s, box-shadow 0.2s, transform 0.15s;
   margin-top: 12px;
 }
 .btn-whatsapp-detail:hover {
-  box-shadow: 0 6px 36px rgba(201,168,76,0.5);
+  background: var(--wa-hover);
+  box-shadow: 0 6px 36px rgba(37,211,102,0.5);
   transform: translateY(-1px);
 }
 
@@ -1745,16 +1755,17 @@ body::before { display: none; }
   gap: 10px;
   padding: 14px;
   border-radius: 12px;
-  background: var(--accent);
+  background: var(--wa);
   color: #ffffff;
   font-weight: 700;
   font-size: 15px;
   text-decoration: none;
-  box-shadow: 0 4px 24px rgba(201,168,76,0.35);
-  transition: box-shadow 0.2s, transform 0.15s;
+  box-shadow: 0 4px 24px var(--wa-shadow);
+  transition: background 0.2s, box-shadow 0.2s, transform 0.15s;
 }
 .contact-pro-wa-btn:hover {
-  box-shadow: 0 6px 36px rgba(201,168,76,0.5);
+  background: var(--wa-hover);
+  box-shadow: 0 6px 36px rgba(37,211,102,0.5);
   transform: translateY(-1px);
 }
 .contact-pro-phone {
@@ -1881,16 +1892,17 @@ body::before { display: none; }
   gap: 10px;
   padding: 16px 36px;
   border-radius: 14px;
-  background: var(--accent);
+  background: var(--wa);
   color: #fff;
   font-weight: 800;
   font-size: 17px;
   text-decoration: none;
-  box-shadow: 0 4px 24px rgba(201,168,76,0.35);
-  transition: box-shadow 0.2s, transform 0.15s;
+  box-shadow: 0 4px 24px var(--wa-shadow);
+  transition: background 0.2s, box-shadow 0.2s, transform 0.15s;
 }
 .how-cta-btn:hover {
-  box-shadow: 0 8px 40px rgba(201,168,76,0.5);
+  background: var(--wa-hover);
+  box-shadow: 0 8px 40px rgba(37,211,102,0.5);
   transform: translateY(-2px);
 }
 

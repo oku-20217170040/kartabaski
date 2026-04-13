@@ -114,10 +114,10 @@ export default function Navbar() {
               whileTap={{ scale: 0.97 }}
               style={{
                 display: 'flex', alignItems: 'center', gap: 7,
-                background: 'var(--accent)',
+                background: '#25D366',
                 color: '#ffffff', fontWeight: 700, fontSize: 13,
                 padding: '8px 16px', borderRadius: 8, border: 'none',
-                boxShadow: '0 2px 12px rgba(201,168,76,0.3)',
+                boxShadow: '0 2px 12px rgba(37,211,102,0.3)',
                 textDecoration: 'none',
               }}
             >
@@ -247,9 +247,9 @@ export default function Navbar() {
                 style={{
                   display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
                   width: '100%', padding: '13px 0', borderRadius: 10,
-                  background: 'var(--accent)',
+                  background: '#25D366',
                   color: '#ffffff', fontWeight: 700, fontSize: 15,
-                  boxShadow: '0 4px 20px rgba(201,168,76,0.3)',
+                  boxShadow: '0 4px 20px rgba(37,211,102,0.3)',
                   textDecoration: 'none',
                 }}
               >
