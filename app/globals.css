@@ -2173,6 +2173,13 @@ body::before { display: none; }
 }
 
 /* ── Ürün detay sayfası ── */
+
+/* Sticky bottom bar — masaüstünde gizli */
+.detail-sticky-bar { display: none; }
+
+/* Desktop: inline WA butonu görünür */
+.detail-wa-desktop { display: flex !important; }
+
 @media (max-width: 1024px) {
   .detail-grid {
     grid-template-columns: 1fr !important;
@@ -2181,18 +2188,70 @@ body::before { display: none; }
   .detail-info { position: static !important; }
 }
 @media (max-width: 768px) {
-  .detail-main-img { aspect-ratio: 3/2 !important; }
-  .detail-thumbs { grid-template-columns: repeat(4, 1fr) !important; gap: 8px !important; }
+  /* Ana sayfa sticky bar — mobilde */
+  .detail-sticky-bar {
+    display: flex;
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    z-index: 200;
+    background: #fff;
+    border-top: 1px solid var(--border);
+    padding: 10px 16px;
+    padding-bottom: calc(10px + env(safe-area-inset-bottom));
+    align-items: center;
+    gap: 12px;
+    box-shadow: 0 -6px 24px rgba(0,0,0,0.09);
+  }
+  .detail-sticky-price {
+    font-family: var(--font-display);
+    font-size: 1.25rem;
+    font-weight: 800;
+    color: var(--primary);
+    letter-spacing: -0.03em;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .detail-sticky-wa-btn {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 13px 16px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, var(--primary), var(--primary-container));
+    color: #fff;
+    font-weight: 700;
+    font-size: 15px;
+    font-family: var(--font-display);
+    text-decoration: none;
+    box-shadow: 0 4px 16px rgba(0,109,47,0.25);
+    letter-spacing: -0.01em;
+  }
+
+  /* İçerideki WA butonu mobilden kaldır */
+  .detail-wa-desktop { display: none !important; }
+
+  /* Thumbnails mobilden kaldır */
+  .detail-thumbs { display: none !important; }
+
+  /* Ana içerik için sticky bar kadar padding */
+  .detail-page-main { padding-bottom: calc(80px + env(safe-area-inset-bottom)) !important; }
+
+  /* Dot göstergesi mobilde ortada */
+  .gallery-dots { display: flex !important; justify-content: center; margin-top: 12px; }
+
+  .detail-main-img { aspect-ratio: 1/1 !important; border-radius: 0 !important; margin-inline: -16px; width: calc(100% + 32px) !important; }
   .detail-title { font-size: 1.4rem !important; }
   .detail-price { font-size: 1.6rem !important; }
-  .detail-wa-btn { padding: 14px 20px !important; font-size: 15px !important; }
   .detail-features { grid-template-columns: 1fr 1fr !important; gap: 8px !important; }
 }
 @media (max-width: 480px) {
-  .detail-thumbs { grid-template-columns: repeat(3, 1fr) !important; }
-  .detail-main-img { aspect-ratio: 1/1 !important; border-radius: 12px !important; }
+  .detail-main-img { aspect-ratio: 1/1 !important; }
   .detail-title { font-size: 1.2rem !important; }
   .detail-badge-row { flex-wrap: wrap; gap: 6px !important; }
+  .detail-sticky-price { font-size: 1.1rem; }
+  .detail-sticky-wa-btn { font-size: 14px; padding: 12px 14px; }
 }
 
 /* ── İletişim bölümü ── */
