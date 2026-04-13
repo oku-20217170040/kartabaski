@@ -254,8 +254,8 @@ export default function ProductDetailClient({ slug, product, similar }: Props) {
                 margin: '10px 0 0',
               }}>{title}</h1>
 
-              {/* Fiyat */}
-              <div style={{ display: 'flex', alignItems: 'baseline', gap: 12, margin: '20px 0 0' }}>
+              {/* Fiyat — mobilede sticky bar'da gösterildiği için gizlenir */}
+              <div className="detail-price-row" style={{ display: 'flex', alignItems: 'baseline', gap: 12, margin: '20px 0 0' }}>
                 <span style={{
                   fontFamily: 'var(--font-display)',
                   fontSize: 32, fontWeight: 800,

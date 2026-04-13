@@ -456,23 +456,27 @@ input, select, textarea { font-family: var(--font-body); }
   display: none;
   justify-content: center;
   align-items: center;
-  gap: 6px;
+  gap: 5px;
   margin-top: 10px;
 }
+/* Görsel küçük, dokunma alanı büyük */
 .gallery-dot {
-  width: 7px; height: 7px;
+  width: 6px; height: 6px;
+  min-width: unset; min-height: unset;
   border-radius: 50%;
   border: none;
-  background: rgba(166,124,46,0.25);
+  background: rgba(0,0,0,0.2);
   cursor: pointer;
-  padding: 0;
+  padding: 8px;
+  background-clip: content-box;
   transition: background 0.2s, width 0.2s;
   flex-shrink: 0;
 }
 .gallery-dot--active {
-  background: var(--accent);
-  width: 20px;
-  border-radius: 4px;
+  background: var(--primary);
+  background-clip: content-box;
+  width: 16px;
+  border-radius: 3px;
 }
 
 @media (max-width: 768px) {
@@ -2231,6 +2235,9 @@ body::before { display: none; }
 
   /* İçerideki WA butonu mobilden kaldır */
   .detail-wa-desktop { display: none !important; }
+
+  /* Fiyat sticky bar'da gösterildiği için içerikten kaldır */
+  .detail-price-row { display: none !important; }
 
   /* Thumbnails mobilden kaldır */
   .detail-thumbs { display: none !important; }

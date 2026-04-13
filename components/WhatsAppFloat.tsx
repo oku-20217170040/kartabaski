@@ -1,16 +1,23 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { usePathname } from 'next/navigation';
 import { WHATSAPP_BASE, DEFAULT_WA_TEXT } from '@/lib/constants';
 
 export default function WhatsAppFloat() {
   const [visible, setVisible] = useState(false);
+  const pathname = usePathname();
+
+  // Ürün detay sayfalarında sticky bar zaten var, float buton gösterilmez
+  const isProductPage = pathname?.startsWith('/urun/');
 
   useEffect(() => {
     const onScroll = () => setVisible(window.scrollY > 100);
     window.addEventListener('scroll', onScroll, { passive: true });
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
+
+  if (isProductPage) return null;
 
   const href = `${WHATSAPP_BASE}?text=${encodeURIComponent(DEFAULT_WA_TEXT)}`;
 
