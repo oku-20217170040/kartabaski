@@ -25,10 +25,10 @@ const fadeUp = {
 };
 
 const STATS = [
-  { value: '500+',      label: 'Sipariş'      },
-  { value: 'Ücretsiz', label: 'Tasarım'       },
-  { value: '3 Gün',    label: 'Teslimat'      },
-  { value: 'TR',       label: 'Geneli Kargo'  },
+  { icon: '🛍️', value: '500+',      label: 'Sipariş'      },
+  { icon: '🎨', value: 'Ücretsiz', label: 'Tasarım'       },
+  { icon: '🚚', value: '3 Gün',    label: 'Teslimat'      },
+  { icon: '🌍', value: 'TR',       label: 'Geneli Kargo'  },
 ];
 
 const WA_HREF = `${WHATSAPP_BASE}?text=${encodeURIComponent(DEFAULT_WA_TEXT)}`;
@@ -119,6 +119,7 @@ export default function HeroSection() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.55 + i * 0.07, duration: 0.4 }}
               >
+                <span className="hero-stat-icon">{s.icon}</span>
                 <span className="hero-stat-value">{s.value}</span>
                 <span className="hero-stat-label">{s.label}</span>
               </motion.div>
