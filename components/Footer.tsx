@@ -118,6 +118,10 @@ export default function Footer() {
                 <span className="fc-icon" style={{ color: '#E1306C' }}>{IG_ICON}</span>
                 <a href={IG_HREF} target="_blank" rel="noopener noreferrer">@kartabaskii</a>
               </li>
+              <li>
+                <span className="fc-icon">✉️</span>
+                <a href="mailto:info@kartabaski.com">info@kartabaski.com</a>
+              </li>
             </ul>
           </div>
         </div>

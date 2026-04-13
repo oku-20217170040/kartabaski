@@ -90,6 +90,7 @@ export default async function HomePage() {
                       WhatsApp ile Yaz
                     </a>
                     <a href={`tel:+${PHONE}`} className="contact-pro-phone">📞 {PHONE_DISPLAY}</a>
+                    <a href="mailto:info@kartabaski.com" className="contact-pro-phone" style={{ marginTop: 6 }}>✉️ info@kartabaski.com</a>
                     <a
                       href="https://www.instagram.com/kartabaskii/"
                       target="_blank"
