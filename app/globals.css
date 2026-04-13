@@ -830,13 +830,6 @@ input, select, textarea { font-family: var(--font-body); }
     max-height: 56vh;
     object-fit: contain;
   }
-  /* Pro-card mobil optimizasyonu */
-  .pro-card-img-wrap { height: 150px; }
-  .pro-card-body { padding: 12px; gap: 6px; }
-  .pro-card-title { font-size: 13px; }
-  .pro-card-price { font-size: 15px; }
-  .pro-card-tags { display: none; }
-  .pro-card-cat { font-size: 9px; }
 }
 
 @media (max-width: 520px) {
@@ -846,17 +839,11 @@ input, select, textarea { font-family: var(--font-body); }
   .product-card-title { font-size: 0.75rem; }
   .product-card-price { font-size: 1rem; }
   .product-card-body { padding: 10px; gap: 5px; }
-  .pro-card-img-wrap { height: 130px; }
-  .pro-card-body { padding: 10px; gap: 5px; }
-  .pro-card-title { font-size: 12px; }
-  .pro-card-price { font-size: 14px; }
-  .pro-card-in-stock { display: none; }
 }
 
 @media (max-width: 360px) {
   /* Çok küçük ekran — tek sütun */
-  .products-grid { grid-template-columns: 1fr; }
-  .pro-card-img-wrap { height: 180px; }
+  .products-grid { grid-template-columns: repeat(2, 1fr); }
 }
 
 /* ── CONTACT SECTION ── */
@@ -1155,187 +1142,114 @@ body::before { display: none; }
 .ham-line:nth-child(3).open { transform: translateY(-7px) rotate(-45deg); }
 
 /* ══════════════════════════════════════
-   PRO-CARD (ProductCard component)
+   TCARD — Trendyol tarzı ürün kartı
 ══════════════════════════════════════ */
-.pro-card {
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: 16px;
+.tcard {
+  display: flex;
+  flex-direction: column;
+  background: #fff;
+  border: 1px solid rgba(0,0,0,0.07);
+  border-radius: 12px;
   overflow: hidden;
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  transition: border-color 0.25s, box-shadow 0.25s;
-}
-.pro-card:hover {
-  border-color: rgba(201,168,76,0.35);
-  box-shadow: 0 16px 48px rgba(0,0,0,0.12), 0 0 0 1px rgba(201,168,76,0.12);
-}
-.pro-card-link {
-  display: flex;
-  flex-direction: column;
-  flex: 1;
   text-decoration: none;
   color: inherit;
+  cursor: pointer;
+  transition: box-shadow 0.22s, border-color 0.22s, transform 0.22s;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.06);
 }
-.pro-card-img-wrap {
+.tcard:hover {
+  box-shadow: 0 8px 32px rgba(0,0,0,0.11);
+  border-color: rgba(201,168,76,0.3);
+  transform: translateY(-3px);
+}
+
+/* Görsel alanı — 1:1 kare */
+.tcard-img-wrap {
   position: relative;
+  width: 100%;
+  aspect-ratio: 1 / 1;
   overflow: hidden;
-  height: 200px;
   background: #F8F7F4;
-  flex-shrink: 0;
 }
-.pro-card-img-skeleton {
+.tcard-skeleton {
   position: absolute;
   inset: 0;
   background: linear-gradient(90deg, #F0EDE8 25%, #E8E4DF 50%, #F0EDE8 75%);
   background-size: 200% 100%;
   animation: shimmer 1.5s infinite;
 }
-.pro-card-img {
+.tcard-img {
   width: 100%;
   height: 100%;
   object-fit: contain;
+  display: block;
+  transition: transform 0.4s ease;
 }
-.pro-card-no-img {
+.tcard-no-img {
   width: 100%; height: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 48px;
-  opacity: 0.3;
+  font-size: 52px;
+  opacity: 0.25;
 }
-.pro-card-gradient {
+.tcard-badge {
   position: absolute;
-  inset: 0;
-  background: linear-gradient(to top, rgba(0,0,0,0.12) 0%, transparent 55%);
-  pointer-events: none;
-}
-.pro-card-badges {
-  position: absolute;
-  top: 10px;
-  left: 10px;
-  z-index: 3;
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-}
-.pro-badge {
-  display: inline-block;
-  padding: 3px 10px;
-  border-radius: 100px;
-  border: 1px solid;
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.03em;
-  backdrop-filter: blur(6px);
-}
-.pro-badge-featured {
-  background: linear-gradient(135deg, rgba(201,168,76,0.9), rgba(180,148,56,0.9));
-  border-color: transparent;
+  top: 8px;
+  left: 8px;
+  padding: 3px 9px;
+  border-radius: 4px;
+  background: linear-gradient(135deg, #C9A84C, #E8C96A);
   color: #fff;
-}
-.pro-card-hover-btn {
-  position: absolute;
-  bottom: 12px;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 4;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 7px 18px;
-  border-radius: 100px;
-  background: rgba(255,255,255,0.85);
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(0,0,0,0.1);
-  color: var(--text);
-  font-size: 12px;
-  font-weight: 600;
-  white-space: nowrap;
-  pointer-events: none;
-}
-.pro-card-body {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  padding: 16px;
-}
-.pro-card-cat {
   font-size: 10px;
   font-weight: 700;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.02em;
+  z-index: 2;
+}
+
+/* Bilgi alanı */
+.tcard-body {
+  padding: 10px 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.tcard-cat {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
   color: var(--muted);
+  margin: 0;
 }
-.pro-card-title {
-  font-size: 15px;
-  font-weight: 600;
-  color: var(--text);
-  line-height: 1.4;
+.tcard-title {
+  font-size: 13px;
+  font-weight: 500;
+  color: #1A1A1A;
+  line-height: 1.45;
   margin: 0;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
-.pro-card-footer {
-  margin-top: auto;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding-top: 10px;
-  border-top: 1px solid rgba(0,0,0,0.06);
-}
-.pro-card-price-wrap {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-.pro-card-price {
-  font-size: 15px;
-  font-weight: 700;
+.tcard-price {
+  font-size: 16px;
+  font-weight: 800;
   color: var(--accent);
-  letter-spacing: -0.01em;
+  letter-spacing: -0.02em;
+  margin: 4px 0 0;
 }
-.pro-card-arrow {
-  width: 30px; height: 30px;
-  border-radius: 50%;
-  background: rgba(0,0,0,0.04);
-  border: 1px solid rgba(0,0,0,0.08);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--muted);
-  transition: background 0.2s, color 0.2s;
-  flex-shrink: 0;
+
+/* Mobil */
+@media (max-width: 760px) {
+  .tcard-body { padding: 8px 10px 12px; }
+  .tcard-title { font-size: 12px; }
+  .tcard-price { font-size: 14px; }
 }
-.pro-card:hover .pro-card-arrow {
-  background: rgba(201,168,76,0.15);
-  border-color: rgba(201,168,76,0.3);
-  color: var(--accent);
-}
-.pro-card-wa-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 7px;
-  width: 100%;
-  padding: 9px 0;
-  border-radius: 10px;
-  background: var(--wa);
-  color: #fff;
-  font-weight: 700;
-  font-size: 13px;
-  text-decoration: none;
-  transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
-  box-shadow: 0 2px 8px var(--wa-shadow);
-}
-.pro-card-wa-btn:hover {
-  background: var(--wa-hover);
-  transform: translateY(-1px);
-  box-shadow: 0 4px 16px rgba(37,211,102,0.4);
+@media (max-width: 520px) {
+  .tcard-title { font-size: 11px; }
+  .tcard-price { font-size: 13px; }
 }
 
 /* ══════════════════════════════════════
