@@ -3,9 +3,9 @@
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { Product } from '@/types';
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import {
-  getTitle, getPriceMin, getPriceMax, getCategory, getActive,
+  getTitle, getPriceMin, getPriceMax, getCategory,
   getSlug, getImageSrc, getFeatured,
 } from '@/lib/product-utils';
 import { formatPriceRange } from '@/lib/products';
@@ -15,6 +15,14 @@ interface Props { product: Product }
 export default function ProductCard({ product }: Props) {
   const [imgError, setImgError]   = useState(false);
   const [imgLoaded, setImgLoaded] = useState(false);
+  const imgRef = useRef<HTMLImageElement>(null);
+
+  // SSR hydration'dan önce yüklenmiş (cache'den gelen) resimleri yakala
+  useEffect(() => {
+    if (imgRef.current?.complete && imgRef.current.naturalWidth > 0) {
+      setImgLoaded(true);
+    }
+  }, []);
 
   const title      = getTitle(product);
   const priceMin   = getPriceMin(product);
@@ -33,13 +41,14 @@ export default function ProductCard({ product }: Props) {
           <>
             {!imgLoaded && <div className="tcard-skeleton" />}
             <motion.img
+              ref={imgRef}
               src={imgSrc}
               alt={title}
-              loading="lazy"
+              loading="eager"
               onLoad={() => setImgLoaded(true)}
               onError={() => setImgError(true)}
               className="tcard-img"
-              style={{ opacity: imgLoaded ? 1 : 0 }}
+              style={{ opacity: imgLoaded ? 1 : 0, transition: 'opacity 0.3s ease' }}
               whileHover={{ scale: 1.06 }}
               transition={{ duration: 0.4, ease: 'easeOut' }}
             />
