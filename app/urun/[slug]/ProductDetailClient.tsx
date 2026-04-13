@@ -46,38 +46,23 @@ function ShareButton({ title, slug }: { title: string; slug: string }) {
   );
 }
 
-import { getProductBySlug, getProductById, getProducts, cloudinaryUrl, cloudinaryThumb, whatsappLink, formatPriceRange } from '@/lib/products';
+import { cloudinaryUrl, cloudinaryThumb, whatsappLink, formatPriceRange } from '@/lib/products';
 import { Product } from '@/types';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import Link from 'next/link';
-import { getTitle, getPriceMin, getPriceMax, getCategory, getActive, getSlug, getDescription } from '@/lib/product-utils';
+import { getTitle, getPriceMin, getPriceMax, getCategory, getSlug, getDescription } from '@/lib/product-utils';
 
-export default function ProductDetailClient({ slug }: { slug: string }) {
-  const [product, setProduct] = useState<Product | null>(null);
-  const [similar, setSimilar] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(true);
+interface Props {
+  slug: string;
+  product: Product | null;
+  similar: Product[];
+}
+
+export default function ProductDetailClient({ slug, product, similar }: Props) {
   const [activeImg, setActiveImg] = useState(0);
   const [lightbox, setLightbox] = useState<number | null>(null);
   const [touchStartX, setTouchStartX] = useState<number | null>(null);
-
-  useEffect(() => {
-    if (!slug || slug === 'undefined') { setLoading(false); return; }
-    getProductBySlug(slug)
-      .then(async (p) => p || getProductById(slug))
-      .then(async (p) => {
-        setProduct(p);
-        if (p) {
-          const cat = getCategory(p);
-          const all = await getProducts();
-          const sim = all
-            .filter((x) => x.id !== p.id && getCategory(x) === cat && getActive(x))
-            .slice(0, 4);
-          setSimilar(sim);
-        }
-      })
-      .finally(() => setLoading(false));
-  }, [slug]);
 
   useEffect(() => {
     if (lightbox === null) return;
@@ -101,17 +86,6 @@ export default function ProductDetailClient({ slug }: { slug: string }) {
             <div className="empty-state-title">Geçersiz ürün bağlantısı</div>
             <Link href="/" className="btn btn-secondary" style={{ marginTop: 20, display: 'inline-flex' }}>← Ürünlere Dön</Link>
           </div>
-        </div>
-      </>
-    );
-  }
-
-  if (loading) {
-    return (
-      <>
-        <Navbar />
-        <div style={{ paddingTop: 120, display: 'flex', justifyContent: 'center' }}>
-          <div className="spinner" />
         </div>
       </>
     );
@@ -347,18 +321,17 @@ export default function ProductDetailClient({ slug }: { slug: string }) {
                   const imgId = p.images?.[0] ?? null;
                   const thumb = imgId ? (imgId.startsWith('http') ? imgId : cloudinaryThumb(imgId)) : null;
                   return (
-                    <Link key={p.id} href={`/urun/${getSlug(p)}`} className="product-card">
-                      <div className="product-card-img">
+                    <Link key={p.id} href={`/urun/${getSlug(p)}`} className="tcard">
+                      <div className="tcard-img-wrap">
                         {thumb
-                          ? <img src={thumb} alt={t} loading="lazy" />
-                          : <div className="product-card-no-img">☕</div>
+                          ? <img src={thumb} alt={t} loading="lazy" className="tcard-img" style={{ opacity: 1 }} />
+                          : <div className="tcard-no-img">☕</div>
                         }
                       </div>
-                      <div className="product-card-body">
-                        <div className="product-card-title">{t}</div>
-                        <div className="product-card-price" style={{ color: 'var(--accent)', fontSize: 14 }}>
-                          {formatPriceRange(pMin, pMax)}
-                        </div>
+                      <div className="tcard-body">
+                        <p className="tcard-cat">{getCategory(p)}</p>
+                        <h3 className="tcard-title">{t}</h3>
+                        <p className="tcard-price">{formatPriceRange(pMin, pMax)}</p>
                       </div>
                     </Link>
                   );
@@ -369,7 +342,6 @@ export default function ProductDetailClient({ slug }: { slug: string }) {
         </div>
       </main>
       <Footer />
-
     </>
   );
 }

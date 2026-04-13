@@ -1,9 +1,9 @@
 import { Metadata } from 'next';
-import { getProductBySlugServer as getProductBySlug } from '@/lib/products-server';
+import { getProductBySlugServer as getProductBySlug, getSimilarProductsServer } from '@/lib/products-server';
 import { cloudinaryUrl, formatPriceRange } from '@/lib/products';
 import ProductDetailClient from './ProductDetailClient';
 import { PHONE, SITE_NAME } from '@/lib/constants';
-import { getTitle, getPriceMin, getPriceMax, getCategory, getActive, getFirstImageId, getShortDesc, getDescription } from '@/lib/product-utils';
+import { getTitle, getPriceMin, getPriceMax, getCategory, getActive, getFirstImageId, getShortDesc, getDescription, getSlug } from '@/lib/product-utils';
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://kartabaski.com';
 
@@ -56,6 +56,10 @@ export default async function ProductDetailPage({ params }: Props) {
 
   const product = await getProductBySlug(slug).catch(() => null);
 
+  const similar = product
+    ? await getSimilarProductsServer(getCategory(product), product.id).catch(() => [])
+    : [];
+
   let productSchema = null;
   if (product) {
     const pTitle = getTitle(product);
@@ -102,7 +106,7 @@ export default async function ProductDetailPage({ params }: Props) {
           dangerouslySetInnerHTML={{ __html: JSON.stringify(productSchema) }}
         />
       )}
-      <ProductDetailClient slug={slug} />
+      <ProductDetailClient slug={slug} product={product} similar={similar} />
     </>
   );
 }

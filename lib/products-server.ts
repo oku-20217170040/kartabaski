@@ -49,3 +49,27 @@ export async function getProductBySlugServer(slug: string): Promise<Product | nu
     return null;
   }
 }
+
+/** Aynı kategorideki benzer ürünleri getirir (Admin SDK) */
+export async function getSimilarProductsServer(
+  category: string,
+  excludeId: string,
+  limit = 4,
+): Promise<Product[]> {
+  try {
+    const snap = await adminDb
+      .collection(COL)
+      .where('category', '==', category)
+      .where('active', '==', true)
+      .limit(limit + 1)
+      .get();
+
+    return snap.docs
+      .map((d) => parseProduct(d.id, d.data() as Record<string, unknown>))
+      .filter((p): p is Product => p !== null && p.id !== excludeId)
+      .slice(0, limit);
+  } catch (err) {
+    console.error('[products-server] getSimilarProductsServer failed:', err);
+    return [];
+  }
+}
