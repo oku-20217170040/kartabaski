@@ -32,5 +32,18 @@ service cloud.firestore {
       allow read, write: if isAdmin();
     }
 
+    // ── konfiguratör koleksiyonları ───────────────────────────────────────────
+    match /configurator_cups/{docId} {
+      // Herkese açık okuma (konfiguratör sayfası public)
+      allow read: if true;
+      // Sadece admin yazabilir
+      allow create, update, delete: if isAdmin();
+    }
+
+    match /configurator_designs/{docId} {
+      allow read: if true;
+      allow create, update, delete: if isAdmin();
+    }
+
   }
 }
