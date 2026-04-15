@@ -142,18 +142,7 @@ export default function ConfiguratorClient() {
         <section ref={designsRef}>
           <SectionTitle number={2} title="Tasarımını Seç" />
           <div style={gridStyle} className="configurator-grid">
-            {designs.map((design) => (
-              <ItemCard
-                key={design.id}
-                selected={selectedDesign?.id === design.id}
-                onClick={() => handleSelectDesign(design)}
-              >
-                <Visual imagePublicId={design.imagePublicId} background={design.gradient} color={design.textColor} label={design.code} emoji="🎨" />
-                <div style={itemNameStyle}>{design.name}</div>
-              </ItemCard>
-            ))}
-
-            {/* Kendi tasarımı kartı — her zaman listede son */}
+            {/* Kendi tasarımı kartı — her zaman listede ilk */}
             <ItemCard
               selected={selectedDesign?.id === '__custom__'}
               onClick={() => handleSelectDesign(CUSTOM_DESIGN)}
@@ -173,6 +162,17 @@ export default function ConfiguratorClient() {
               </div>
               <div style={{ ...itemNameStyle, color: '#1A1A1A', fontWeight: 700 }}>Kendi Tasarımım</div>
             </ItemCard>
+
+            {designs.map((design) => (
+              <ItemCard
+                key={design.id}
+                selected={selectedDesign?.id === design.id}
+                onClick={() => handleSelectDesign(design)}
+              >
+                <Visual imagePublicId={design.imagePublicId} background={design.gradient} color={design.textColor} label={design.code} emoji="🎨" />
+                <div style={itemNameStyle}>{design.name}</div>
+              </ItemCard>
+            ))}
           </div>
         </section>
 
