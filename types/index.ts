@@ -32,6 +32,33 @@ export const CATEGORIES: Category[] = [
   'Özel Tasarım',
 ];
 
+// ── Konfiguratör ─────────────────────────────────────────────────────────────
+
+export interface ConfiguratorCup {
+  id: string;
+  code: string;       // B1, B2 ...
+  name: string;
+  price: number;
+  gradient: string;   // CSS gradient — ör. "linear-gradient(135deg,#6366F1,#8B5CF6)"
+  textColor: string;  // Görsel üzerindeki metin rengi — ör. "rgba(255,255,255,0.92)"
+  active: boolean;
+  order: number;
+  createdAt: number;
+  updatedAt: number;
+}
+
+export interface ConfiguratorDesign {
+  id: string;
+  code: string;       // T1, T2 ...
+  name: string;
+  gradient: string;
+  textColor: string;
+  active: boolean;
+  order: number;
+  createdAt: number;
+  updatedAt: number;
+}
+
 export interface FilterState {
   search: string;
   category: Category | '';

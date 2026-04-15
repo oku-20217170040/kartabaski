@@ -1,81 +1,41 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
-import { whatsappLink } from '@/lib/products';
+import { collection, getDocs, orderBy, query, where } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
+import { ConfiguratorCup, ConfiguratorDesign } from '@/types';
 
-/* ─── VERİ ─────────────────────────────────────────────────────
-   Bardak ve tasarım bilgileri — kolayca güncellenebilir.
-──────────────────────────────────────────────────────────────── */
-const CUPS = [
-  { id: 'B1',  name: 'Klasik Mat',        price: 250 },
-  { id: 'B2',  name: 'Pembe Konik',        price: 265 },
-  { id: 'B3',  name: 'Mavi Seramik',       price: 280 },
-  { id: 'B4',  name: 'Alev Desenli',       price: 295 },
-  { id: 'B5',  name: 'Yeşil Sihirli',      price: 310 },
-  { id: 'B6',  name: 'Lacivert Büyük',     price: 325 },
-  { id: 'B7',  name: 'Turuncu Panoramik',  price: 340 },
-  { id: 'B8',  name: 'Mor Fincan',         price: 355 },
-  { id: 'B9',  name: 'Turkuaz Mini',       price: 270 },
-  { id: 'B10', name: 'Antrasit Kare',      price: 285 },
-] as const;
-
-const DESIGNS = [
-  { id: 'T1',  name: 'Sade' },
-  { id: 'T2',  name: 'Çiçekli' },
-  { id: 'T3',  name: 'Doğum Günü' },
-  { id: 'T4',  name: 'Aşk' },
-  { id: 'T5',  name: 'Komik' },
-  { id: 'T6',  name: 'Motivasyon' },
-  { id: 'T7',  name: 'Kurumsal' },
-  { id: 'T8',  name: 'Bebek' },
-  { id: 'T9',  name: 'Doğa' },
-  { id: 'T10', name: 'Soyut' },
-] as const;
-
-type Cup    = typeof CUPS[number];
-type Design = typeof DESIGNS[number];
-
-/* Placeholder renk gradyanları */
-const CUP_COLORS: Record<string, string> = {
-  B1:  'linear-gradient(135deg,#6366F1,#8B5CF6)',
-  B2:  'linear-gradient(135deg,#EC4899,#F43F5E)',
-  B3:  'linear-gradient(135deg,#14B8A6,#0EA5E9)',
-  B4:  'linear-gradient(135deg,#F59E0B,#EF4444)',
-  B5:  'linear-gradient(135deg,#10B981,#059669)',
-  B6:  'linear-gradient(135deg,#3B82F6,#6366F1)',
-  B7:  'linear-gradient(135deg,#F97316,#EAB308)',
-  B8:  'linear-gradient(135deg,#8B5CF6,#EC4899)',
-  B9:  'linear-gradient(135deg,#06B6D4,#10B981)',
-  B10: 'linear-gradient(135deg,#64748B,#334155)',
-};
-
-const DESIGN_COLORS: Record<string, { bg: string; color: string }> = {
-  T1:  { bg: 'linear-gradient(135deg,#F3F4F6,#D1D5DB)',   color: '#374151' },
-  T2:  { bg: 'linear-gradient(135deg,#FDF2F8,#FBCFE8)',   color: '#9D174D' },
-  T3:  { bg: 'linear-gradient(135deg,#FFFBEB,#FDE68A)',   color: '#92400E' },
-  T4:  { bg: 'linear-gradient(135deg,#FFF1F2,#FECDD3)',   color: '#9F1239' },
-  T5:  { bg: 'linear-gradient(135deg,#ECFDF5,#A7F3D0)',   color: '#065F46' },
-  T6:  { bg: 'linear-gradient(135deg,#EFF6FF,#BFDBFE)',   color: '#1E40AF' },
-  T7:  { bg: 'linear-gradient(135deg,#F8FAFC,#CBD5E1)',   color: '#0F172A' },
-  T8:  { bg: 'linear-gradient(135deg,#FFF7ED,#FED7AA)',   color: '#9A3412' },
-  T9:  { bg: 'linear-gradient(135deg,#F0FDF4,#BBF7D0)',   color: '#14532D' },
-  T10: { bg: 'linear-gradient(135deg,#FAF5FF,#DDD6FE)',   color: '#4C1D95' },
-};
+type Cup    = ConfiguratorCup;
+type Design = ConfiguratorDesign;
 
 const WA_NUMBER = '905458266508';
 
 function buildWaUrl(cup: Cup, design: Design): string {
-  const msg = `Merhaba, ${cup.id} bardağına ${design.id} tasarımını bastırmak istiyorum. Bilgi alabilir miyim?`;
+  const msg = `Merhaba, ${cup.code} bardağına ${design.code} tasarımını bastırmak istiyorum. Bilgi alabilir miyim?`;
   return `https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(msg)}`;
 }
 
 /* ─── COMPONENT ─────────────────────────────────────────────── */
 export default function ConfiguratorClient() {
+  const [cups,           setCups]           = useState<Cup[]>([]);
+  const [designs,        setDesigns]        = useState<Design[]>([]);
+  const [dataLoading,    setDataLoading]    = useState(true);
   const [selectedCup,    setSelectedCup]    = useState<Cup | null>(null);
   const [selectedDesign, setSelectedDesign] = useState<Design | null>(null);
   const [toast,          setToast]          = useState('');
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    Promise.all([
+      getDocs(query(collection(db, 'configurator_cups'),    orderBy('order'), where('active', '==', true))),
+      getDocs(query(collection(db, 'configurator_designs'), orderBy('order'), where('active', '==', true))),
+    ]).then(([cupsSnap, designsSnap]) => {
+      setCups(cupsSnap.docs.map(d => ({ id: d.id, ...d.data() } as Cup)));
+      setDesigns(designsSnap.docs.map(d => ({ id: d.id, ...d.data() } as Design)));
+      setDataLoading(false);
+    }).catch(() => setDataLoading(false));
+  }, []);
 
   const designsRef = useRef<HTMLElement>(null);
   const previewRef = useRef<HTMLElement>(null);
@@ -101,6 +61,12 @@ export default function ConfiguratorClient() {
   }
 
   const bothSelected = !!(selectedCup && selectedDesign);
+
+  if (dataLoading) return (
+    <div style={{ minHeight: '60vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div className="spinner" />
+    </div>
+  );
 
   return (
     <>
@@ -133,39 +99,44 @@ export default function ConfiguratorClient() {
         {/* ── 1. BARDAK SEÇİMİ ─────────────────────────────── */}
         <section>
           <SectionTitle number={1} title="Bardağını Seç" />
-          <div style={gridStyle} className="configurator-grid">
-            {CUPS.map((cup) => (
-              <ItemCard
-                key={cup.id}
-                selected={selectedCup?.id === cup.id}
-                onClick={() => handleSelectCup(cup)}
-              >
-                <Visual background={CUP_COLORS[cup.id]} color="rgba(255,255,255,0.92)" label={cup.id} emoji="☕" />
-                <div style={itemNameStyle}>{cup.name}</div>
-                <div style={{ fontSize: 12, fontWeight: 700, textAlign: 'center', color: '#FF6B35', marginTop: 2 }}>{cup.price}₺</div>
-              </ItemCard>
-            ))}
-          </div>
+          {cups.length === 0 ? (
+            <p style={{ color: '#6B7280', fontSize: 14 }}>Henüz bardak eklenmemiş.</p>
+          ) : (
+            <div style={gridStyle} className="configurator-grid">
+              {cups.map((cup) => (
+                <ItemCard
+                  key={cup.id}
+                  selected={selectedCup?.id === cup.id}
+                  onClick={() => handleSelectCup(cup)}
+                >
+                  <Visual background={cup.gradient} color={cup.textColor} label={cup.code} emoji="☕" />
+                  <div style={itemNameStyle}>{cup.name}</div>
+                  <div style={{ fontSize: 12, fontWeight: 700, textAlign: 'center', color: '#FF6B35', marginTop: 2 }}>{cup.price}₺</div>
+                </ItemCard>
+              ))}
+            </div>
+          )}
         </section>
 
         {/* ── 2. TASARIM SEÇİMİ ────────────────────────────── */}
         <section ref={designsRef}>
           <SectionTitle number={2} title="Tasarımını Seç" />
-          <div style={gridStyle} className="configurator-grid">
-            {DESIGNS.map((design) => {
-              const dc = DESIGN_COLORS[design.id];
-              return (
+          {designs.length === 0 ? (
+            <p style={{ color: '#6B7280', fontSize: 14 }}>Henüz tasarım eklenmemiş.</p>
+          ) : (
+            <div style={gridStyle} className="configurator-grid">
+              {designs.map((design) => (
                 <ItemCard
                   key={design.id}
                   selected={selectedDesign?.id === design.id}
                   onClick={() => handleSelectDesign(design)}
                 >
-                  <Visual background={dc.bg} color={dc.color} label={design.id} emoji="🎨" />
+                  <Visual background={design.gradient} color={design.textColor} label={design.code} emoji="🎨" />
                   <div style={itemNameStyle}>{design.name}</div>
                 </ItemCard>
-              );
-            })}
-          </div>
+              ))}
+            </div>
+          )}
         </section>
 
         {/* ── 3. ÖNİZLEME ──────────────────────────────────── */}
@@ -193,13 +164,13 @@ export default function ConfiguratorClient() {
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
                   <div style={{
                     width: 100, height: 100, borderRadius: 12,
-                    background: CUP_COLORS[selectedCup.id],
+                    background: selectedCup.gradient,
                     display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
                     fontWeight: 800, fontSize: '1.3rem',
-                    color: 'rgba(255,255,255,0.92)', textShadow: '0 1px 3px rgba(0,0,0,0.25)',
+                    color: selectedCup.textColor,
                     boxShadow: '0 8px 24px rgba(0,0,0,0.13)',
                   }}>
-                    <span>{selectedCup.id}</span>
+                    <span>{selectedCup.code}</span>
                     <span style={{ fontSize: '0.7rem', opacity: 0.8 }}>☕</span>
                   </div>
                   <span style={{ fontSize: 12, fontWeight: 600, color: '#6B7280' }}>{selectedCup.name}</span>
@@ -208,31 +179,28 @@ export default function ConfiguratorClient() {
 
               <span style={{ fontSize: '2rem', color: '#FF6B35', fontWeight: 800 }}>+</span>
 
-              {selectedDesign && (() => {
-                const dc = DESIGN_COLORS[selectedDesign.id];
-                return (
-                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
-                    <div style={{
-                      width: 100, height: 100, borderRadius: 12,
-                      background: dc.bg,
-                      display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-                      fontWeight: 800, fontSize: '1.3rem', color: dc.color,
-                      boxShadow: '0 8px 24px rgba(0,0,0,0.13)',
-                    }}>
-                      <span>{selectedDesign.id}</span>
-                      <span style={{ fontSize: '0.7rem', opacity: 0.8 }}>🎨</span>
-                    </div>
-                    <span style={{ fontSize: 12, fontWeight: 600, color: '#6B7280' }}>{selectedDesign.name}</span>
+              {selectedDesign && (
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
+                  <div style={{
+                    width: 100, height: 100, borderRadius: 12,
+                    background: selectedDesign.gradient,
+                    display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+                    fontWeight: 800, fontSize: '1.3rem', color: selectedDesign.textColor,
+                    boxShadow: '0 8px 24px rgba(0,0,0,0.13)',
+                  }}>
+                    <span>{selectedDesign.code}</span>
+                    <span style={{ fontSize: '0.7rem', opacity: 0.8 }}>🎨</span>
                   </div>
-                );
-              })()}
+                  <span style={{ fontSize: 12, fontWeight: 600, color: '#6B7280' }}>{selectedDesign.name}</span>
+                </div>
+              )}
             </div>
 
             {/* Kombino adı + fiyat */}
             {bothSelected && (
               <div style={{ textAlign: 'center', marginBottom: 20 }}>
                 <div style={{ fontSize: 16, fontWeight: 700, marginBottom: 10 }}>
-                  Seçimin: {selectedCup!.name} ({selectedCup!.id}) + {selectedDesign!.name} ({selectedDesign!.id})
+                  Seçimin: {selectedCup!.name} ({selectedCup!.code}) + {selectedDesign!.name} ({selectedDesign!.code})
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 16, flexWrap: 'wrap' }}>
                   <span style={{ fontSize: 22, fontWeight: 800, color: '#FF6B35' }}>{selectedCup!.price}₺</span>

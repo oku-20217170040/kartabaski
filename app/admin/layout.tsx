@@ -35,9 +35,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   if (pathname === '/admin/login') return <>{children}</>;
 
   const links = [
-    { href: '/admin', label: 'Dashboard', icon: '📊' },
-    { href: '/admin/products', label: 'Ürünler', icon: '📦' },
-    { href: '/admin/products/new', label: 'Yeni Ürün', icon: '➕' },
+    { href: '/admin',                   label: 'Dashboard',    icon: '📊' },
+    { href: '/admin/products',          label: 'Ürünler',      icon: '📦' },
+    { href: '/admin/products/new',      label: 'Yeni Ürün',    icon: '➕' },
+    { href: '/admin/konfigurator',      label: 'Konfiguratör', icon: '🎨' },
   ];
 
   const sidebarContent = (
