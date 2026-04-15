@@ -10,13 +10,14 @@ export default function NewCupPage() {
 
   const handleSubmit = async (data: ConfiguratorItemFormData) => {
     await createCupAction({
-      code:      data.code,
-      name:      data.name,
-      price:     data.price ?? 0,
-      gradient:  data.gradient,
-      textColor: data.textColor,
-      active:    data.active,
-      order:     data.order,
+      code:          data.code,
+      name:          data.name,
+      price:         data.price ?? 0,
+      imagePublicId: data.imagePublicId,
+      gradient:      data.gradient,
+      textColor:     data.textColor,
+      active:        data.active,
+      order:         data.order,
     });
     router.push('/admin/konfigurator');
   };

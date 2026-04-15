@@ -1,10 +1,16 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 
-// Gradient ön ayarları — kolayca seçilebilsin
+const CLOUDINARY_CLOUD = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || 'dwulzfmlu';
+
+function cfImg(publicId: string, w = 600) {
+  return `https://res.cloudinary.com/${CLOUDINARY_CLOUD}/image/upload/f_auto,q_auto,w_${w},c_fill/${publicId}`;
+}
+
+// Gradient ön ayarları — image yoksa fallback olarak kullanılır
 const GRADIENT_PRESETS = [
-  { label: 'Mor–Eflatun',   value: 'linear-gradient(135deg,#6366F1,#8B5CF6)',   text: 'rgba(255,255,255,0.92)' },
+  { label: 'Mor–Eflatun',    value: 'linear-gradient(135deg,#6366F1,#8B5CF6)',   text: 'rgba(255,255,255,0.92)' },
   { label: 'Pembe–Kırmızı',  value: 'linear-gradient(135deg,#EC4899,#F43F5E)',   text: 'rgba(255,255,255,0.92)' },
   { label: 'Teal–Mavi',      value: 'linear-gradient(135deg,#14B8A6,#0EA5E9)',   text: 'rgba(255,255,255,0.92)' },
   { label: 'Turuncu–Sarı',   value: 'linear-gradient(135deg,#F97316,#EAB308)',   text: 'rgba(255,255,255,0.92)' },
@@ -25,7 +31,8 @@ const GRADIENT_PRESETS = [
 export interface ConfiguratorItemFormData {
   code: string;
   name: string;
-  price?: number;     // sadece bardak için
+  price?: number;          // sadece bardak için
+  imagePublicId?: string;  // Cloudinary public_id
   gradient: string;
   textColor: string;
   active: boolean;
@@ -40,20 +47,52 @@ interface Props {
   backHref: string;
 }
 
+async function uploadToCloudinary(file: File): Promise<string> {
+  const form = new FormData();
+  form.append('file', file);
+  const res = await fetch('/api/upload', { method: 'POST', body: form });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error((err as { error?: string }).error || 'Yükleme başarısız');
+  }
+  const data = await res.json();
+  return data.public_id as string;
+}
+
 export default function ConfiguratorItemForm({ type, initial, onSubmit, submitLabel, backHref }: Props) {
-  const [code,      setCode]      = useState(initial?.code      || '');
-  const [name,      setName]      = useState(initial?.name      || '');
-  const [price,     setPrice]     = useState(String(initial?.price || ''));
-  const [gradient,  setGradient]  = useState(initial?.gradient  || GRADIENT_PRESETS[0].value);
-  const [textColor, setTextColor] = useState(initial?.textColor || GRADIENT_PRESETS[0].text);
-  const [active,    setActive]    = useState(initial?.active    ?? true);
-  const [order,     setOrder]     = useState(String(initial?.order ?? 1));
-  const [saving,    setSaving]    = useState(false);
-  const [error,     setError]     = useState('');
+  const [code,          setCode]          = useState(initial?.code          || '');
+  const [name,          setName]          = useState(initial?.name          || '');
+  const [price,         setPrice]         = useState(String(initial?.price  || ''));
+  const [imagePublicId, setImagePublicId] = useState(initial?.imagePublicId || '');
+  const [gradient,      setGradient]      = useState(initial?.gradient      || GRADIENT_PRESETS[0].value);
+  const [textColor,     setTextColor]     = useState(initial?.textColor     || GRADIENT_PRESETS[0].text);
+  const [active,        setActive]        = useState(initial?.active        ?? true);
+  const [order,         setOrder]         = useState(String(initial?.order  ?? 1));
+  const [uploading,     setUploading]     = useState(false);
+  const [saving,        setSaving]        = useState(false);
+  const [error,         setError]         = useState('');
+
+  const fileRef = useRef<HTMLInputElement>(null);
 
   const handlePreset = (preset: typeof GRADIENT_PRESETS[0]) => {
     setGradient(preset.value);
     setTextColor(preset.text);
+  };
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    setError('');
+    try {
+      const pid = await uploadToCloudinary(file);
+      setImagePublicId(pid);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Yükleme başarısız');
+    } finally {
+      setUploading(false);
+      if (fileRef.current) fileRef.current.value = '';
+    }
   };
 
   const handleSubmit = async () => {
@@ -63,9 +102,10 @@ export default function ConfiguratorItemForm({ type, initial, onSubmit, submitLa
     setError('');
     try {
       await onSubmit({
-        code: code.trim().toUpperCase(),
-        name: name.trim(),
-        price: type === 'cup' ? Number(price) : undefined,
+        code:          code.trim().toUpperCase(),
+        name:          name.trim(),
+        price:         type === 'cup' ? Number(price) : undefined,
+        imagePublicId: imagePublicId || undefined,
         gradient,
         textColor,
         active,
@@ -78,6 +118,7 @@ export default function ConfiguratorItemForm({ type, initial, onSubmit, submitLa
   };
 
   const emoji = type === 'cup' ? '☕' : '🎨';
+  const label = type === 'cup' ? 'Bardak' : 'Tasarım';
 
   return (
     <div style={{ display: 'grid', gridTemplateColumns: '1fr 320px', gap: 24, alignItems: 'start' }}>
@@ -85,7 +126,7 @@ export default function ConfiguratorItemForm({ type, initial, onSubmit, submitLa
       {/* Sol kolon */}
       <div className="card" style={{ padding: 28 }}>
         <h2 style={{ fontFamily: 'var(--font-display)', marginBottom: 20 }}>
-          {type === 'cup' ? 'Bardak Bilgileri' : 'Tasarım Bilgileri'}
+          {label} Bilgileri
         </h2>
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
@@ -138,9 +179,72 @@ export default function ConfiguratorItemForm({ type, initial, onSubmit, submitLa
           </div>
         )}
 
-        {/* Gradient seçimi */}
+        {/* Fotoğraf yükleme */}
         <div className="form-group">
-          <label className="form-label">Renk / Gradient</label>
+          <label className="form-label">{label} Fotoğrafı</label>
+          <div style={{
+            border: '2px dashed var(--border)',
+            borderRadius: 10,
+            padding: 20,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: 12,
+            background: 'var(--surface-raised)',
+          }}>
+            {imagePublicId ? (
+              <div style={{ position: 'relative', width: '100%', maxWidth: 220 }}>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={cfImg(imagePublicId, 400)}
+                  alt="Yüklenen fotoğraf"
+                  style={{ width: '100%', borderRadius: 8, display: 'block', objectFit: 'cover', aspectRatio: '1/1' }}
+                />
+                <button
+                  type="button"
+                  onClick={() => setImagePublicId('')}
+                  style={{
+                    position: 'absolute', top: 6, right: 6,
+                    background: 'rgba(0,0,0,0.6)', color: '#fff',
+                    border: 'none', borderRadius: '50%',
+                    width: 26, height: 26, cursor: 'pointer',
+                    fontSize: 14, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  }}
+                  title="Fotoğrafı kaldır"
+                >✕</button>
+              </div>
+            ) : (
+              <div style={{ textAlign: 'center', color: 'var(--muted)', fontSize: 13 }}>
+                <div style={{ fontSize: 32, marginBottom: 6 }}>📷</div>
+                <div>Fotoğraf yükle</div>
+                <div style={{ fontSize: 11, marginTop: 2 }}>JPG, PNG — önerilen kare format</div>
+              </div>
+            )}
+            <input
+              ref={fileRef}
+              type="file"
+              accept="image/*"
+              style={{ display: 'none' }}
+              onChange={handleFileChange}
+            />
+            <button
+              type="button"
+              className="btn btn-secondary btn-sm"
+              onClick={() => fileRef.current?.click()}
+              disabled={uploading}
+              style={{ minWidth: 140 }}
+            >
+              {uploading ? 'Yükleniyor...' : imagePublicId ? 'Fotoğrafı Değiştir' : 'Fotoğraf Seç'}
+            </button>
+          </div>
+          <p style={{ fontSize: 11, color: 'var(--muted)', marginTop: 6 }}>
+            Fotoğraf yüklenmezse aşağıdaki renk/gradient kullanılır.
+          </p>
+        </div>
+
+        {/* Gradient seçimi — fallback */}
+        <div className="form-group">
+          <label className="form-label">Renk / Gradient (fotoğraf yoksa gösterilir)</label>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8, marginBottom: 12 }}>
             {GRADIENT_PRESETS.map(preset => (
               <button
@@ -194,16 +298,29 @@ export default function ConfiguratorItemForm({ type, initial, onSubmit, submitLa
           <div style={{
             width: '100%', aspectRatio: '1/1',
             borderRadius: 12,
-            background: gradient,
+            overflow: 'hidden',
+            background: imagePublicId ? '#f3f4f6' : gradient,
             display: 'flex', flexDirection: 'column',
             alignItems: 'center', justifyContent: 'center',
-            fontWeight: 800, fontSize: '2rem',
-            color: textColor,
             marginBottom: 10,
             boxShadow: '0 4px 20px rgba(0,0,0,0.12)',
+            position: 'relative',
           }}>
-            <span>{code || (type === 'cup' ? 'B?' : 'T?')}</span>
-            <span style={{ fontSize: '1rem', opacity: 0.8, marginTop: 4 }}>{emoji}</span>
+            {imagePublicId ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={cfImg(imagePublicId, 400)}
+                alt="Önizleme"
+                style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+              />
+            ) : (
+              <>
+                <span style={{ fontWeight: 800, fontSize: '2rem', color: textColor }}>
+                  {code || (type === 'cup' ? 'B?' : 'T?')}
+                </span>
+                <span style={{ fontSize: '1rem', opacity: 0.8, marginTop: 4, color: textColor }}>{emoji}</span>
+              </>
+            )}
           </div>
           <div style={{ textAlign: 'center', fontSize: 14, fontWeight: 600 }}>{name || 'İsim girilmedi'}</div>
           {type === 'cup' && (
@@ -232,7 +349,7 @@ export default function ConfiguratorItemForm({ type, initial, onSubmit, submitLa
               {error}
             </div>
           )}
-          <button className="btn btn-primary btn-full btn-lg" onClick={handleSubmit} disabled={saving}>
+          <button className="btn btn-primary btn-full btn-lg" onClick={handleSubmit} disabled={saving || uploading}>
             {saving ? 'Kaydediliyor...' : submitLabel}
           </button>
         </div>

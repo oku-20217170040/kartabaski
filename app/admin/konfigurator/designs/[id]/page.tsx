@@ -26,12 +26,13 @@ export default function EditDesignPage() {
 
   const handleSubmit = async (data: ConfiguratorItemFormData) => {
     await updateDesignAction(id, {
-      code:      data.code,
-      name:      data.name,
-      gradient:  data.gradient,
-      textColor: data.textColor,
-      active:    data.active,
-      order:     data.order,
+      code:          data.code,
+      name:          data.name,
+      imagePublicId: data.imagePublicId,
+      gradient:      data.gradient,
+      textColor:     data.textColor,
+      active:        data.active,
+      order:         data.order,
     });
     router.push('/admin/konfigurator');
   };

@@ -10,6 +10,11 @@ type Cup    = ConfiguratorCup;
 type Design = ConfiguratorDesign;
 
 const WA_NUMBER = '905458266508';
+const CF_CLOUD  = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || 'dwulzfmlu';
+
+function cfImg(publicId: string, w = 400) {
+  return `https://res.cloudinary.com/${CF_CLOUD}/image/upload/f_auto,q_auto,w_${w},c_fill/${publicId}`;
+}
 
 function buildWaUrl(cup: Cup, design: Design): string {
   const msg = `Merhaba, ${cup.code} bardağına ${design.code} tasarımını bastırmak istiyorum. Bilgi alabilir miyim?`;
@@ -109,7 +114,7 @@ export default function ConfiguratorClient() {
                   selected={selectedCup?.id === cup.id}
                   onClick={() => handleSelectCup(cup)}
                 >
-                  <Visual background={cup.gradient} color={cup.textColor} label={cup.code} emoji="☕" />
+                  <Visual imagePublicId={cup.imagePublicId} background={cup.gradient} color={cup.textColor} label={cup.code} emoji="☕" />
                   <div style={itemNameStyle}>{cup.name}</div>
                   <div style={{ fontSize: 12, fontWeight: 700, textAlign: 'center', color: '#FF6B35', marginTop: 2 }}>{cup.price}₺</div>
                 </ItemCard>
@@ -131,7 +136,7 @@ export default function ConfiguratorClient() {
                   selected={selectedDesign?.id === design.id}
                   onClick={() => handleSelectDesign(design)}
                 >
-                  <Visual background={design.gradient} color={design.textColor} label={design.code} emoji="🎨" />
+                  <Visual imagePublicId={design.imagePublicId} background={design.gradient} color={design.textColor} label={design.code} emoji="🎨" />
                   <div style={itemNameStyle}>{design.name}</div>
                 </ItemCard>
               ))}
@@ -164,14 +169,19 @@ export default function ConfiguratorClient() {
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
                   <div style={{
                     width: 100, height: 100, borderRadius: 12,
-                    background: selectedCup.gradient,
+                    background: selectedCup.imagePublicId ? '#f3f4f6' : selectedCup.gradient,
                     display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
                     fontWeight: 800, fontSize: '1.3rem',
                     color: selectedCup.textColor,
                     boxShadow: '0 8px 24px rgba(0,0,0,0.13)',
+                    overflow: 'hidden',
                   }}>
-                    <span>{selectedCup.code}</span>
-                    <span style={{ fontSize: '0.7rem', opacity: 0.8 }}>☕</span>
+                    {selectedCup.imagePublicId ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={cfImg(selectedCup.imagePublicId, 200)} alt={selectedCup.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    ) : (
+                      <><span>{selectedCup.code}</span><span style={{ fontSize: '0.7rem', opacity: 0.8 }}>☕</span></>
+                    )}
                   </div>
                   <span style={{ fontSize: 12, fontWeight: 600, color: '#6B7280' }}>{selectedCup.name}</span>
                 </div>
@@ -183,13 +193,18 @@ export default function ConfiguratorClient() {
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
                   <div style={{
                     width: 100, height: 100, borderRadius: 12,
-                    background: selectedDesign.gradient,
+                    background: selectedDesign.imagePublicId ? '#f3f4f6' : selectedDesign.gradient,
                     display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
                     fontWeight: 800, fontSize: '1.3rem', color: selectedDesign.textColor,
                     boxShadow: '0 8px 24px rgba(0,0,0,0.13)',
+                    overflow: 'hidden',
                   }}>
-                    <span>{selectedDesign.code}</span>
-                    <span style={{ fontSize: '0.7rem', opacity: 0.8 }}>🎨</span>
+                    {selectedDesign.imagePublicId ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={cfImg(selectedDesign.imagePublicId, 200)} alt={selectedDesign.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    ) : (
+                      <><span>{selectedDesign.code}</span><span style={{ fontSize: '0.7rem', opacity: 0.8 }}>🎨</span></>
+                    )}
                   </div>
                   <span style={{ fontSize: 12, fontWeight: 600, color: '#6B7280' }}>{selectedDesign.name}</span>
                 </div>
@@ -331,18 +346,32 @@ function ItemCard({ children, selected, onClick }: { children: React.ReactNode; 
   );
 }
 
-function Visual({ background, color, label, emoji }: { background: string; color: string; label: string; emoji: string }) {
+function Visual({ imagePublicId, background, color, label, emoji }: { imagePublicId?: string; background: string; color: string; label: string; emoji: string }) {
   return (
     <div style={{
       width: '100%', aspectRatio: '1 / 1',
-      borderRadius: 8, background,
+      borderRadius: 8,
+      background: imagePublicId ? '#f3f4f6' : background,
       display: 'flex', flexDirection: 'column',
       alignItems: 'center', justifyContent: 'center',
       fontWeight: 800, fontSize: '1.1rem', color,
       marginBottom: 8,
+      overflow: 'hidden',
+      position: 'relative',
     }}>
-      <span>{label}</span>
-      <span style={{ fontSize: '0.65rem', opacity: 0.8, marginTop: 2 }}>{emoji}</span>
+      {imagePublicId ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={cfImg(imagePublicId, 300)}
+          alt={label}
+          style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+        />
+      ) : (
+        <>
+          <span>{label}</span>
+          <span style={{ fontSize: '0.65rem', opacity: 0.8, marginTop: 2 }}>{emoji}</span>
+        </>
+      )}
     </div>
   );
 }
