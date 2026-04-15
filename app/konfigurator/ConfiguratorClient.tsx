@@ -16,8 +16,23 @@ function cfImg(publicId: string, w = 400) {
   return `https://res.cloudinary.com/${CF_CLOUD}/image/upload/f_auto,q_auto,w_${w},c_fill/${publicId}`;
 }
 
+// Özel "kendi tasarımım" seçeneği — sahte bir Design nesnesi
+const CUSTOM_DESIGN: Design = {
+  id: '__custom__',
+  code: 'ÖZEL',
+  name: 'Kendi Tasarımım',
+  gradient: 'linear-gradient(135deg,#1A1A2E,#16213E)',
+  textColor: '#C9A84C',
+  active: true,
+  order: 9999,
+  createdAt: 0,
+  updatedAt: 0,
+};
+
 function buildWaUrl(cup: Cup, design: Design): string {
-  const msg = `Merhaba, ${cup.code} bardağına ${design.code} tasarımını bastırmak istiyorum. Bilgi alabilir miyim?`;
+  const msg = design.id === '__custom__'
+    ? `Merhaba, ${cup.name} bardağına kendi tasarımımı bastırmak istiyorum. Bilgi alabilir miyim?`
+    : `Merhaba, ${cup.name} bardağına "${design.name}" tasarımını bastırmak istiyorum. Bilgi alabilir miyim?`;
   return `https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(msg)}`;
 }
 
@@ -126,22 +141,39 @@ export default function ConfiguratorClient() {
         {/* ── 2. TASARIM SEÇİMİ ────────────────────────────── */}
         <section ref={designsRef}>
           <SectionTitle number={2} title="Tasarımını Seç" />
-          {designs.length === 0 ? (
-            <p style={{ color: '#6B7280', fontSize: 14 }}>Henüz tasarım eklenmemiş.</p>
-          ) : (
-            <div style={gridStyle} className="configurator-grid">
-              {designs.map((design) => (
-                <ItemCard
-                  key={design.id}
-                  selected={selectedDesign?.id === design.id}
-                  onClick={() => handleSelectDesign(design)}
-                >
-                  <Visual imagePublicId={design.imagePublicId} background={design.gradient} color={design.textColor} label={design.code} emoji="🎨" />
-                  <div style={itemNameStyle}>{design.name}</div>
-                </ItemCard>
-              ))}
-            </div>
-          )}
+          <div style={gridStyle} className="configurator-grid">
+            {designs.map((design) => (
+              <ItemCard
+                key={design.id}
+                selected={selectedDesign?.id === design.id}
+                onClick={() => handleSelectDesign(design)}
+              >
+                <Visual imagePublicId={design.imagePublicId} background={design.gradient} color={design.textColor} label={design.code} emoji="🎨" />
+                <div style={itemNameStyle}>{design.name}</div>
+              </ItemCard>
+            ))}
+
+            {/* Kendi tasarımı kartı — her zaman listede son */}
+            <ItemCard
+              selected={selectedDesign?.id === '__custom__'}
+              onClick={() => handleSelectDesign(CUSTOM_DESIGN)}
+              highlight
+            >
+              <div style={{
+                width: '100%', aspectRatio: '1/1',
+                borderRadius: 8,
+                background: 'linear-gradient(135deg,#1A1A2E,#16213E)',
+                display: 'flex', flexDirection: 'column',
+                alignItems: 'center', justifyContent: 'center',
+                marginBottom: 8,
+                gap: 4,
+              }}>
+                <span style={{ fontSize: '1.6rem' }}>🖼️</span>
+                <span style={{ fontSize: '0.6rem', fontWeight: 700, color: '#C9A84C', letterSpacing: '0.05em', textTransform: 'uppercase' }}>Kendi</span>
+              </div>
+              <div style={{ ...itemNameStyle, color: '#1A1A1A', fontWeight: 700 }}>Kendi Tasarımım</div>
+            </ItemCard>
+          </div>
         </section>
 
         {/* ── 3. ÖNİZLEME ──────────────────────────────────── */}
@@ -193,13 +225,17 @@ export default function ConfiguratorClient() {
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
                   <div style={{
                     width: 100, height: 100, borderRadius: 12,
-                    background: selectedDesign.imagePublicId ? '#f3f4f6' : selectedDesign.gradient,
+                    background: selectedDesign.id === '__custom__'
+                      ? 'linear-gradient(135deg,#1A1A2E,#16213E)'
+                      : selectedDesign.imagePublicId ? '#f3f4f6' : selectedDesign.gradient,
                     display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
                     fontWeight: 800, fontSize: '1.3rem', color: selectedDesign.textColor,
                     boxShadow: '0 8px 24px rgba(0,0,0,0.13)',
                     overflow: 'hidden',
                   }}>
-                    {selectedDesign.imagePublicId ? (
+                    {selectedDesign.id === '__custom__' ? (
+                      <><span style={{ fontSize: '2rem' }}>🖼️</span><span style={{ fontSize: '0.6rem', color: '#C9A84C', fontWeight: 700 }}>ÖZEL</span></>
+                    ) : selectedDesign.imagePublicId ? (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img src={cfImg(selectedDesign.imagePublicId, 200)} alt={selectedDesign.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                     ) : (
@@ -215,7 +251,9 @@ export default function ConfiguratorClient() {
             {bothSelected && (
               <div style={{ textAlign: 'center', marginBottom: 20 }}>
                 <div style={{ fontSize: 16, fontWeight: 700, marginBottom: 10 }}>
-                  Seçimin: {selectedCup!.name} ({selectedCup!.code}) + {selectedDesign!.name} ({selectedDesign!.code})
+                  {selectedDesign!.id === '__custom__'
+                    ? `${selectedCup!.name} bardağına kendi tasarımın`
+                    : `${selectedCup!.name} + ${selectedDesign!.name}`}
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 16, flexWrap: 'wrap' }}>
                   <span style={{ fontSize: 22, fontWeight: 800, color: '#FF6B35' }}>{selectedCup!.price}₺</span>
@@ -244,7 +282,7 @@ export default function ConfiguratorClient() {
               }}
             >
               <WaIcon />
-              📱 WhatsApp&apos;tan Sipariş Ver
+              {selectedDesign?.id === '__custom__' ? '📱 Kendi Tasarımım İçin WhatsApp\'a Yaz' : '📱 WhatsApp\'tan Sipariş Ver'}
             </a>
           </div>
         </section>
@@ -311,13 +349,15 @@ function SectionTitle({ number, title }: { number: number; title: string }) {
   );
 }
 
-function ItemCard({ children, selected, onClick }: { children: React.ReactNode; selected: boolean; onClick: () => void }) {
+function ItemCard({ children, selected, onClick, highlight }: { children: React.ReactNode; selected: boolean; onClick: () => void; highlight?: boolean }) {
+  const borderColor = selected ? '#FF6B35' : highlight ? '#C9A84C' : '#E5E7EB';
+  const bgColor     = selected ? '#FFF1EC' : highlight ? '#FFFBEB' : '#fff';
   return (
     <div
       onClick={onClick}
       style={{
-        background: selected ? '#FFF1EC' : '#fff',
-        border: `2px solid ${selected ? '#FF6B35' : '#E5E7EB'}`,
+        background: bgColor,
+        border: `2px solid ${borderColor}`,
         borderRadius: 12,
         padding: 10,
         cursor: 'pointer',
