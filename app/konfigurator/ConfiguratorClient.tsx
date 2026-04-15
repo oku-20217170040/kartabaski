@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
-import { collection, getDocs, orderBy, query, where } from 'firebase/firestore';
+import { collection, getDocs, orderBy, query } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { ConfiguratorCup, ConfiguratorDesign } from '@/types';
 
@@ -33,11 +33,11 @@ export default function ConfiguratorClient() {
 
   useEffect(() => {
     Promise.all([
-      getDocs(query(collection(db, 'configurator_cups'),    orderBy('order'), where('active', '==', true))),
-      getDocs(query(collection(db, 'configurator_designs'), orderBy('order'), where('active', '==', true))),
+      getDocs(query(collection(db, 'configurator_cups'),    orderBy('order'))),
+      getDocs(query(collection(db, 'configurator_designs'), orderBy('order'))),
     ]).then(([cupsSnap, designsSnap]) => {
-      setCups(cupsSnap.docs.map(d => ({ id: d.id, ...d.data() } as Cup)));
-      setDesigns(designsSnap.docs.map(d => ({ id: d.id, ...d.data() } as Design)));
+      setCups(cupsSnap.docs.map(d => ({ id: d.id, ...d.data() } as Cup)).filter(c => c.active));
+      setDesigns(designsSnap.docs.map(d => ({ id: d.id, ...d.data() } as Design)).filter(d => d.active));
       setDataLoading(false);
     }).catch(() => setDataLoading(false));
   }, []);
