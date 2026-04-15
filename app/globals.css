@@ -2652,3 +2652,8 @@ body::before { display: none; }
   .hero-stat-value { font-size: 1.1rem !important; }
   .hero-stat-label { font-size: 10px !important; }
 }
+
+/* ── Konfiguratör — mobil grid ── */
+@media (max-width: 768px) {
+  .configurator-grid { grid-template-columns: repeat(2, 1fr) !important; }
+}
