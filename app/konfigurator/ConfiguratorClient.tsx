@@ -16,7 +16,6 @@ function cfImg(publicId: string, w = 400) {
   return `https://res.cloudinary.com/${CF_CLOUD}/image/upload/f_auto,q_auto,w_${w},c_fill/${publicId}`;
 }
 
-// Özel "kendi tasarımım" seçeneği — sahte bir Design nesnesi
 const CUSTOM_DESIGN: Design = {
   id: '__custom__',
   code: 'ÖZEL',
@@ -24,7 +23,7 @@ const CUSTOM_DESIGN: Design = {
   gradient: 'linear-gradient(135deg,#1A1A2E,#16213E)',
   textColor: '#C9A84C',
   active: true,
-  order: 9999,
+  order: 0,
   createdAt: 0,
   updatedAt: 0,
 };
@@ -36,7 +35,109 @@ function buildWaUrl(cup: Cup, design: Design): string {
   return `https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(msg)}`;
 }
 
-/* ─── COMPONENT ─────────────────────────────────────────────── */
+/* ─── CAROUSEL ───────────────────────────────────────────────── */
+const CARD_W   = 148; // px — kart genişliği
+const CARD_GAP = 12;  // px — kartlar arası boşluk
+const SCROLL_STEP = (CARD_W + CARD_GAP) * 3; // 3 kart kadar kaydır
+
+function Carousel({ children, id }: { children: React.ReactNode; id: string }) {
+  const trackRef = useRef<HTMLDivElement>(null);
+  const [canLeft,  setCanLeft]  = useState(false);
+  const [canRight, setCanRight] = useState(true);
+
+  function updateArrows() {
+    const el = trackRef.current;
+    if (!el) return;
+    setCanLeft(el.scrollLeft > 4);
+    setCanRight(el.scrollLeft + el.clientWidth < el.scrollWidth - 4);
+  }
+
+  useEffect(() => {
+    const el = trackRef.current;
+    if (!el) return;
+    updateArrows();
+    el.addEventListener('scroll', updateArrows, { passive: true });
+    const ro = new ResizeObserver(updateArrows);
+    ro.observe(el);
+    return () => { el.removeEventListener('scroll', updateArrows); ro.disconnect(); };
+  }, []);
+
+  // children değişince (veriler yüklendi) okları güncelle
+  useEffect(() => { setTimeout(updateArrows, 80); }, [children]);
+
+  function scroll(dir: 'left' | 'right') {
+    trackRef.current?.scrollBy({ left: dir === 'left' ? -SCROLL_STEP : SCROLL_STEP, behavior: 'smooth' });
+  }
+
+  return (
+    <div style={{ position: 'relative' }}>
+      {/* Sol ok */}
+      {canLeft && (
+        <button
+          aria-label="Geri"
+          onClick={() => scroll('left')}
+          style={arrowStyle('left')}
+        >‹</button>
+      )}
+
+      {/* Kaydırılabilir track */}
+      <div
+        ref={trackRef}
+        id={id}
+        style={{
+          display: 'flex',
+          gap: CARD_GAP,
+          overflowX: 'auto',
+          scrollSnapType: 'x mandatory',
+          WebkitOverflowScrolling: 'touch',
+          scrollbarWidth: 'none',
+          msOverflowStyle: 'none',
+          padding: '6px 4px 12px',
+        }}
+        // hide scrollbar on webkit
+        className="hide-scrollbar"
+      >
+        {children}
+      </div>
+
+      {/* Sağ ok */}
+      {canRight && (
+        <button
+          aria-label="İleri"
+          onClick={() => scroll('right')}
+          style={arrowStyle('right')}
+        >›</button>
+      )}
+    </div>
+  );
+}
+
+function arrowStyle(side: 'left' | 'right'): React.CSSProperties {
+  return {
+    position: 'absolute',
+    top: '50%',
+    [side]: -16,
+    transform: 'translateY(-60%)',
+    zIndex: 10,
+    width: 34,
+    height: 34,
+    borderRadius: '50%',
+    background: '#fff',
+    border: '1.5px solid #E5E7EB',
+    boxShadow: '0 2px 8px rgba(0,0,0,0.12)',
+    cursor: 'pointer',
+    fontSize: 20,
+    fontWeight: 700,
+    color: '#374151',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    lineHeight: 1,
+    padding: 0,
+  };
+}
+
+/* ─── MAIN COMPONENT ─────────────────────────────────────────── */
 export default function ConfiguratorClient() {
   const [cups,           setCups]           = useState<Cup[]>([]);
   const [designs,        setDesigns]        = useState<Design[]>([]);
@@ -68,6 +169,7 @@ export default function ConfiguratorClient() {
 
   function handleSelectCup(cup: Cup) {
     setSelectedCup(cup);
+    // Zaten başka bir bardak seçiliyse sadece değiştir, scroll yok
     if (!selectedDesign) {
       setTimeout(() => designsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 150);
     }
@@ -90,6 +192,9 @@ export default function ConfiguratorClient() {
 
   return (
     <>
+      {/* hide-scrollbar global style */}
+      <style>{`.hide-scrollbar::-webkit-scrollbar{display:none}`}</style>
+
       {/* ── Header ───────────────────────────────────────────── */}
       <header style={{
         background: '#fff',
@@ -122,9 +227,9 @@ export default function ConfiguratorClient() {
           {cups.length === 0 ? (
             <p style={{ color: '#6B7280', fontSize: 14 }}>Henüz bardak eklenmemiş.</p>
           ) : (
-            <div style={gridStyle} className="configurator-grid">
+            <Carousel id="cups-track">
               {cups.map((cup) => (
-                <ItemCard
+                <CarouselCard
                   key={cup.id}
                   selected={selectedCup?.id === cup.id}
                   onClick={() => handleSelectCup(cup)}
@@ -132,18 +237,18 @@ export default function ConfiguratorClient() {
                   <Visual imagePublicId={cup.imagePublicId} background={cup.gradient} color={cup.textColor} label={cup.code} emoji="☕" />
                   <div style={itemNameStyle}>{cup.name}</div>
                   <div style={{ fontSize: 12, fontWeight: 700, textAlign: 'center', color: '#FF6B35', marginTop: 2 }}>{cup.price}₺</div>
-                </ItemCard>
+                </CarouselCard>
               ))}
-            </div>
+            </Carousel>
           )}
         </section>
 
         {/* ── 2. TASARIM SEÇİMİ ────────────────────────────── */}
         <section ref={designsRef}>
           <SectionTitle number={2} title="Tasarımını Seç" />
-          <div style={gridStyle} className="configurator-grid">
-            {/* Kendi tasarımı kartı — her zaman listede ilk */}
-            <ItemCard
+          <Carousel id="designs-track">
+            {/* Kendi tasarımı kartı — her zaman ilk */}
+            <CarouselCard
               selected={selectedDesign?.id === '__custom__'}
               onClick={() => handleSelectDesign(CUSTOM_DESIGN)}
               highlight
@@ -154,26 +259,25 @@ export default function ConfiguratorClient() {
                 background: 'linear-gradient(135deg,#1A1A2E,#16213E)',
                 display: 'flex', flexDirection: 'column',
                 alignItems: 'center', justifyContent: 'center',
-                marginBottom: 8,
-                gap: 4,
+                marginBottom: 8, gap: 4,
               }}>
                 <span style={{ fontSize: '1.6rem' }}>🖼️</span>
                 <span style={{ fontSize: '0.6rem', fontWeight: 700, color: '#C9A84C', letterSpacing: '0.05em', textTransform: 'uppercase' }}>Kendi</span>
               </div>
               <div style={{ ...itemNameStyle, color: '#1A1A1A', fontWeight: 700 }}>Kendi Tasarımım</div>
-            </ItemCard>
+            </CarouselCard>
 
             {designs.map((design) => (
-              <ItemCard
+              <CarouselCard
                 key={design.id}
                 selected={selectedDesign?.id === design.id}
                 onClick={() => handleSelectDesign(design)}
               >
                 <Visual imagePublicId={design.imagePublicId} background={design.gradient} color={design.textColor} label={design.code} emoji="🎨" />
                 <div style={itemNameStyle}>{design.name}</div>
-              </ItemCard>
+              </CarouselCard>
             ))}
-          </div>
+          </Carousel>
         </section>
 
         {/* ── 3. ÖNİZLEME ──────────────────────────────────── */}
@@ -203,10 +307,8 @@ export default function ConfiguratorClient() {
                     width: 100, height: 100, borderRadius: 12,
                     background: selectedCup.imagePublicId ? '#f3f4f6' : selectedCup.gradient,
                     display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-                    fontWeight: 800, fontSize: '1.3rem',
-                    color: selectedCup.textColor,
-                    boxShadow: '0 8px 24px rgba(0,0,0,0.13)',
-                    overflow: 'hidden',
+                    fontWeight: 800, fontSize: '1.3rem', color: selectedCup.textColor,
+                    boxShadow: '0 8px 24px rgba(0,0,0,0.13)', overflow: 'hidden',
                   }}>
                     {selectedCup.imagePublicId ? (
                       // eslint-disable-next-line @next/next/no-img-element
@@ -230,8 +332,7 @@ export default function ConfiguratorClient() {
                       : selectedDesign.imagePublicId ? '#f3f4f6' : selectedDesign.gradient,
                     display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
                     fontWeight: 800, fontSize: '1.3rem', color: selectedDesign.textColor,
-                    boxShadow: '0 8px 24px rgba(0,0,0,0.13)',
-                    overflow: 'hidden',
+                    boxShadow: '0 8px 24px rgba(0,0,0,0.13)', overflow: 'hidden',
                   }}>
                     {selectedDesign.id === '__custom__' ? (
                       <><span style={{ fontSize: '2rem' }}>🖼️</span><span style={{ fontSize: '0.6rem', color: '#C9A84C', fontWeight: 700 }}>ÖZEL</span></>
@@ -349,13 +450,21 @@ function SectionTitle({ number, title }: { number: number; title: string }) {
   );
 }
 
-function ItemCard({ children, selected, onClick, highlight }: { children: React.ReactNode; selected: boolean; onClick: () => void; highlight?: boolean }) {
+function CarouselCard({ children, selected, onClick, highlight }: {
+  children: React.ReactNode;
+  selected: boolean;
+  onClick: () => void;
+  highlight?: boolean;
+}) {
   const borderColor = selected ? '#FF6B35' : highlight ? '#C9A84C' : '#E5E7EB';
   const bgColor     = selected ? '#FFF1EC' : highlight ? '#FFFBEB' : '#fff';
   return (
     <div
       onClick={onClick}
       style={{
+        flexShrink: 0,
+        width: CARD_W,
+        scrollSnapAlign: 'start',
         background: bgColor,
         border: `2px solid ${borderColor}`,
         borderRadius: 12,
@@ -363,13 +472,13 @@ function ItemCard({ children, selected, onClick, highlight }: { children: React.
         cursor: 'pointer',
         position: 'relative',
         transform: selected ? 'translateY(-4px)' : undefined,
-        boxShadow: selected ? '0 8px 24px rgba(0,0,0,0.13)' : '0 2px 8px rgba(0,0,0,0.08)',
+        boxShadow: selected ? '0 8px 24px rgba(0,0,0,0.13)' : '0 2px 8px rgba(0,0,0,0.06)',
         transition: 'transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease, background 0.18s ease',
         userSelect: 'none',
         WebkitTapHighlightColor: 'transparent',
       }}
-      onMouseEnter={(e) => { if (!selected) { (e.currentTarget as HTMLDivElement).style.transform = 'translateY(-4px)'; (e.currentTarget as HTMLDivElement).style.boxShadow = '0 8px 24px rgba(0,0,0,0.13)'; } }}
-      onMouseLeave={(e) => { if (!selected) { (e.currentTarget as HTMLDivElement).style.transform = ''; (e.currentTarget as HTMLDivElement).style.boxShadow = '0 2px 8px rgba(0,0,0,0.08)'; } }}
+      onMouseEnter={(e) => { if (!selected) { const el = e.currentTarget as HTMLDivElement; el.style.transform = 'translateY(-4px)'; el.style.boxShadow = '0 8px 24px rgba(0,0,0,0.13)'; } }}
+      onMouseLeave={(e) => { if (!selected) { const el = e.currentTarget as HTMLDivElement; el.style.transform = ''; el.style.boxShadow = '0 2px 8px rgba(0,0,0,0.06)'; } }}
     >
       {selected && (
         <div style={{
@@ -386,7 +495,9 @@ function ItemCard({ children, selected, onClick, highlight }: { children: React.
   );
 }
 
-function Visual({ imagePublicId, background, color, label, emoji }: { imagePublicId?: string; background: string; color: string; label: string; emoji: string }) {
+function Visual({ imagePublicId, background, color, label, emoji }: {
+  imagePublicId?: string; background: string; color: string; label: string; emoji: string;
+}) {
   return (
     <div style={{
       width: '100%', aspectRatio: '1 / 1',
@@ -395,22 +506,13 @@ function Visual({ imagePublicId, background, color, label, emoji }: { imagePubli
       display: 'flex', flexDirection: 'column',
       alignItems: 'center', justifyContent: 'center',
       fontWeight: 800, fontSize: '1.1rem', color,
-      marginBottom: 8,
-      overflow: 'hidden',
-      position: 'relative',
+      marginBottom: 8, overflow: 'hidden', position: 'relative',
     }}>
       {imagePublicId ? (
         // eslint-disable-next-line @next/next/no-img-element
-        <img
-          src={cfImg(imagePublicId, 300)}
-          alt={label}
-          style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
-        />
+        <img src={cfImg(imagePublicId, 300)} alt={label} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
       ) : (
-        <>
-          <span>{label}</span>
-          <span style={{ fontSize: '0.65rem', opacity: 0.8, marginTop: 2 }}>{emoji}</span>
-        </>
+        <><span>{label}</span><span style={{ fontSize: '0.65rem', opacity: 0.8, marginTop: 2 }}>{emoji}</span></>
       )}
     </div>
   );
@@ -433,14 +535,6 @@ function WaIcon({ size = 22 }: { size?: number }) {
     </svg>
   );
 }
-
-const gridStyle: React.CSSProperties = {
-  display: 'grid',
-  gridTemplateColumns: 'repeat(5, 1fr)',
-  gap: 12,
-};
-
-// Kullanım: <div style={gridStyle} className="configurator-grid">
 
 const itemNameStyle: React.CSSProperties = {
   fontSize: 12,
