@@ -37,6 +37,49 @@ export default async function HomePage() {
           <div className="container">
             <ProductsClient initialProducts={products} />
 
+            {/* Konfiguratör Banner */}
+            <a
+              href="/konfigurator"
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                gap: 16,
+                background: 'linear-gradient(135deg, #006D2F 0%, #009140 60%, #25D366 100%)',
+                borderRadius: 16,
+                padding: '24px 28px',
+                margin: '40px 0',
+                textDecoration: 'none',
+                boxShadow: '0 8px 32px rgba(0,109,47,0.25)',
+                flexWrap: 'wrap',
+              }}
+            >
+              <div>
+                <div style={{ fontSize: 13, fontWeight: 600, color: 'rgba(255,255,255,0.75)', letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: 6 }}>
+                  Yeni Özellik ✦
+                </div>
+                <div style={{ fontSize: 'clamp(1.1rem, 3vw, 1.4rem)', fontWeight: 800, color: '#fff', letterSpacing: '-0.02em', lineHeight: 1.2 }}>
+                  Kendi kombinasyonunu oluştur
+                </div>
+                <div style={{ fontSize: 14, color: 'rgba(255,255,255,0.8)', marginTop: 6 }}>
+                  Bardağını seç, tasarımını seç — biz basalım.
+                </div>
+              </div>
+              <div style={{
+                flexShrink: 0,
+                background: '#fff',
+                color: '#006D2F',
+                fontWeight: 800,
+                fontSize: 14,
+                padding: '12px 22px',
+                borderRadius: 10,
+                letterSpacing: '-0.01em',
+                whiteSpace: 'nowrap',
+              }}>
+                Dene →
+              </div>
+            </a>
+
             {/* Contact Section */}
             <section id="iletisim" className="contact-pro">
               <div className="contact-pro-inner">
