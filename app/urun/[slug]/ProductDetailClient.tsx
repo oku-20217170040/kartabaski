@@ -273,6 +273,7 @@ export default function ProductDetailClient({ slug, product, similar }: Props) {
                   color: 'var(--text-sub)',
                   margin: '20px 0 0',
                   maxWidth: 480,
+                  whiteSpace: 'pre-line',
                 }}>
                   {description}
                 </p>
