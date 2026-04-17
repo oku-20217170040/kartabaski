@@ -12,6 +12,7 @@ export const CategorySchema = z.enum([
   'Kurumsal Sipariş',
   'Özel Tasarım',
   'Pro Kupa',
+  'Lüks Kupa',
 ]);
 
 // ── Ürün ─────────────────────────────────────────────────────────────────────

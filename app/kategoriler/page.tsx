@@ -19,6 +19,7 @@ const CATEGORY_META: Record<Category, { icon: string; desc: string; color: strin
   'Kurumsal Sipariş':       { icon: '🏢', desc: 'Kurumsal ve toplu baskı siparişleri', color: '#4a6fa5' },
   'Özel Tasarım':           { icon: '🎨', desc: 'Tamamen kişiselleştirilmiş özel tasarım ürünler', color: '#a87fd6' },
   'Pro Kupa':               { icon: '🏆', desc: 'Profesyonel kalitede özel baskı kupalar', color: '#2e7d9e' },
+  'Lüks Kupa':              { icon: '💎', desc: 'Üst segment lüks baskı kupalar', color: '#8e44ad' },
 };
 
 export default function KategorilerPage() {
