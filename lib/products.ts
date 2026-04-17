@@ -114,8 +114,8 @@ export function whatsappLink(productTitle?: string, slug?: string): string {
 
 export function formatPriceRange(priceMin: number, priceMax: number): string {
   if (!priceMin && !priceMax) return 'Fiyat için yazın';
-  if (priceMin && !priceMax) return `${new Intl.NumberFormat('tr-TR').format(priceMin)}₺'den başlayan`;
-  if (!priceMin && priceMax) return `${new Intl.NumberFormat('tr-TR').format(priceMax)}₺'ye kadar`;
+  if (priceMin && !priceMax) return `${new Intl.NumberFormat('tr-TR').format(priceMin)}₺`;
+  if (!priceMin && priceMax) return `${new Intl.NumberFormat('tr-TR').format(priceMax)}₺`;
   if (priceMin === priceMax) return `${new Intl.NumberFormat('tr-TR').format(priceMin)}₺`;
   return `${new Intl.NumberFormat('tr-TR').format(priceMin)}₺ – ${new Intl.NumberFormat('tr-TR').format(priceMax)}₺`;
 }
