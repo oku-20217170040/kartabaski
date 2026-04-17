@@ -35,7 +35,7 @@ const base: Product = {
   slug: '',
   priceMin: 0,
   priceMax: 0,
-  category: 'Sihirli Mat Kupa',
+  category: 'Sihirli Kupa',
   active: true,
   shortDesc: '',
   description: '',
@@ -98,11 +98,11 @@ describe('getPrice', () => {
 
 describe('getCategory', () => {
   it('category alanını okur', () => {
-    expect(getCategory({ ...base, category: 'Sihirli Mat Kupa' })).toBe('Sihirli Mat Kupa');
+    expect(getCategory({ ...base, category: 'Sihirli Kupa' })).toBe('Sihirli Mat Kupa');
   });
 
   it('kategori alias\'ını okur', () => {
-    expect(getCategory({ ...base, category: 'Sihirli Mat Kupa', kategori: 'Özel Tasarım' } as unknown as Product)).toBe('Sihirli Mat Kupa');
+    expect(getCategory({ ...base, category: 'Sihirli Kupa', kategori: 'Özel Tasarım' } as unknown as Product)).toBe('Sihirli Mat Kupa');
   });
 });
 

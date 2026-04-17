@@ -33,7 +33,7 @@ export default function ProductForm({ initial, onSubmit, submitLabel }: Props) {
   const [slug, setSlug] = useState(initial?.slug || '');
   const [priceMin, setPriceMin] = useState(String(initial?.priceMin || ''));
   const [priceMax, setPriceMax] = useState(String(initial?.priceMax || ''));
-  const [category, setCategory] = useState<Category>(initial?.category || 'Sihirli Mat Kupa');
+  const [category, setCategory] = useState<Category>(initial?.category || 'Sihirli Kupa');
   const [active, setActive] = useState(initial?.active ?? true);
   const [deliveryDays, setDeliveryDays] = useState(String(initial?.deliveryDays || '3'));
   const [description, setDescription] = useState(initial?.description || '');
@@ -399,7 +399,7 @@ export default function ProductForm({ initial, onSubmit, submitLabel }: Props) {
 
             <div className="form-group">
               <label className="form-label">Başlık *</label>
-              <input className="form-input" value={title} onChange={(e) => handleTitleChange(e.target.value)} placeholder="Sihirli Mat Kupa - 330ml" />
+              <input className="form-input" value={title} onChange={(e) => handleTitleChange(e.target.value)} placeholder="Sihirli Kupa - 330ml" />
             </div>
 
             <div className="form-group">

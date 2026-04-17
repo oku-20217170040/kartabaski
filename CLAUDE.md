@@ -102,7 +102,7 @@ These rules must be deployed via Firebase Console (Firestore → Rules tab).
 | `deliveryDays` | number | Kargo süresi (iş günü, varsayılan: 3) |
 | `seoTags` | string[]? | Gizli SEO etiketleri |
 
-Valid categories: `Sihirli Mat Kupa`, `Sihirli Konik Kupa`, `Seramik Nescafe Fincanı`, `Sihirli Renkli Kupa`, `Özel Tasarım`
+Valid categories: `Sihirli Kupa`, `Klasik Kupa`, `Porselen Kupa`, `Nescafe & Latte Fincanı`, `Türk Kahvesi Fincanı`, `Fincan Seti`, `Kurumsal Sipariş`, `Özel Tasarım`
 
 ### Price Helpers
 

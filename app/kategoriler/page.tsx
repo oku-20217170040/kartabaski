@@ -10,11 +10,14 @@ import Footer from '@/components/Footer';
 import Link from 'next/link';
 
 const CATEGORY_META: Record<Category, { icon: string; desc: string; color: string }> = {
-  'Sihirli Mat Kupa':       { icon: '☕', desc: 'Isıyla renk değiştiren mat yüzey kupalar', color: '#C9A84C' },
-  'Sihirli Konik Kupa':     { icon: '🍵', desc: 'Konik formlu sihirli baskı kupalar', color: '#d4a017' },
-  'Seramik Nescafe Fincanı':{ icon: '🫖', desc: 'Özel tasarım seramik nescafe fincanları', color: '#b87333' },
-  'Sihirli Renkli Kupa':    { icon: '🎨', desc: 'Canlı renklerle ısıya duyarlı sihirli kupalar', color: '#e86a3a' },
-  'Özel Tasarım':           { icon: '✨', desc: 'Tamamen kişiselleştirilmiş özel tasarım ürünler', color: '#a87fd6' },
+  'Sihirli Kupa':           { icon: '✨', desc: 'Isıyla renk değiştiren sihirli baskı kupalar', color: '#C9A84C' },
+  'Klasik Kupa':            { icon: '☕', desc: 'Klasik tasarımlı kişiye özel baskı kupalar', color: '#d4a017' },
+  'Porselen Kupa':          { icon: '🍶', desc: 'Şık porselen baskı kupalar', color: '#b87333' },
+  'Nescafe & Latte Fincanı':{ icon: '🫖', desc: 'Nescafe ve latte için özel tasarım fincanlar', color: '#c0632a' },
+  'Türk Kahvesi Fincanı':   { icon: '🧆', desc: 'Geleneksel Türk kahvesi fincanları', color: '#7b4f2e' },
+  'Fincan Seti':            { icon: '🍽️', desc: 'Özel tasarımlı fincan setleri', color: '#6a8d73' },
+  'Kurumsal Sipariş':       { icon: '🏢', desc: 'Kurumsal ve toplu baskı siparişleri', color: '#4a6fa5' },
+  'Özel Tasarım':           { icon: '🎨', desc: 'Tamamen kişiselleştirilmiş özel tasarım ürünler', color: '#a87fd6' },
 };
 
 export default function KategorilerPage() {

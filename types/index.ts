@@ -18,17 +18,23 @@ export interface Product {
 }
 
 export type Category =
-  | 'Sihirli Mat Kupa'
-  | 'Sihirli Konik Kupa'
-  | 'Seramik Nescafe Fincanı'
-  | 'Sihirli Renkli Kupa'
+  | 'Sihirli Kupa'
+  | 'Klasik Kupa'
+  | 'Porselen Kupa'
+  | 'Nescafe & Latte Fincanı'
+  | 'Türk Kahvesi Fincanı'
+  | 'Fincan Seti'
+  | 'Kurumsal Sipariş'
   | 'Özel Tasarım';
 
 export const CATEGORIES: Category[] = [
-  'Sihirli Mat Kupa',
-  'Sihirli Konik Kupa',
-  'Seramik Nescafe Fincanı',
-  'Sihirli Renkli Kupa',
+  'Sihirli Kupa',
+  'Klasik Kupa',
+  'Porselen Kupa',
+  'Nescafe & Latte Fincanı',
+  'Türk Kahvesi Fincanı',
+  'Fincan Seti',
+  'Kurumsal Sipariş',
   'Özel Tasarım',
 ];
 
