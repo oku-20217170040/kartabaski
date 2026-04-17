@@ -18,6 +18,7 @@ const CATEGORY_META: Record<Category, { icon: string; desc: string; color: strin
   'Fincan Seti':            { icon: '🍽️', desc: 'Özel tasarımlı fincan setleri', color: '#6a8d73' },
   'Kurumsal Sipariş':       { icon: '🏢', desc: 'Kurumsal ve toplu baskı siparişleri', color: '#4a6fa5' },
   'Özel Tasarım':           { icon: '🎨', desc: 'Tamamen kişiselleştirilmiş özel tasarım ürünler', color: '#a87fd6' },
+  'Pro Kupa':               { icon: '🏆', desc: 'Profesyonel kalitede özel baskı kupalar', color: '#2e7d9e' },
 };
 
 export default function KategorilerPage() {

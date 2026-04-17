@@ -25,7 +25,8 @@ export type Category =
   | 'Türk Kahvesi Fincanı'
   | 'Fincan Seti'
   | 'Kurumsal Sipariş'
-  | 'Özel Tasarım';
+  | 'Özel Tasarım'
+  | 'Pro Kupa';
 
 export const CATEGORIES: Category[] = [
   'Sihirli Kupa',
@@ -36,6 +37,7 @@ export const CATEGORIES: Category[] = [
   'Fincan Seti',
   'Kurumsal Sipariş',
   'Özel Tasarım',
+  'Pro Kupa',
 ];
 
 // ── Konfiguratör ─────────────────────────────────────────────────────────────
