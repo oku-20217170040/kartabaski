@@ -185,6 +185,29 @@ export default function ProductDetailClient({ slug, product, similar }: Props) {
                       </svg>
                       Büyüt
                     </div>
+
+                    {/* Nokta göstergesi — resmin içinde altta */}
+                    {images.length > 1 && (
+                      <div className="gallery-dots">
+                        {images.map((_, i) => (
+                          <button
+                            key={i}
+                            className={`gallery-dot ${i === activeImg ? 'gallery-dot--active' : ''}`}
+                            onClick={e => { e.stopPropagation(); setActiveImg(i); }}
+                            aria-label={`Fotoğraf ${i + 1}`}
+                          />
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Swipe hint okçuğu */}
+                    {images.length > 1 && (
+                      <div className="gallery-swipe-hint">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.85)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                          <polyline points="9 18 15 12 9 6"/>
+                        </svg>
+                      </div>
+                    )}
                   </>
                 ) : (
                   <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '5rem', opacity: 0.15 }}>☕</div>
@@ -214,19 +237,6 @@ export default function ProductDetailClient({ slug, product, similar }: Props) {
                 </div>
               )}
 
-              {/* Mobil nokta göstergesi */}
-              {images && images.length > 1 && (
-                <div className="gallery-dots">
-                  {images.map((_, i) => (
-                    <button
-                      key={i}
-                      className={`gallery-dot ${i === activeImg ? 'gallery-dot--active' : ''}`}
-                      onClick={e => { e.stopPropagation(); setActiveImg(i); }}
-                      aria-label={`Fotoğraf ${i + 1}`}
-                    />
-                  ))}
-                </div>
-              )}
             </div>
 
             {/* Sağ: Info panel — sticky (5/12) */}
