@@ -90,14 +90,15 @@ export default function Footer() {
           <div className="footer-col">
             <h4 className="footer-col-head">Kategoriler</h4>
             <ul className="footer-nav">
+              <li><Link href="/?category=Seramik%20Nescafe%20Fincan%C4%B1">Seramik Nescafe Fincanı</Link></li>
+              <li><Link href="/?category=L%C3%BCks%20Kupa">Lüks Kupa</Link></li>
+              <li><Link href="/?category=Nescafe%20Fincan%C4%B1">Nescafe Fincanı</Link></li>
+              <li><Link href="/?category=Latte%20Fincan%C4%B1">Latte Fincanı</Link></li>
+              <li><Link href="/?category=Pro%20Kupa">Pro Kupa</Link></li>
+              <li><Link href="/?category=B%C3%BCy%C3%BCk%20Kupa">Büyük Kupa</Link></li>
               <li><Link href="/?category=Sihirli%20Kupa">Sihirli Kupa</Link></li>
-              <li><Link href="/?category=Klasik%20Kupa">Klasik Kupa</Link></li>
-              <li><Link href="/?category=Porselen%20Kupa">Porselen Kupa</Link></li>
-              <li><Link href="/?category=Nescafe%20%26%20Latte%20Fincan%C4%B1">Nescafe & Latte Fincanı</Link></li>
-              <li><Link href="/?category=T%C3%BCrk%20Kahvesi%20Fincan%C4%B1">Türk Kahvesi Fincanı</Link></li>
-              <li><Link href="/?category=Fincan%20Seti">Fincan Seti</Link></li>
-              <li><Link href="/?category=Kurumsal%20Sipari%C5%9F">Kurumsal Sipariş</Link></li>
               <li><Link href="/?category=%C3%96zel%20Tasar%C4%B1m">Özel Tasarım</Link></li>
+              <li><Link href="/?category=Kurumsal">Kurumsal</Link></li>
             </ul>
           </div>
 

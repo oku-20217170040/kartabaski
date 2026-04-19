@@ -10,16 +10,15 @@ import Footer from '@/components/Footer';
 import Link from 'next/link';
 
 const CATEGORY_META: Record<Category, { icon: string; desc: string; color: string }> = {
-  'Sihirli Kupa':           { icon: '✨', desc: 'Isıyla renk değiştiren sihirli baskı kupalar', color: '#C9A84C' },
-  'Klasik Kupa':            { icon: '☕', desc: 'Klasik tasarımlı kişiye özel baskı kupalar', color: '#d4a017' },
-  'Porselen Kupa':          { icon: '🍶', desc: 'Şık porselen baskı kupalar', color: '#b87333' },
-  'Nescafe & Latte Fincanı':{ icon: '🫖', desc: 'Nescafe ve latte için özel tasarım fincanlar', color: '#c0632a' },
-  'Türk Kahvesi Fincanı':   { icon: '🧆', desc: 'Geleneksel Türk kahvesi fincanları', color: '#7b4f2e' },
-  'Fincan Seti':            { icon: '🍽️', desc: 'Özel tasarımlı fincan setleri', color: '#6a8d73' },
-  'Kurumsal Sipariş':       { icon: '🏢', desc: 'Kurumsal ve toplu baskı siparişleri', color: '#4a6fa5' },
-  'Özel Tasarım':           { icon: '🎨', desc: 'Tamamen kişiselleştirilmiş özel tasarım ürünler', color: '#a87fd6' },
-  'Pro Kupa':               { icon: '🏆', desc: 'Profesyonel kalitede özel baskı kupalar', color: '#2e7d9e' },
+  'Seramik Nescafe Fincanı':{ icon: '🫖', desc: 'Seramik malzemeden üretilmiş nescafe fincanları', color: '#c0632a' },
   'Lüks Kupa':              { icon: '💎', desc: 'Üst segment lüks baskı kupalar', color: '#8e44ad' },
+  'Nescafe Fincanı':        { icon: '☕', desc: 'Nescafe için özel tasarım fincanlar', color: '#b87333' },
+  'Latte Fincanı':          { icon: '🥛', desc: 'Latte için özel tasarım fincanlar', color: '#d4a017' },
+  'Pro Kupa':               { icon: '🏆', desc: 'Profesyonel kalitede özel baskı kupalar', color: '#2e7d9e' },
+  'Büyük Kupa':             { icon: '🥤', desc: 'Büyük boyutlu kişiye özel baskı kupalar', color: '#6a8d73' },
+  'Sihirli Kupa':           { icon: '✨', desc: 'Isıyla renk değiştiren sihirli baskı kupalar', color: '#C9A84C' },
+  'Özel Tasarım':           { icon: '🎨', desc: 'Tamamen kişiselleştirilmiş özel tasarım ürünler', color: '#a87fd6' },
+  'Kurumsal':               { icon: '🏢', desc: 'Kurumsal ve toplu baskı siparişleri', color: '#4a6fa5' },
 };
 
 export default function KategorilerPage() {

@@ -3,16 +3,15 @@ import { z } from 'zod';
 // ── Kategori ─────────────────────────────────────────────────────────────────
 
 export const CategorySchema = z.enum([
-  'Sihirli Kupa',
-  'Klasik Kupa',
-  'Porselen Kupa',
-  'Nescafe & Latte Fincanı',
-  'Türk Kahvesi Fincanı',
-  'Fincan Seti',
-  'Kurumsal Sipariş',
-  'Özel Tasarım',
-  'Pro Kupa',
+  'Seramik Nescafe Fincanı',
   'Lüks Kupa',
+  'Nescafe Fincanı',
+  'Latte Fincanı',
+  'Pro Kupa',
+  'Büyük Kupa',
+  'Sihirli Kupa',
+  'Özel Tasarım',
+  'Kurumsal',
 ]);
 
 // ── Ürün ─────────────────────────────────────────────────────────────────────

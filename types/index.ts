@@ -18,28 +18,26 @@ export interface Product {
 }
 
 export type Category =
-  | 'Sihirli Kupa'
-  | 'Klasik Kupa'
-  | 'Porselen Kupa'
-  | 'Nescafe & Latte Fincanı'
-  | 'Türk Kahvesi Fincanı'
-  | 'Fincan Seti'
-  | 'Kurumsal Sipariş'
-  | 'Özel Tasarım'
+  | 'Seramik Nescafe Fincanı'
+  | 'Lüks Kupa'
+  | 'Nescafe Fincanı'
+  | 'Latte Fincanı'
   | 'Pro Kupa'
-  | 'Lüks Kupa';
+  | 'Büyük Kupa'
+  | 'Sihirli Kupa'
+  | 'Özel Tasarım'
+  | 'Kurumsal';
 
 export const CATEGORIES: Category[] = [
-  'Sihirli Kupa',
-  'Klasik Kupa',
-  'Porselen Kupa',
-  'Nescafe & Latte Fincanı',
-  'Türk Kahvesi Fincanı',
-  'Fincan Seti',
-  'Kurumsal Sipariş',
-  'Özel Tasarım',
-  'Pro Kupa',
+  'Seramik Nescafe Fincanı',
   'Lüks Kupa',
+  'Nescafe Fincanı',
+  'Latte Fincanı',
+  'Pro Kupa',
+  'Büyük Kupa',
+  'Sihirli Kupa',
+  'Özel Tasarım',
+  'Kurumsal',
 ];
 
 // ── Konfiguratör ─────────────────────────────────────────────────────────────
