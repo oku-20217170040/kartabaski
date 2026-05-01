@@ -88,7 +88,7 @@ export default function AdminKonfiguratorPage() {
                   }}>
                     <div style={{
                       width: 44, height: 44, borderRadius: 8, flexShrink: 0, overflow: 'hidden',
-                      background: cup.gradient, position: 'relative',
+                      background: '#f3f4f6', position: 'relative',
                     }}>
                       {cup.imagePublicId ? (
                         <Image
@@ -147,7 +147,7 @@ export default function AdminKonfiguratorPage() {
                   }}>
                     <div style={{
                       width: 44, height: 44, borderRadius: 8, flexShrink: 0, overflow: 'hidden',
-                      background: design.gradient, position: 'relative',
+                      background: '#f3f4f6', position: 'relative',
                     }}>
                       {design.imagePublicId ? (
                         <Image
