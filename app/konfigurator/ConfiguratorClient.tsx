@@ -234,7 +234,7 @@ export default function ConfiguratorClient() {
                   selected={selectedCup?.id === cup.id}
                   onClick={() => handleSelectCup(cup)}
                 >
-                  <Visual imagePublicId={cup.imagePublicId} background={cup.gradient} color={cup.textColor} label={cup.code} emoji="☕" />
+                  <Visual imagePublicId={cup.imagePublicId} background={cup.gradient ?? ''} color={cup.textColor ?? ''} label={cup.code} emoji="☕" />
                   <div style={itemNameStyle}>{cup.name}</div>
                   <div style={{ fontSize: 12, fontWeight: 700, textAlign: 'center', color: '#FF6B35', marginTop: 2 }}>{cup.price}₺</div>
                 </CarouselCard>
@@ -273,7 +273,7 @@ export default function ConfiguratorClient() {
                 selected={selectedDesign?.id === design.id}
                 onClick={() => handleSelectDesign(design)}
               >
-                <Visual imagePublicId={design.imagePublicId} background={design.gradient} color={design.textColor} label={design.code} emoji="🎨" />
+                <Visual imagePublicId={design.imagePublicId} background={design.gradient ?? ''} color={design.textColor ?? ''} label={design.code} emoji="🎨" />
                 <div style={itemNameStyle}>{design.name}</div>
               </CarouselCard>
             ))}

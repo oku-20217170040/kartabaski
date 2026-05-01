@@ -14,8 +14,6 @@ export default function NewCupPage() {
       name:          data.name,
       price:         data.price ?? 0,
       imagePublicId: data.imagePublicId,
-      gradient:      data.gradient,
-      textColor:     data.textColor,
       active:        data.active,
       order:         data.order,
     });

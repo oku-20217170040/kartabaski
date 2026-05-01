@@ -13,8 +13,6 @@ export default function NewDesignPage() {
       code:          data.code,
       name:          data.name,
       imagePublicId: data.imagePublicId,
-      gradient:      data.gradient,
-      textColor:     data.textColor,
       active:        data.active,
       order:         data.order,
     });

@@ -44,12 +44,12 @@ export const CATEGORIES: Category[] = [
 
 export interface ConfiguratorCup {
   id: string;
-  code: string;          // B1, B2 ...
+  code: string;
   name: string;
   price: number;
-  imagePublicId?: string; // Cloudinary public_id — gerçek fotoğraf
-  gradient: string;       // CSS gradient — ör. "linear-gradient(135deg,#6366F1,#8B5CF6)"
-  textColor: string;      // Görsel üzerindeki metin rengi — ör. "rgba(255,255,255,0.92)"
+  imagePublicId?: string;
+  gradient?: string;
+  textColor?: string;
   active: boolean;
   order: number;
   createdAt: number;
@@ -58,11 +58,11 @@ export interface ConfiguratorCup {
 
 export interface ConfiguratorDesign {
   id: string;
-  code: string;          // T1, T2 ...
+  code: string;
   name: string;
-  imagePublicId?: string; // Cloudinary public_id — gerçek fotoğraf
-  gradient: string;
-  textColor: string;
+  imagePublicId?: string;
+  gradient?: string;
+  textColor?: string;
   active: boolean;
   order: number;
   createdAt: number;
