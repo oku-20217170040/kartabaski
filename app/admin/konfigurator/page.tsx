@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Image from 'next/image';
 import Link from 'next/link';
 import { collection, getDocs, orderBy, query } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
@@ -85,14 +86,19 @@ export default function AdminKonfiguratorPage() {
                     padding: '12px 16px', display: 'flex', gap: 12, alignItems: 'center',
                     opacity: cup.active ? 1 : 0.55,
                   }}>
-                    {/* Renk önizleme */}
                     <div style={{
-                      width: 44, height: 44, borderRadius: 8, flexShrink: 0,
-                      background: cup.gradient,
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      fontSize: 11, fontWeight: 800, color: cup.textColor,
+                      width: 44, height: 44, borderRadius: 8, flexShrink: 0, overflow: 'hidden',
+                      background: cup.gradient, position: 'relative',
                     }}>
-                      {cup.code}
+                      {cup.imagePublicId ? (
+                        <Image
+                          src={`https://res.cloudinary.com/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/upload/w_88,h_88,c_fill,f_auto,q_auto/${cup.imagePublicId}`}
+                          alt={cup.name}
+                          fill
+                          style={{ objectFit: 'cover' }}
+                          sizes="44px"
+                        />
+                      ) : null}
                     </div>
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ fontWeight: 600, fontSize: 14 }}>{cup.name}</div>
@@ -140,12 +146,18 @@ export default function AdminKonfiguratorPage() {
                     opacity: design.active ? 1 : 0.55,
                   }}>
                     <div style={{
-                      width: 44, height: 44, borderRadius: 8, flexShrink: 0,
-                      background: design.gradient,
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      fontSize: 11, fontWeight: 800, color: design.textColor,
+                      width: 44, height: 44, borderRadius: 8, flexShrink: 0, overflow: 'hidden',
+                      background: design.gradient, position: 'relative',
                     }}>
-                      {design.code}
+                      {design.imagePublicId ? (
+                        <Image
+                          src={`https://res.cloudinary.com/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/upload/w_88,h_88,c_fill,f_auto,q_auto/${design.imagePublicId}`}
+                          alt={design.name}
+                          fill
+                          style={{ objectFit: 'cover' }}
+                          sizes="44px"
+                        />
+                      ) : null}
                     </div>
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ fontWeight: 600, fontSize: 14 }}>{design.name}</div>
