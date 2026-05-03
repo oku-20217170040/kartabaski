@@ -70,9 +70,13 @@ interface Props {
 }
 
 export default function ProductDetailClient({ slug, product, similar }: Props) {
+  const colors = product?.colors ?? [];
+  const [selectedColor, setSelectedColor] = useState<number | null>(colors.length > 0 ? 0 : null);
   const [activeImg, setActiveImg]   = useState(0);
   const [lightbox, setLightbox]     = useState<number | null>(null);
   const [touchStartX, setTouchStartX] = useState<number | null>(null);
+
+  useEffect(() => { setActiveImg(0); }, [selectedColor]);
 
   useEffect(() => {
     if (lightbox === null) return;
@@ -124,10 +128,14 @@ export default function ProductDetailClient({ slug, product, similar }: Props) {
   const productSlug  = getSlug(product);
   const deliveryDays = product.deliveryDays ?? 3;
 
-  const rawImages: string[] = product.images || [];
-  const images = rawImages.length
-    ? rawImages.map(id => id.startsWith('http') ? id : cloudinaryUrl(id))
-    : null;
+  const activeColorImages: string[] | null = (() => {
+    if (selectedColor !== null && colors[selectedColor]?.images?.length) {
+      return colors[selectedColor].images.map(id => id.startsWith('http') ? id : cloudinaryUrl(id));
+    }
+    const raw = product.images || [];
+    return raw.length ? raw.map(id => id.startsWith('http') ? id : cloudinaryUrl(id)) : null;
+  })();
+  const images = activeColorImages;
 
   const priceLabel = formatPriceRange(priceMin, priceMax);
 
@@ -289,6 +297,39 @@ export default function ProductDetailClient({ slug, product, similar }: Props) {
                 </p>
               )}
 
+              {/* Renk seçici */}
+              {colors.length > 0 && (
+                <div style={{ margin: '20px 0 0' }}>
+                  <p style={{ fontSize: 13, color: 'var(--muted)', marginBottom: 10, fontWeight: 600 }}>
+                    Renk: <span style={{ color: 'var(--text)', fontWeight: 700 }}>
+                      {selectedColor !== null ? colors[selectedColor].name : 'Seçilmedi'}
+                    </span>
+                  </p>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                    {colors.map((c, i) => (
+                      <button
+                        key={i}
+                        onClick={() => setSelectedColor(i)}
+                        style={{
+                          padding: '7px 16px',
+                          borderRadius: 8,
+                          border: selectedColor === i
+                            ? '2px solid var(--primary)'
+                            : '1.5px solid var(--border)',
+                          background: selectedColor === i ? 'var(--primary-container)' : 'var(--card)',
+                          color: selectedColor === i ? 'var(--primary)' : 'var(--text-sub)',
+                          fontSize: 13, fontWeight: selectedColor === i ? 700 : 400,
+                          cursor: 'pointer',
+                          transition: 'all 0.15s',
+                        }}
+                      >
+                        {c.name}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               {/* Kargo bilgisi */}
               <div style={{
                 display: 'flex', alignItems: 'center', gap: 8,
@@ -308,7 +349,7 @@ export default function ProductDetailClient({ slug, product, similar }: Props) {
 
               {/* WhatsApp CTA — masaüstünde görünür, mobilden sticky bar'a taşındı */}
               <a
-                href={whatsappLink(title, slug)}
+                href={whatsappLink(title, slug, selectedColor !== null ? colors[selectedColor]?.name : undefined)}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="detail-wa-desktop"
@@ -454,7 +495,7 @@ export default function ProductDetailClient({ slug, product, similar }: Props) {
       <div className="detail-sticky-bar">
         <div className="detail-sticky-price">{priceLabel}</div>
         <a
-          href={whatsappLink(title, slug)}
+          href={whatsappLink(title, slug, selectedColor !== null ? colors[selectedColor]?.name : undefined)}
           target="_blank"
           rel="noopener noreferrer"
           className="detail-sticky-wa-btn"

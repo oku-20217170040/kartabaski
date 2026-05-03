@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
-import { Product, CATEGORIES, Category } from '@/types';
+import { Product, ProductColor, CATEGORIES, Category } from '@/types';
 import { cloudinaryUrl } from '@/lib/products';
 
 interface Props {
@@ -41,6 +41,11 @@ export default function ProductForm({ initial, onSubmit, submitLabel }: Props) {
   const [productCode, setProductCode] = useState(initial?.productCode || '');
   const [seoTags, setSeoTags] = useState<string[]>(initial?.seoTags || []);
   const [seoTagInput, setSeoTagInput] = useState('');
+  const [colors, setColors] = useState<ProductColor[]>(initial?.colors || []);
+  const [newColorName, setNewColorName] = useState('');
+  const [colorUploading, setColorUploading] = useState<number | null>(null);
+  const colorFileRefs = useRef<(HTMLInputElement | null)[]>([]);
+
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
@@ -255,6 +260,47 @@ export default function ProductForm({ initial, onSubmit, submitLabel }: Props) {
 
   // ─────────────────────────────────────────────────────────────────────────────
 
+  const addColor = () => {
+    const name = newColorName.trim();
+    if (!name) return;
+    setColors(prev => [...prev, { name, images: [] }]);
+    setNewColorName('');
+  };
+
+  const removeColor = (i: number) => {
+    setColors(prev => prev.filter((_, j) => j !== i));
+  };
+
+  const handleColorUpload = async (colorIndex: number, files: FileList | null) => {
+    if (!files || !files.length) return;
+    setColorUploading(colorIndex);
+    try {
+      const ids = await Promise.all(Array.from(files).map(uploadToCloudinary));
+      ids.forEach(id => sessionUploads.current.add(id));
+      setColors(prev => prev.map((c, i) =>
+        i === colorIndex ? { ...c, images: [...c.images, ...ids] } : c
+      ));
+    } catch {
+      setError('Renk görseli yüklenemedi.');
+    } finally {
+      setColorUploading(null);
+    }
+  };
+
+  const removeColorImage = (colorIndex: number, imgIndex: number, id: string) => {
+    if (sessionUploads.current.has(id)) {
+      sessionUploads.current.delete(id);
+      fetch('/api/cloudinary-delete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ publicIds: [id] }),
+      });
+    }
+    setColors(prev => prev.map((c, i) =>
+      i === colorIndex ? { ...c, images: c.images.filter((_, j) => j !== imgIndex) } : c
+    ));
+  };
+
   const addSeoTag = () => {
     const t = seoTagInput.trim();
     if (t && !seoTags.includes(t)) setSeoTags((prev) => [...prev, t]);
@@ -281,6 +327,7 @@ export default function ProductForm({ initial, onSubmit, submitLabel }: Props) {
         shortDesc: initial?.shortDesc || '',
         description,
         images,
+        colors: colors.length > 0 ? colors : undefined,
         deliveryDays: Number(deliveryDays) || 3,
         seoTags,
         productCode: productCode.trim() || undefined,
@@ -570,6 +617,108 @@ export default function ProductForm({ initial, onSubmit, submitLabel }: Props) {
                 </div>
               </>
             )}
+          </div>
+          {/* Renk Varyantları */}
+          <div className="card" style={{ padding: 28, marginTop: 20 }}>
+            <h2 style={{ fontFamily: 'var(--font-display)', marginBottom: 4 }}>Renk Varyantları</h2>
+            <p style={{ fontSize: 12, color: 'var(--muted)', marginBottom: 16 }}>
+              Her renk için ayrı fotoğraf ekleyin. Müşteri ürün sayfasında renk seçip WhatsApp mesajına yansıtır.
+            </p>
+
+            {/* Yeni renk ekle */}
+            <div style={{ display: 'flex', gap: 8, marginBottom: 20 }}>
+              <input
+                className="form-input"
+                placeholder="Renk adı — örn: Turuncu, Koyu Mavi"
+                value={newColorName}
+                onChange={e => setNewColorName(e.target.value)}
+                onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addColor(); } }}
+                style={{ flex: 1 }}
+              />
+              <button
+                type="button"
+                onClick={addColor}
+                disabled={!newColorName.trim()}
+                className="btn btn-secondary"
+                style={{ whiteSpace: 'nowrap', padding: '0 18px' }}
+              >
+                + Renk Ekle
+              </button>
+            </div>
+
+            {colors.length === 0 && (
+              <p style={{ fontSize: 13, color: 'var(--muted)', textAlign: 'center', padding: '16px 0' }}>
+                Henüz renk varyantı eklenmedi.
+              </p>
+            )}
+
+            {colors.map((color, ci) => (
+              <div key={ci} style={{
+                border: '1px solid var(--border)',
+                borderRadius: 10,
+                padding: 16,
+                marginBottom: 12,
+                background: 'var(--surface)',
+              }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+                  <span style={{ fontWeight: 700, fontSize: 14, color: 'var(--text)' }}>{color.name}</span>
+                  <button
+                    type="button"
+                    onClick={() => removeColor(ci)}
+                    style={{
+                      background: 'none', border: 'none',
+                      color: 'var(--danger)', cursor: 'pointer',
+                      fontSize: 13, padding: '2px 8px',
+                    }}
+                  >
+                    Sil
+                  </button>
+                </div>
+
+                {/* Renk görselleri */}
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 8 }}>
+                  {color.images.map((id, ii) => (
+                    <div key={id} style={{ position: 'relative', width: 80, height: 64, borderRadius: 8, overflow: 'hidden', flexShrink: 0 }}>
+                      <img src={cloudinaryUrl(id, 'f_auto,q_auto,w_200,h_160,c_fill')} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                      <button
+                        type="button"
+                        onClick={() => removeColorImage(ci, ii, id)}
+                        style={{
+                          position: 'absolute', top: 2, right: 2,
+                          width: 18, height: 18, borderRadius: '50%',
+                          background: 'rgba(0,0,0,0.7)', border: 'none',
+                          color: '#fff', fontSize: 11, cursor: 'pointer',
+                          display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          lineHeight: 1,
+                        }}
+                      >×</button>
+                    </div>
+                  ))}
+
+                  {/* Yükle butonu */}
+                  <label style={{
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    width: 80, height: 64, borderRadius: 8,
+                    border: '2px dashed var(--border)',
+                    cursor: colorUploading === ci ? 'wait' : 'pointer',
+                    fontSize: 11, color: 'var(--muted)',
+                    flexShrink: 0, flexDirection: 'column', gap: 2,
+                  }}>
+                    {colorUploading === ci ? '⏳' : '📁'}
+                    <span>{colorUploading === ci ? 'Yükleniyor' : 'Ekle'}</span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      multiple
+                      style={{ display: 'none' }}
+                      ref={el => { colorFileRefs.current[ci] = el; }}
+                      onChange={e => handleColorUpload(ci, e.target.files)}
+                      disabled={colorUploading !== null}
+                    />
+                  </label>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
 

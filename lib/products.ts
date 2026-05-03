@@ -100,13 +100,14 @@ export function cloudinaryThumb(publicId: string): string {
 
 // ── WhatsApp ─────────────────────────────────────────────────────────────────
 
-export function whatsappLink(productTitle?: string, slug?: string): string {
+export function whatsappLink(productTitle?: string, slug?: string, color?: string): string {
   if (!productTitle) {
     return `https://wa.me/${PHONE}?text=${encodeURIComponent(DEFAULT_WA_TEXT)}`;
   }
   const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://kartabaski.com';
   const productUrl = slug ? `\n🔗 ${SITE_URL}/urun/${slug}` : '';
-  const text = `Merhaba, aşağıdaki ürün için sipariş vermek istiyorum. Fiyat bilgisi alabilir miyim?\n\n☕ ${productTitle}${productUrl}`;
+  const colorLine = color ? `\n🎨 Renk: ${color}` : '';
+  const text = `Merhaba, aşağıdaki ürün için sipariş vermek istiyorum. Fiyat bilgisi alabilir miyim?\n\n☕ ${productTitle}${colorLine}${productUrl}`;
   return `https://wa.me/${PHONE}?text=${encodeURIComponent(text)}`;
 }
 

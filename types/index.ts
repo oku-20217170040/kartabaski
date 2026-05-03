@@ -1,3 +1,8 @@
+export interface ProductColor {
+  name: string;
+  images: string[]; // Cloudinary public_ids
+}
+
 export interface Product {
   id: string;
   title: string;
@@ -9,7 +14,8 @@ export interface Product {
   featured?: boolean;
   shortDesc: string;
   description: string;
-  images: string[]; // Cloudinary public_ids
+  images: string[]; // Cloudinary public_ids (kapak/varsayılan)
+  colors?: ProductColor[]; // Renk varyantları
   deliveryDays: number; // varsayılan: 3
   seoTags?: string[]; // Gizli SEO etiketleri — müşteri görmez, JSON-LD'ye gömülür
   productCode?: string; // Sadece admin panelinde görünür, ürün yönetimi için

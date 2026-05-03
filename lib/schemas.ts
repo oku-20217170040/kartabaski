@@ -31,6 +31,10 @@ export const ProductSchema = z.object({
   shortDesc:    z.string().default(''),
   description:  z.string().default(''),
   images:       z.array(z.string()).default([]),
+  colors:       z.array(z.object({
+    name:   z.string(),
+    images: z.array(z.string()).default([]),
+  })).optional(),
   deliveryDays: z.number().default(3),
   seoTags:      z.array(z.string()).optional(),
   productCode:  z.string().optional(), // Sadece admin panelinde görünür
