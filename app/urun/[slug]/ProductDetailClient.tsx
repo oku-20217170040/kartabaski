@@ -222,17 +222,22 @@ export default function ProductDetailClient({ slug, product, similar }: Props) {
                 )}
               </div>
 
-              {/* Thumbnail grid (stitch: 3 square thumbs) */}
+              {/* Thumbnail strip — tüm fotoğraflar, yatay kaydırmalı */}
               {images && images.length > 1 && (
-                <div className="detail-thumbs">
-                  {images.slice(0, 3).map((src, i) => (
+                <div style={{
+                  display: 'flex', gap: 8, marginTop: 10,
+                  overflowX: 'auto', paddingBottom: 4,
+                  scrollbarWidth: 'none',
+                }}>
+                  {images.map((src, i) => (
                     <button
                       key={i}
                       onClick={() => setActiveImg(i)}
                       style={{
-                        padding: 0, border: 'none', borderRadius: 12,
+                        padding: 0, border: 'none', borderRadius: 10,
                         overflow: 'hidden', cursor: 'pointer',
-                        aspectRatio: '1',
+                        flexShrink: 0,
+                        width: 72, height: 72,
                         outline: i === activeImg ? '2.5px solid var(--primary)' : '2px solid transparent',
                         outlineOffset: 2,
                         transition: 'outline-color 0.15s',
@@ -242,6 +247,39 @@ export default function ProductDetailClient({ slug, product, similar }: Props) {
                       <img src={src} alt={`${title} ${i + 1}`} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
                     </button>
                   ))}
+                </div>
+              )}
+
+              {/* Renk seçici — galeri altında */}
+              {colors.length > 0 && (
+                <div style={{ marginTop: 14 }}>
+                  <p style={{ fontSize: 12, color: 'var(--muted)', marginBottom: 8, fontWeight: 600 }}>
+                    Renk: <span style={{ color: 'var(--text)', fontWeight: 700 }}>
+                      {selectedColor !== null ? colors[selectedColor].name : 'Seçilmedi'}
+                    </span>
+                  </p>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 7 }}>
+                    {colors.map((c, i) => (
+                      <button
+                        key={i}
+                        onClick={() => setSelectedColor(i)}
+                        style={{
+                          padding: '6px 14px',
+                          borderRadius: 8,
+                          border: selectedColor === i
+                            ? '2px solid var(--primary)'
+                            : '1.5px solid var(--border)',
+                          background: selectedColor === i ? 'var(--primary-container)' : 'var(--card)',
+                          color: selectedColor === i ? 'var(--primary)' : 'var(--text-sub)',
+                          fontSize: 13, fontWeight: selectedColor === i ? 700 : 400,
+                          cursor: 'pointer',
+                          transition: 'all 0.15s',
+                        }}
+                      >
+                        {c.name}
+                      </button>
+                    ))}
+                  </div>
                 </div>
               )}
 
@@ -295,39 +333,6 @@ export default function ProductDetailClient({ slug, product, similar }: Props) {
                 }}>
                   {description}
                 </p>
-              )}
-
-              {/* Renk seçici */}
-              {colors.length > 0 && (
-                <div style={{ margin: '20px 0 0' }}>
-                  <p style={{ fontSize: 13, color: 'var(--muted)', marginBottom: 10, fontWeight: 600 }}>
-                    Renk: <span style={{ color: 'var(--text)', fontWeight: 700 }}>
-                      {selectedColor !== null ? colors[selectedColor].name : 'Seçilmedi'}
-                    </span>
-                  </p>
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-                    {colors.map((c, i) => (
-                      <button
-                        key={i}
-                        onClick={() => setSelectedColor(i)}
-                        style={{
-                          padding: '7px 16px',
-                          borderRadius: 8,
-                          border: selectedColor === i
-                            ? '2px solid var(--primary)'
-                            : '1.5px solid var(--border)',
-                          background: selectedColor === i ? 'var(--primary-container)' : 'var(--card)',
-                          color: selectedColor === i ? 'var(--primary)' : 'var(--text-sub)',
-                          fontSize: 13, fontWeight: selectedColor === i ? 700 : 400,
-                          cursor: 'pointer',
-                          transition: 'all 0.15s',
-                        }}
-                      >
-                        {c.name}
-                      </button>
-                    ))}
-                  </div>
-                </div>
               )}
 
               {/* Kargo bilgisi */}
