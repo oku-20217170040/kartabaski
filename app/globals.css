@@ -1518,14 +1518,7 @@ body::before { display: none; }
   overflow-y: auto;
   scrollbar-width: none;
   z-index: 3;
-  opacity: 0;
-  transform: translateX(-6px);
-  transition: opacity 0.2s ease, transform 0.2s ease;
-  pointer-events: none;
-}
-.tcard:hover .tcard-colors {
   opacity: 1;
-  transform: translateX(0);
   pointer-events: auto;
 }
 .tcard-color-btn {
@@ -1575,28 +1568,6 @@ body::before { display: none; }
   backdrop-filter: blur(2px);
 }
 
-/* Mobil otomatik slayt nokta göstergesi */
-.tcard-slide-dots {
-  position: absolute;
-  bottom: 8px;
-  left: 50%;
-  transform: translateX(-50%);
-  display: flex;
-  gap: 5px;
-  z-index: 4;
-  pointer-events: none;
-}
-.tcard-slide-dot {
-  width: 5px;
-  height: 5px;
-  border-radius: 50%;
-  background: rgba(255,255,255,0.45);
-  transition: background 0.2s, transform 0.2s;
-}
-.tcard-slide-dot--active {
-  background: #fff;
-  transform: scale(1.4);
-}
 
 /* Bilgi alanı */
 .tcard-body {
