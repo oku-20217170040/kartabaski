@@ -161,11 +161,11 @@ export default function ProductDetailClient({ slug, product, similar }: Props) {
 
             {/* Sol: Galeri (7/12) */}
             <div className="detail-gallery">
-              {/* Ana görsel — 4:5 */}
+              {/* Ana görsel — renk sidebar'ı ile birlikte */}
               <div
                 className="detail-main-img"
-                onClick={() => images && setLightbox(activeImg)}
                 style={{ cursor: images ? 'zoom-in' : 'default' }}
+                onClick={() => images && setLightbox(activeImg)}
                 onTouchStart={e => setTouchStartX(e.touches[0].clientX)}
                 onTouchEnd={e => {
                   if (touchStartX === null || !images || images.length < 2) return;
@@ -178,51 +178,109 @@ export default function ProductDetailClient({ slug, product, similar }: Props) {
                 }}
               >
                 {images ? (
-                  <>
-                    <img src={images[activeImg]} alt={title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                    <div style={{
-                      position: 'absolute', bottom: 12, right: 12,
-                      background: 'rgba(26,28,28,0.55)', backdropFilter: 'blur(8px)',
-                      borderRadius: 8, padding: '5px 10px',
-                      fontSize: 12, color: '#fff',
-                      display: 'flex', alignItems: 'center', gap: 4,
-                    }}>
-                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
-                        <line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/>
-                      </svg>
-                      Büyüt
-                    </div>
-
-                    {/* Nokta göstergesi — resmin içinde altta */}
-                    {images.length > 1 && (
-                      <div className="gallery-dots">
-                        {images.map((_, i) => (
-                          <button
-                            key={i}
-                            className={`gallery-dot ${i === activeImg ? 'gallery-dot--active' : ''}`}
-                            onClick={e => { e.stopPropagation(); setActiveImg(i); }}
-                            aria-label={`Fotoğraf ${i + 1}`}
-                          />
-                        ))}
-                      </div>
-                    )}
-
-                    {/* Swipe hint okçuğu */}
-                    {images.length > 1 && (
-                      <div className="gallery-swipe-hint">
-                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.85)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                          <polyline points="9 18 15 12 9 6"/>
-                        </svg>
-                      </div>
-                    )}
-                  </>
+                  <img src={images[activeImg]} alt={title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                 ) : (
                   <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '5rem', opacity: 0.15 }}>☕</div>
                 )}
+
+                {/* Renk varyant sidebar — sol üst köşe, fotoğrafın üzerinde */}
+                {colors.length > 0 && (
+                  <div
+                    onClick={e => e.stopPropagation()}
+                    style={{
+                      position: 'absolute', top: 10, left: 10, bottom: 10,
+                      display: 'flex', flexDirection: 'column', gap: 6,
+                      overflowY: 'auto',
+                      scrollbarWidth: 'none',
+                      paddingRight: 2,
+                      zIndex: 10,
+                    }}
+                  >
+                    {colors.map((c, i) => {
+                      const thumb = c.images[0]
+                        ? cloudinaryUrl(c.images[0], 'f_auto,q_auto,w_120,h_120,c_fill')
+                        : null;
+                      const isActive = selectedColor === i;
+                      return (
+                        <button
+                          key={i}
+                          onClick={() => setSelectedColor(i)}
+                          title={c.name}
+                          style={{
+                            padding: 0, border: 'none', borderRadius: 10,
+                            overflow: 'hidden', cursor: 'pointer', flexShrink: 0,
+                            width: 60, height: 60,
+                            outline: isActive ? '2.5px solid var(--primary)' : '2px solid rgba(255,255,255,0.5)',
+                            outlineOffset: 2,
+                            background: 'rgba(26,28,28,0.45)',
+                            backdropFilter: 'blur(6px)',
+                            transition: 'outline-color 0.15s, opacity 0.15s',
+                            opacity: isActive ? 1 : 0.72,
+                            position: 'relative',
+                          }}
+                        >
+                          {thumb
+                            ? <img src={thumb} alt={c.name} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+                            : <span style={{ fontSize: 10, color: '#fff', padding: 4, display: 'block', lineHeight: 1.2, textAlign: 'center' }}>{c.name}</span>
+                          }
+                          {/* Renk adı — altta küçük etiket */}
+                          <span style={{
+                            position: 'absolute', bottom: 0, left: 0, right: 0,
+                            background: isActive ? 'rgba(0,109,47,0.82)' : 'rgba(0,0,0,0.52)',
+                            color: '#fff', fontSize: 9, fontWeight: 700,
+                            textAlign: 'center', padding: '2px 2px 3px',
+                            lineHeight: 1.2,
+                            backdropFilter: 'blur(2px)',
+                          }}>{c.name}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+
+                {/* Büyüt etiketi */}
+                {images && (
+                  <div style={{
+                    position: 'absolute', bottom: 12, right: 12,
+                    background: 'rgba(26,28,28,0.55)', backdropFilter: 'blur(8px)',
+                    borderRadius: 8, padding: '5px 10px',
+                    fontSize: 12, color: '#fff',
+                    display: 'flex', alignItems: 'center', gap: 4,
+                    pointerEvents: 'none',
+                  }}>
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                      <line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/>
+                    </svg>
+                    Büyüt
+                  </div>
+                )}
+
+                {/* Nokta göstergesi */}
+                {images && images.length > 1 && (
+                  <div className="gallery-dots">
+                    {images.map((_, i) => (
+                      <button
+                        key={i}
+                        className={`gallery-dot ${i === activeImg ? 'gallery-dot--active' : ''}`}
+                        onClick={e => { e.stopPropagation(); setActiveImg(i); }}
+                        aria-label={`Fotoğraf ${i + 1}`}
+                      />
+                    ))}
+                  </div>
+                )}
+
+                {/* Swipe hint */}
+                {images && images.length > 1 && (
+                  <div className="gallery-swipe-hint">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.85)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <polyline points="9 18 15 12 9 6"/>
+                    </svg>
+                  </div>
+                )}
               </div>
 
-              {/* Thumbnail strip — tüm fotoğraflar, yatay kaydırmalı */}
+              {/* Thumbnail strip — seçili rengin tüm fotoğrafları */}
               {images && images.length > 1 && (
                 <div style={{
                   display: 'flex', gap: 8, marginTop: 10,
@@ -235,8 +293,7 @@ export default function ProductDetailClient({ slug, product, similar }: Props) {
                       onClick={() => setActiveImg(i)}
                       style={{
                         padding: 0, border: 'none', borderRadius: 10,
-                        overflow: 'hidden', cursor: 'pointer',
-                        flexShrink: 0,
+                        overflow: 'hidden', cursor: 'pointer', flexShrink: 0,
                         width: 72, height: 72,
                         outline: i === activeImg ? '2.5px solid var(--primary)' : '2px solid transparent',
                         outlineOffset: 2,
@@ -247,39 +304,6 @@ export default function ProductDetailClient({ slug, product, similar }: Props) {
                       <img src={src} alt={`${title} ${i + 1}`} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
                     </button>
                   ))}
-                </div>
-              )}
-
-              {/* Renk seçici — galeri altında */}
-              {colors.length > 0 && (
-                <div style={{ marginTop: 14 }}>
-                  <p style={{ fontSize: 12, color: 'var(--muted)', marginBottom: 8, fontWeight: 600 }}>
-                    Renk: <span style={{ color: 'var(--text)', fontWeight: 700 }}>
-                      {selectedColor !== null ? colors[selectedColor].name : 'Seçilmedi'}
-                    </span>
-                  </p>
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 7 }}>
-                    {colors.map((c, i) => (
-                      <button
-                        key={i}
-                        onClick={() => setSelectedColor(i)}
-                        style={{
-                          padding: '6px 14px',
-                          borderRadius: 8,
-                          border: selectedColor === i
-                            ? '2px solid var(--primary)'
-                            : '1.5px solid var(--border)',
-                          background: selectedColor === i ? 'var(--primary-container)' : 'var(--card)',
-                          color: selectedColor === i ? 'var(--primary)' : 'var(--text-sub)',
-                          fontSize: 13, fontWeight: selectedColor === i ? 700 : 400,
-                          cursor: 'pointer',
-                          transition: 'all 0.15s',
-                        }}
-                      >
-                        {c.name}
-                      </button>
-                    ))}
-                  </div>
                 </div>
               )}
 
