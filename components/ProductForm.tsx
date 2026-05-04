@@ -46,6 +46,14 @@ export default function ProductForm({ initial, onSubmit, submitLabel }: Props) {
   const [colorUploading, setColorUploading] = useState<number | null>(null);
   const colorFileRefs = useRef<(HTMLInputElement | null)[]>([]);
 
+  // Varyant sıralama (HTML5 drag)
+  const colorDragIndexRef = useRef<number | null>(null);
+  const [colorDragOver, setColorDragOver] = useState<number | null>(null);
+
+  // Varyant içi fotoğraf sıralama — her varyant için ayrı ref
+  const colorImgDragRef = useRef<{ colorIndex: number; imgIndex: number } | null>(null);
+  const [colorImgDragOver, setColorImgDragOver] = useState<{ colorIndex: number; imgIndex: number } | null>(null);
+
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
@@ -259,6 +267,53 @@ export default function ProductForm({ initial, onSubmit, submitLabel }: Props) {
   };
 
   // ─────────────────────────────────────────────────────────────────────────────
+
+  // ── Varyant sıralama ─────────────────────────────────────────────────────────
+  const handleColorDragStart = (i: number) => { colorDragIndexRef.current = i; };
+  const handleColorDragOver = (e: React.DragEvent, i: number) => {
+    e.preventDefault();
+    if (colorDragIndexRef.current !== null) setColorDragOver(i);
+  };
+  const handleColorDrop = (e: React.DragEvent, to: number) => {
+    e.preventDefault();
+    const from = colorDragIndexRef.current;
+    if (from === null || from === to) { setColorDragOver(null); return; }
+    setColors(prev => {
+      const next = [...prev];
+      const [moved] = next.splice(from, 1);
+      next.splice(to, 0, moved);
+      return next;
+    });
+    colorDragIndexRef.current = null;
+    setColorDragOver(null);
+  };
+  const handleColorDragEnd = () => { colorDragIndexRef.current = null; setColorDragOver(null); };
+
+  // ── Varyant içi fotoğraf sıralama ────────────────────────────────────────────
+  const handleColorImgDragStart = (colorIndex: number, imgIndex: number) => {
+    colorImgDragRef.current = { colorIndex, imgIndex };
+  };
+  const handleColorImgDragOver = (e: React.DragEvent, colorIndex: number, imgIndex: number) => {
+    e.preventDefault();
+    if (colorImgDragRef.current) setColorImgDragOver({ colorIndex, imgIndex });
+  };
+  const handleColorImgDrop = (e: React.DragEvent, colorIndex: number, toIndex: number) => {
+    e.preventDefault();
+    const src = colorImgDragRef.current;
+    if (!src || src.colorIndex !== colorIndex || src.imgIndex === toIndex) {
+      setColorImgDragOver(null); return;
+    }
+    setColors(prev => prev.map((c, ci) => {
+      if (ci !== colorIndex) return c;
+      const imgs = [...c.images];
+      const [moved] = imgs.splice(src.imgIndex, 1);
+      imgs.splice(toIndex, 0, moved);
+      return { ...c, images: imgs };
+    }));
+    colorImgDragRef.current = null;
+    setColorImgDragOver(null);
+  };
+  const handleColorImgDragEnd = () => { colorImgDragRef.current = null; setColorImgDragOver(null); };
 
   const addColor = () => {
     const name = newColorName.trim();
@@ -653,15 +708,31 @@ export default function ProductForm({ initial, onSubmit, submitLabel }: Props) {
             )}
 
             {colors.map((color, ci) => (
-              <div key={ci} style={{
-                border: '1px solid var(--border)',
-                borderRadius: 10,
-                padding: 16,
-                marginBottom: 12,
-                background: 'var(--surface)',
-              }}>
+              <div
+                key={ci}
+                draggable
+                onDragStart={() => handleColorDragStart(ci)}
+                onDragOver={e => handleColorDragOver(e, ci)}
+                onDrop={e => handleColorDrop(e, ci)}
+                onDragEnd={handleColorDragEnd}
+                style={{
+                  border: colorDragOver === ci && colorDragIndexRef.current !== ci
+                    ? '2px solid var(--accent)'
+                    : '1px solid var(--border)',
+                  borderRadius: 10,
+                  padding: 16,
+                  marginBottom: 12,
+                  background: 'var(--surface)',
+                  opacity: colorDragIndexRef.current === ci ? 0.4 : 1,
+                  transition: 'opacity 0.1s, border-color 0.1s',
+                  cursor: 'grab',
+                }}
+              >
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-                  <span style={{ fontWeight: 700, fontSize: 14, color: 'var(--text)' }}>{color.name}</span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <span style={{ color: 'var(--muted)', fontSize: 16, lineHeight: 1, userSelect: 'none' }}>⠿</span>
+                    <span style={{ fontWeight: 700, fontSize: 14, color: 'var(--text)' }}>{color.name}</span>
+                  </div>
                   <button
                     type="button"
                     onClick={() => removeColor(ci)}
@@ -675,11 +746,43 @@ export default function ProductForm({ initial, onSubmit, submitLabel }: Props) {
                   </button>
                 </div>
 
-                {/* Renk görselleri */}
+                {/* Renk görselleri — sürükleyerek sıralanabilir */}
+                {color.images.length > 1 && (
+                  <p style={{ fontSize: 11, color: 'var(--muted)', margin: '0 0 6px', userSelect: 'none' }}>
+                    Sıralamak için sürükleyin — ilk görsel sidebar'da gösterilir
+                  </p>
+                )}
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 8 }}>
-                  {color.images.map((id, ii) => (
-                    <div key={id} style={{ position: 'relative', width: 80, height: 64, borderRadius: 8, overflow: 'hidden', flexShrink: 0 }}>
-                      <img src={cloudinaryUrl(id, 'f_auto,q_auto,w_200,h_160,c_fill')} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  {color.images.map((id, ii) => {
+                    const isImgDragging = colorImgDragRef.current?.colorIndex === ci && colorImgDragRef.current?.imgIndex === ii;
+                    const isImgOver = colorImgDragOver?.colorIndex === ci && colorImgDragOver?.imgIndex === ii && !isImgDragging;
+                    return (
+                    <div
+                      key={id}
+                      draggable
+                      onDragStart={e => { e.stopPropagation(); handleColorImgDragStart(ci, ii); }}
+                      onDragOver={e => { e.stopPropagation(); handleColorImgDragOver(e, ci, ii); }}
+                      onDrop={e => { e.stopPropagation(); handleColorImgDrop(e, ci, ii); }}
+                      onDragEnd={e => { e.stopPropagation(); handleColorImgDragEnd(); }}
+                      style={{
+                        position: 'relative', width: 80, height: 64,
+                        borderRadius: 8, overflow: 'hidden', flexShrink: 0,
+                        cursor: 'grab',
+                        outline: isImgOver ? '2px solid var(--accent)' : ii === 0 ? '2px solid var(--accent)' : 'none',
+                        outlineOffset: 2,
+                        opacity: isImgDragging ? 0.35 : 1,
+                        transition: 'opacity 0.1s, outline 0.1s',
+                      }}
+                    >
+                      <img src={cloudinaryUrl(id, 'f_auto,q_auto,w_200,h_160,c_fill')} alt="" draggable={false} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                      {ii === 0 && (
+                        <span style={{
+                          position: 'absolute', bottom: 3, left: 3,
+                          background: 'var(--accent)', color: '#0a0a0a',
+                          fontSize: 9, fontWeight: 700, padding: '1px 4px', borderRadius: 3,
+                          pointerEvents: 'none',
+                        }}>Kapak</span>
+                      )}
                       <button
                         type="button"
                         onClick={() => removeColorImage(ci, ii, id)}
@@ -693,7 +796,8 @@ export default function ProductForm({ initial, onSubmit, submitLabel }: Props) {
                         }}
                       >×</button>
                     </div>
-                  ))}
+                    );
+                  })}
 
                   {/* Yükle butonu */}
                   <label style={{
