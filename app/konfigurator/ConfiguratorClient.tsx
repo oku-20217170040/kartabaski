@@ -143,10 +143,12 @@ export default function ConfiguratorClient() {
   const [cups,           setCups]           = useState<Cup[]>([]);
   const [designs,        setDesigns]        = useState<Design[]>([]);
   const [dataLoading,    setDataLoading]    = useState(true);
+  const [expandedCupId,    setExpandedCupId]    = useState<string | null>(null);
   const [selectedCup,      setSelectedCup]      = useState<Cup | null>(null);
   const [selectedColorIdx, setSelectedColorIdx] = useState<number | null>(null);
   const [selectedDesign,   setSelectedDesign]   = useState<Design | null>(null);
   const [designTab,        setDesignTab]        = useState<string>('Tümü');
+  const variantPanelRef = useRef<HTMLDivElement>(null);
   const [toast,          setToast]          = useState('');
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -170,15 +172,28 @@ export default function ConfiguratorClient() {
     toastTimer.current = setTimeout(() => setToast(''), 2800);
   }
 
-  function handleSelectCup(cup: Cup, colorIdx: number | null = null) {
-    if (selectedCup?.id === cup.id && colorIdx === selectedColorIdx) {
-      setSelectedCup(null); setSelectedColorIdx(null); return;
+  function handleCupClick(cup: Cup) {
+    const colors = cup.colors?.filter(c => c.images[0]) ?? [];
+    if (colors.length === 0) {
+      // Varyant yok — direkt seç/kaldır
+      if (selectedCup?.id === cup.id) { setSelectedCup(null); setSelectedColorIdx(null); setExpandedCupId(null); return; }
+      setSelectedCup(cup); setSelectedColorIdx(null); setExpandedCupId(null);
+      if (!selectedDesign) setTimeout(() => designsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 150);
+    } else {
+      // Varyant var — paneli aç/kapat
+      setExpandedCupId(prev => prev === cup.id ? null : cup.id);
+      setTimeout(() => variantPanelRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 100);
+    }
+  }
+
+  function handleSelectVariant(cup: Cup, colorIdx: number | null) {
+    if (selectedCup?.id === cup.id && selectedColorIdx === colorIdx) {
+      setSelectedCup(null); setSelectedColorIdx(null); setExpandedCupId(null); return;
     }
     setSelectedCup(cup);
     setSelectedColorIdx(colorIdx);
-    if (!selectedDesign) {
-      setTimeout(() => designsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 150);
-    }
+    setExpandedCupId(null);
+    if (!selectedDesign) setTimeout(() => designsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 150);
   }
 
   function handleSelectDesign(design: Design) {
@@ -240,18 +255,88 @@ export default function ConfiguratorClient() {
           {cups.length === 0 ? (
             <p style={{ color: '#6B7280', fontSize: 14 }}>Henüz bardak eklenmemiş.</p>
           ) : (
-            <Carousel id="cups-track">
-              {cups.map((cup) => (
-                <CupCard
-                  key={cup.id}
-                  cup={cup}
-                  selected={selectedCup?.id === cup.id}
-                  selectedColorIdx={selectedCup?.id === cup.id ? selectedColorIdx : null}
-                  onClick={() => handleSelectCup(cup, null)}
-                  onSelectColor={(i) => handleSelectCup(cup, i)}
-                />
-              ))}
-            </Carousel>
+            <>
+              <Carousel id="cups-track">
+                {cups.map((cup) => (
+                  <CupCard
+                    key={cup.id}
+                    cup={cup}
+                    expanded={expandedCupId === cup.id}
+                    selected={selectedCup?.id === cup.id}
+                    onClick={() => handleCupClick(cup)}
+                  />
+                ))}
+              </Carousel>
+
+              {/* Varyant paneli — seçilen bardağın altında açılır */}
+              {(() => {
+                const expandedCup = cups.find(c => c.id === expandedCupId);
+                if (!expandedCup) return null;
+                const colors = expandedCup.colors?.filter(c => c.images[0]) ?? [];
+                if (colors.length === 0) return null;
+                return (
+                  <div
+                    ref={variantPanelRef}
+                    style={{
+                      marginTop: 12,
+                      background: '#fff',
+                      border: '2px solid #FF6B35',
+                      borderRadius: 12,
+                      padding: '20px 20px 16px',
+                      animation: 'galleryFadeIn 0.2s ease',
+                    }}
+                  >
+                    <p style={{ fontSize: 13, fontWeight: 700, color: '#374151', marginBottom: 14 }}>
+                      {expandedCup.name} — Renk Seç
+                    </p>
+                    <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+                      {/* Renksiz (ana bardak) seçeneği */}
+                      <button
+                        onClick={() => handleSelectVariant(expandedCup, null)}
+                        style={{
+                          display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6,
+                          background: 'none', border: 'none', cursor: 'pointer', padding: 0,
+                        }}
+                      >
+                        <div style={{
+                          width: 72, height: 72, borderRadius: 10, overflow: 'hidden',
+                          background: '#f3f4f6',
+                          outline: selectedCup?.id === expandedCup.id && selectedColorIdx === null ? '3px solid #FF6B35' : '2px solid #E5E7EB',
+                          outlineOffset: 2, transition: 'outline-color 0.12s',
+                        }}>
+                          {expandedCup.imagePublicId
+                            ? <img src={cfImg(expandedCup.imagePublicId, 144)} alt="Standart" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} /> // eslint-disable-line @next/next/no-img-element
+                            : <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24 }}>☕</div>
+                          }
+                        </div>
+                        <span style={{ fontSize: 11, color: '#6B7280', fontWeight: 600 }}>Standart</span>
+                      </button>
+
+                      {colors.map((c, i) => (
+                        <button
+                          key={i}
+                          onClick={() => handleSelectVariant(expandedCup, i)}
+                          style={{
+                            display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6,
+                            background: 'none', border: 'none', cursor: 'pointer', padding: 0,
+                          }}
+                        >
+                          <div style={{
+                            width: 72, height: 72, borderRadius: 10, overflow: 'hidden',
+                            outline: selectedCup?.id === expandedCup.id && selectedColorIdx === i ? '3px solid #FF6B35' : '2px solid #E5E7EB',
+                            outlineOffset: 2, transition: 'outline-color 0.12s',
+                          }}>
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img src={cfImg(c.images[0], 144)} alt={c.name} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+                          </div>
+                          <span style={{ fontSize: 11, color: '#6B7280', fontWeight: 600 }}>{c.name}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })()}
+            </>
           )}
         </section>
 
@@ -497,73 +582,38 @@ function SectionTitle({ number, title }: { number: number; title: string }) {
   );
 }
 
-function CupCard({ cup, selected, selectedColorIdx, onClick, onSelectColor }: {
+function CupCard({ cup, selected, expanded, onClick }: {
   cup: Cup;
   selected: boolean;
-  selectedColorIdx: number | null;
+  expanded: boolean;
   onClick: () => void;
-  onSelectColor: (i: number) => void;
 }) {
-  const [hoverColor, setHoverColor] = useState<number | null>(null);
   const colors = cup.colors?.filter(c => c.images[0]) ?? [];
-
-  // Gösterilecek görsel: hover > seçili renk > ana görsel
-  const displayIdx = hoverColor ?? selectedColorIdx;
-  const activeImg = displayIdx !== null && colors[displayIdx]
-    ? cfImg(colors[displayIdx].images[0], 300)
-    : cup.imagePublicId ? cfImg(cup.imagePublicId, 300) : null;
-
-  // Seçili renk adı
-  const selectedColorName = selectedColorIdx !== null && colors[selectedColorIdx]
-    ? colors[selectedColorIdx].name : null;
+  const hasVariants = colors.length > 0;
 
   return (
-    <CarouselCard selected={selected} onClick={onClick}>
+    <CarouselCard selected={selected || expanded} onClick={onClick}>
       <div style={{ position: 'relative', width: '100%', aspectRatio: '1/1', borderRadius: 8, overflow: 'hidden', background: cup.imagePublicId ? '#f3f4f6' : (cup.gradient ?? '#f3f4f6'), marginBottom: 8 }}>
-        {activeImg ? (
-          <img
-            key={displayIdx ?? 'base'}
-            src={activeImg}
-            alt={cup.name}
-            style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', animation: displayIdx !== null ? 'galleryFadeIn 0.2s ease' : undefined }}
-          />
+        {cup.imagePublicId ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={cfImg(cup.imagePublicId, 300)} alt={cup.name} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
         ) : (
           <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.5rem' }}>☕</div>
         )}
-
-        {/* Varyant thumbnail sidebar */}
-        {colors.length > 0 && (
-          <div
-            style={{ position: 'absolute', top: 4, left: 4, bottom: 4, display: 'flex', flexDirection: 'column', gap: 4, overflowY: 'auto', scrollbarWidth: 'none', zIndex: 3 }}
-            onMouseLeave={() => setHoverColor(null)}
-          >
-            {colors.map((c, i) => {
-              const isSelected = selected && selectedColorIdx === i;
-              return (
-                <button
-                  key={i}
-                  onMouseEnter={e => { e.stopPropagation(); setHoverColor(i); }}
-                  onMouseLeave={e => { e.stopPropagation(); setHoverColor(null); }}
-                  onTouchStart={e => { e.stopPropagation(); }}
-                  onClick={e => { e.stopPropagation(); onSelectColor(i); }}
-                  title={c.name}
-                  style={{
-                    padding: 0, border: 'none', borderRadius: 5, overflow: 'hidden',
-                    cursor: 'pointer', flexShrink: 0, width: 28, height: 28,
-                    outline: isSelected ? '2.5px solid #FF6B35' : '1.5px solid rgba(255,255,255,0.6)',
-                    outlineOffset: 1,
-                    opacity: isSelected || hoverColor === i ? 1 : 0.72,
-                    transition: 'outline-color 0.12s, opacity 0.12s',
-                  }}
-                >
-                  <img src={cfImg(c.images[0], 80)} alt={c.name} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
-                </button>
-              );
-            })}
+        {/* Varyant göstergesi */}
+        {hasVariants && (
+          <div style={{
+            position: 'absolute', bottom: 6, right: 6,
+            background: expanded ? '#FF6B35' : 'rgba(0,0,0,0.5)',
+            color: '#fff', fontSize: 9, fontWeight: 700,
+            borderRadius: 4, padding: '2px 5px',
+            transition: 'background 0.15s',
+          }}>
+            {colors.length} renk
           </div>
         )}
       </div>
-      <div style={itemNameStyle}>{cup.name}{selectedColorName ? ` — ${selectedColorName}` : ''}</div>
+      <div style={itemNameStyle}>{cup.name}</div>
       <div style={{ fontSize: 12, fontWeight: 700, textAlign: 'center', color: '#FF6B35', marginTop: 2 }}>{cup.price}₺</div>
     </CarouselCard>
   );
