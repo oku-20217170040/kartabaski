@@ -224,7 +224,7 @@ export default function ConfiguratorClient() {
       <style>{`
         .hide-scrollbar::-webkit-scrollbar{display:none}
         .design-cat-select{display:none}
-        @media(max-width:900px){
+        @media(pointer:coarse){
           .design-cat-tabs{display:none}
           .design-cat-select{display:block}
         }
