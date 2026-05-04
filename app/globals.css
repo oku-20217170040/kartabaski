@@ -1506,6 +1506,75 @@ body::before { display: none; }
   z-index: 2;
 }
 
+/* Renk varyant sidebar — kart hover */
+.tcard-colors {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  bottom: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  overflow-y: auto;
+  scrollbar-width: none;
+  z-index: 3;
+  opacity: 0;
+  transform: translateX(-6px);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  pointer-events: none;
+}
+.tcard:hover .tcard-colors {
+  opacity: 1;
+  transform: translateX(0);
+  pointer-events: auto;
+}
+.tcard-color-btn {
+  padding: 0;
+  border: none;
+  border-radius: 8px;
+  overflow: hidden;
+  cursor: pointer;
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  outline: 2px solid rgba(255,255,255,0.45);
+  outline-offset: 2px;
+  background: rgba(20,20,20,0.5);
+  backdrop-filter: blur(5px);
+  transition: outline-color 0.15s, opacity 0.15s, transform 0.15s;
+  opacity: 0.75;
+  position: relative;
+}
+.tcard-color-btn:hover,
+.tcard-color-btn--active {
+  opacity: 1;
+  outline-color: #fff;
+  transform: scale(1.08);
+}
+.tcard-color-btn--active {
+  outline-color: var(--primary, #166534);
+}
+.tcard-color-btn img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.tcard-color-btn span {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: rgba(0,0,0,0.55);
+  color: #fff;
+  font-size: 8px;
+  font-weight: 700;
+  text-align: center;
+  padding: 2px 2px 3px;
+  line-height: 1.2;
+  backdrop-filter: blur(2px);
+}
+
 /* Bilgi alanı */
 .tcard-body {
   padding: 12px 14px 16px;
