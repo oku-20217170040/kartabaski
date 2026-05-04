@@ -148,6 +148,14 @@ export default function ConfiguratorClient() {
   const [selectedColorIdx, setSelectedColorIdx] = useState<number | null>(null);
   const [selectedDesign,   setSelectedDesign]   = useState<Design | null>(null);
   const [designTab,        setDesignTab]        = useState<string>('Tümü');
+  const [isMobile,         setIsMobile]         = useState(false);
+
+  useEffect(() => {
+    const check = () => setIsMobile(window.matchMedia('(pointer: coarse)').matches);
+    check();
+    window.matchMedia('(pointer: coarse)').addEventListener('change', check);
+    return () => window.matchMedia('(pointer: coarse)').removeEventListener('change', check);
+  }, []);
   const variantPanelRef = useRef<HTMLDivElement>(null);
   const [toast,          setToast]          = useState('');
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -223,11 +231,6 @@ export default function ConfiguratorClient() {
       {/* hide-scrollbar global style */}
       <style>{`
         .hide-scrollbar::-webkit-scrollbar{display:none}
-        .design-cat-select{display:none}
-        @media(pointer:coarse){
-          .design-cat-tabs{display:none}
-          .design-cat-select{display:block}
-        }
       `}</style>
 
       {/* ── Header ───────────────────────────────────────────── */}
@@ -357,31 +360,12 @@ export default function ConfiguratorClient() {
             const filtered = designTab === 'Tümü' ? designs : designs.filter(d => d.category === designTab);
             return (
               <>
-                {/* Masaüstü: pill sekmeler */}
-                <div className="design-cat-tabs" style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 16 }}>
-                  {cats.map(cat => (
-                    <button
-                      key={cat}
-                      onClick={() => setDesignTab(cat)}
-                      style={{
-                        padding: '6px 14px', borderRadius: 20, border: '1.5px solid',
-                        borderColor: designTab === cat ? '#FF6B35' : '#E5E7EB',
-                        background: designTab === cat ? '#FF6B35' : '#fff',
-                        color: designTab === cat ? '#fff' : '#374151',
-                        fontSize: 13, fontWeight: 600, cursor: 'pointer',
-                        transition: 'all 0.15s ease',
-                      }}
-                    >{cat}</button>
-                  ))}
-                </div>
-
-                {/* Mobil: açılır liste */}
-                <div className="design-cat-select" style={{ marginBottom: 16 }}>
+                {isMobile ? (
                   <select
                     value={designTab}
                     onChange={e => setDesignTab(e.target.value)}
                     style={{
-                      width: '100%', padding: '10px 14px',
+                      width: '100%', padding: '10px 14px', marginBottom: 16,
                       borderRadius: 10, border: '1.5px solid #E5E7EB',
                       fontSize: 14, fontWeight: 600, color: '#374151',
                       background: '#fff', cursor: 'pointer',
@@ -394,7 +378,24 @@ export default function ConfiguratorClient() {
                   >
                     {cats.map(cat => <option key={cat} value={cat}>{cat}</option>)}
                   </select>
-                </div>
+                ) : (
+                  <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 16 }}>
+                    {cats.map(cat => (
+                      <button
+                        key={cat}
+                        onClick={() => setDesignTab(cat)}
+                        style={{
+                          padding: '6px 14px', borderRadius: 20, border: '1.5px solid',
+                          borderColor: designTab === cat ? '#FF6B35' : '#E5E7EB',
+                          background: designTab === cat ? '#FF6B35' : '#fff',
+                          color: designTab === cat ? '#fff' : '#374151',
+                          fontSize: 13, fontWeight: 600, cursor: 'pointer',
+                          transition: 'all 0.15s ease',
+                        }}
+                      >{cat}</button>
+                    ))}
+                  </div>
+                )}
 
                 <Carousel id="designs-track">
                   {/* Kendi tasarımı kartı — sadece Tümü sekmesinde */}
