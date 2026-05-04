@@ -221,7 +221,14 @@ export default function ConfiguratorClient() {
   return (
     <>
       {/* hide-scrollbar global style */}
-      <style>{`.hide-scrollbar::-webkit-scrollbar{display:none}`}</style>
+      <style>{`
+        .hide-scrollbar::-webkit-scrollbar{display:none}
+        .design-cat-select{display:none}
+        @media(max-width:600px){
+          .design-cat-tabs{display:none}
+          .design-cat-select{display:block}
+        }
+      `}</style>
 
       {/* ── Header ───────────────────────────────────────────── */}
       <header style={{
@@ -350,25 +357,43 @@ export default function ConfiguratorClient() {
             const filtered = designTab === 'Tümü' ? designs : designs.filter(d => d.category === designTab);
             return (
               <>
-                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 16 }}>
+                {/* Masaüstü: pill sekmeler */}
+                <div className="design-cat-tabs" style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 16 }}>
                   {cats.map(cat => (
                     <button
                       key={cat}
                       onClick={() => setDesignTab(cat)}
                       style={{
-                        padding: '6px 14px',
-                        borderRadius: 20,
-                        border: '1.5px solid',
+                        padding: '6px 14px', borderRadius: 20, border: '1.5px solid',
                         borderColor: designTab === cat ? '#FF6B35' : '#E5E7EB',
                         background: designTab === cat ? '#FF6B35' : '#fff',
                         color: designTab === cat ? '#fff' : '#374151',
-                        fontSize: 13,
-                        fontWeight: 600,
-                        cursor: 'pointer',
+                        fontSize: 13, fontWeight: 600, cursor: 'pointer',
                         transition: 'all 0.15s ease',
                       }}
                     >{cat}</button>
                   ))}
+                </div>
+
+                {/* Mobil: açılır liste */}
+                <div className="design-cat-select" style={{ marginBottom: 16 }}>
+                  <select
+                    value={designTab}
+                    onChange={e => setDesignTab(e.target.value)}
+                    style={{
+                      width: '100%', padding: '10px 14px',
+                      borderRadius: 10, border: '1.5px solid #E5E7EB',
+                      fontSize: 14, fontWeight: 600, color: '#374151',
+                      background: '#fff', cursor: 'pointer',
+                      appearance: 'none',
+                      backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236B7280' stroke-width='2.5'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E")`,
+                      backgroundRepeat: 'no-repeat',
+                      backgroundPosition: 'right 12px center',
+                      paddingRight: 36,
+                    }}
+                  >
+                    {cats.map(cat => <option key={cat} value={cat}>{cat}</option>)}
+                  </select>
                 </div>
 
                 <Carousel id="designs-track">
