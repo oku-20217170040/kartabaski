@@ -69,6 +69,7 @@ export interface ConfiguratorDesign {
   imagePublicId?: string;
   gradient?: string;
   textColor?: string;
+  category?: string;
   active: boolean;
   order: number;
   createdAt: number;

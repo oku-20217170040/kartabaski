@@ -29,6 +29,7 @@ export default function EditDesignPage() {
       code:          data.code,
       name:          data.name,
       imagePublicId: data.imagePublicId,
+      category:      data.category,
       active:        data.active,
       order:         data.order,
     });
@@ -58,7 +59,7 @@ export default function EditDesignPage() {
       </div>
       <ConfiguratorItemForm
         type="design"
-        initial={design}
+        initial={{ ...design, category: design.category }}
         onSubmit={handleSubmit}
         submitLabel="Değişiklikleri Kaydet"
         backHref="/admin/konfigurator"

@@ -144,6 +144,7 @@ export default function ConfiguratorClient() {
   const [dataLoading,    setDataLoading]    = useState(true);
   const [selectedCup,    setSelectedCup]    = useState<Cup | null>(null);
   const [selectedDesign, setSelectedDesign] = useState<Design | null>(null);
+  const [designTab,      setDesignTab]      = useState<string>('Tümü');
   const [toast,          setToast]          = useState('');
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -246,38 +247,71 @@ export default function ConfiguratorClient() {
         {/* ── 2. TASARIM SEÇİMİ ────────────────────────────── */}
         <section ref={designsRef}>
           <SectionTitle number={2} title="Tasarımını Seç" />
-          <Carousel id="designs-track">
-            {/* Kendi tasarımı kartı — her zaman ilk */}
-            <CarouselCard
-              selected={selectedDesign?.id === '__custom__'}
-              onClick={() => handleSelectDesign(CUSTOM_DESIGN)}
-              highlight
-            >
-              <div style={{
-                width: '100%', aspectRatio: '1/1',
-                borderRadius: 8,
-                background: 'linear-gradient(135deg,#1A1A2E,#16213E)',
-                display: 'flex', flexDirection: 'column',
-                alignItems: 'center', justifyContent: 'center',
-                marginBottom: 8, gap: 4,
-              }}>
-                <span style={{ fontSize: '1.6rem' }}>🖼️</span>
-                <span style={{ fontSize: '0.6rem', fontWeight: 700, color: '#C9A84C', letterSpacing: '0.05em', textTransform: 'uppercase' }}>Kendi</span>
-              </div>
-              <div style={{ ...itemNameStyle, color: '#1A1A1A', fontWeight: 700 }}>Kendi Tasarımım</div>
-            </CarouselCard>
 
-            {designs.map((design) => (
-              <CarouselCard
-                key={design.id}
-                selected={selectedDesign?.id === design.id}
-                onClick={() => handleSelectDesign(design)}
-              >
-                <Visual imagePublicId={design.imagePublicId} background={design.gradient ?? ''} color={design.textColor ?? ''} label={design.code} emoji="🎨" />
-                <div style={itemNameStyle}>{design.name}</div>
-              </CarouselCard>
-            ))}
-          </Carousel>
+          {/* Kategori sekmeleri */}
+          {(() => {
+            const cats = ['Tümü', ...Array.from(new Set(designs.map(d => d.category).filter(Boolean) as string[]))];
+            const filtered = designTab === 'Tümü' ? designs : designs.filter(d => d.category === designTab);
+            return (
+              <>
+                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 16 }}>
+                  {cats.map(cat => (
+                    <button
+                      key={cat}
+                      onClick={() => setDesignTab(cat)}
+                      style={{
+                        padding: '6px 14px',
+                        borderRadius: 20,
+                        border: '1.5px solid',
+                        borderColor: designTab === cat ? '#FF6B35' : '#E5E7EB',
+                        background: designTab === cat ? '#FF6B35' : '#fff',
+                        color: designTab === cat ? '#fff' : '#374151',
+                        fontSize: 13,
+                        fontWeight: 600,
+                        cursor: 'pointer',
+                        transition: 'all 0.15s ease',
+                      }}
+                    >{cat}</button>
+                  ))}
+                </div>
+
+                <Carousel id="designs-track">
+                  {/* Kendi tasarımı kartı — sadece Tümü sekmesinde */}
+                  {designTab === 'Tümü' && (
+                    <CarouselCard
+                      selected={selectedDesign?.id === '__custom__'}
+                      onClick={() => handleSelectDesign(CUSTOM_DESIGN)}
+                      highlight
+                    >
+                      <div style={{
+                        width: '100%', aspectRatio: '1/1',
+                        borderRadius: 8,
+                        background: 'linear-gradient(135deg,#1A1A2E,#16213E)',
+                        display: 'flex', flexDirection: 'column',
+                        alignItems: 'center', justifyContent: 'center',
+                        marginBottom: 8, gap: 4,
+                      }}>
+                        <span style={{ fontSize: '1.6rem' }}>🖼️</span>
+                        <span style={{ fontSize: '0.6rem', fontWeight: 700, color: '#C9A84C', letterSpacing: '0.05em', textTransform: 'uppercase' }}>Kendi</span>
+                      </div>
+                      <div style={{ ...itemNameStyle, color: '#1A1A1A', fontWeight: 700 }}>Kendi Tasarımım</div>
+                    </CarouselCard>
+                  )}
+
+                  {filtered.map((design) => (
+                    <CarouselCard
+                      key={design.id}
+                      selected={selectedDesign?.id === design.id}
+                      onClick={() => handleSelectDesign(design)}
+                    >
+                      <Visual imagePublicId={design.imagePublicId} background={design.gradient ?? ''} color={design.textColor ?? ''} label={design.code} emoji="🎨" />
+                      <div style={itemNameStyle}>{design.name}</div>
+                    </CarouselCard>
+                  ))}
+                </Carousel>
+              </>
+            );
+          })()}
         </section>
 
         {/* ── 3. ÖNİZLEME ──────────────────────────────────── */}

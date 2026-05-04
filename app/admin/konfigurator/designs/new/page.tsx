@@ -13,6 +13,7 @@ export default function NewDesignPage() {
       code:          data.code,
       name:          data.name,
       imagePublicId: data.imagePublicId,
+      category:      data.category,
       active:        data.active,
       order:         data.order,
     });

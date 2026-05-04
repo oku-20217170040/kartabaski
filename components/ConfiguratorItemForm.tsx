@@ -9,18 +9,29 @@ function cfImg(publicId: string, w = 600) {
 }
 
 
+export const DESIGN_CATEGORIES = [
+  'Kahve & Çay',
+  'Doğa & Botanik',
+  'Kurumsal',
+  'Sevgi & Aile',
+  'Seyahat & Şehir',
+  'Sanat & Soyut',
+  'Diğer',
+] as const;
+
 export interface ConfiguratorItemFormData {
   code: string;
   name: string;
   price?: number;
   imagePublicId?: string;
+  category?: string;
   active: boolean;
   order: number;
 }
 
 interface Props {
   type: 'cup' | 'design';
-  initial?: Partial<ConfiguratorItemFormData>;
+  initial?: Partial<ConfiguratorItemFormData & { category?: string }>;
   onSubmit: (data: ConfiguratorItemFormData) => Promise<void>;
   submitLabel: string;
   backHref: string;
@@ -43,6 +54,7 @@ export default function ConfiguratorItemForm({ type, initial, onSubmit, submitLa
   const [name,          setName]          = useState(initial?.name          || '');
   const [price,         setPrice]         = useState(String(initial?.price  || ''));
   const [imagePublicId, setImagePublicId] = useState(initial?.imagePublicId || '');
+  const [category,      setCategory]      = useState(initial?.category      || '');
   const [active,        setActive]        = useState(initial?.active        ?? true);
   const [order,         setOrder]         = useState(String(initial?.order  ?? 1));
   const [uploading,     setUploading]     = useState(false);
@@ -78,6 +90,7 @@ export default function ConfiguratorItemForm({ type, initial, onSubmit, submitLa
         name:          name.trim(),
         price:         type === 'cup' ? Number(price) : undefined,
         imagePublicId: imagePublicId || undefined,
+        category:      type === 'design' ? (category || undefined) : undefined,
         active,
         order: Number(order) || 1,
       });
@@ -146,6 +159,16 @@ export default function ConfiguratorItemForm({ type, initial, onSubmit, submitLa
               onChange={e => setPrice(e.target.value)}
               placeholder="250"
             />
+          </div>
+        )}
+
+        {type === 'design' && (
+          <div className="form-group">
+            <label className="form-label">Kategori</label>
+            <select className="form-select" value={category} onChange={e => setCategory(e.target.value)}>
+              <option value="">— Kategori seç —</option>
+              {DESIGN_CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+            </select>
           </div>
         )}
 
