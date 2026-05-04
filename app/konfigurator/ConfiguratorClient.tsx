@@ -28,10 +28,11 @@ const CUSTOM_DESIGN: Design = {
   updatedAt: 0,
 };
 
-function buildWaUrl(cup: Cup, design: Design): string {
+function buildWaUrl(cup: Cup, design: Design, colorName?: string | null): string {
+  const cupLabel = colorName ? `${cup.name} (${colorName})` : cup.name;
   const msg = design.id === '__custom__'
-    ? `Merhaba, ${cup.name} bardağına kendi tasarımımı bastırmak istiyorum. Bilgi alabilir miyim?`
-    : `Merhaba, ${cup.name} bardağına "${design.name}" tasarımını bastırmak istiyorum. Bilgi alabilir miyim?`;
+    ? `Merhaba, ${cupLabel} bardağına kendi tasarımımı bastırmak istiyorum. Bilgi alabilir miyim?`
+    : `Merhaba, ${cupLabel} bardağına "${design.name}" tasarımını bastırmak istiyorum. Bilgi alabilir miyim?`;
   return `https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(msg)}`;
 }
 
@@ -142,9 +143,10 @@ export default function ConfiguratorClient() {
   const [cups,           setCups]           = useState<Cup[]>([]);
   const [designs,        setDesigns]        = useState<Design[]>([]);
   const [dataLoading,    setDataLoading]    = useState(true);
-  const [selectedCup,    setSelectedCup]    = useState<Cup | null>(null);
-  const [selectedDesign, setSelectedDesign] = useState<Design | null>(null);
-  const [designTab,      setDesignTab]      = useState<string>('Tümü');
+  const [selectedCup,      setSelectedCup]      = useState<Cup | null>(null);
+  const [selectedColorIdx, setSelectedColorIdx] = useState<number | null>(null);
+  const [selectedDesign,   setSelectedDesign]   = useState<Design | null>(null);
+  const [designTab,        setDesignTab]        = useState<string>('Tümü');
   const [toast,          setToast]          = useState('');
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -168,9 +170,12 @@ export default function ConfiguratorClient() {
     toastTimer.current = setTimeout(() => setToast(''), 2800);
   }
 
-  function handleSelectCup(cup: Cup) {
-    if (selectedCup?.id === cup.id) { setSelectedCup(null); return; }
+  function handleSelectCup(cup: Cup, colorIdx: number | null = null) {
+    if (selectedCup?.id === cup.id && colorIdx === selectedColorIdx) {
+      setSelectedCup(null); setSelectedColorIdx(null); return;
+    }
     setSelectedCup(cup);
+    setSelectedColorIdx(colorIdx);
     if (!selectedDesign) {
       setTimeout(() => designsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 150);
     }
@@ -185,6 +190,12 @@ export default function ConfiguratorClient() {
   }
 
   const bothSelected = !!(selectedCup && selectedDesign);
+  const selectedColor = selectedCup && selectedColorIdx !== null
+    ? selectedCup.colors?.filter(c => c.images[0])[selectedColorIdx] ?? null
+    : null;
+  const previewCupImg = selectedColor
+    ? cfImg(selectedColor.images[0], 200)
+    : selectedCup?.imagePublicId ? cfImg(selectedCup.imagePublicId, 200) : null;
 
   if (dataLoading) return (
     <div style={{ minHeight: '60vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -235,7 +246,9 @@ export default function ConfiguratorClient() {
                   key={cup.id}
                   cup={cup}
                   selected={selectedCup?.id === cup.id}
-                  onClick={() => handleSelectCup(cup)}
+                  selectedColorIdx={selectedCup?.id === cup.id ? selectedColorIdx : null}
+                  onClick={() => handleSelectCup(cup, null)}
+                  onSelectColor={(i) => handleSelectCup(cup, i)}
                 />
               ))}
             </Carousel>
@@ -337,19 +350,21 @@ export default function ConfiguratorClient() {
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
                   <div style={{
                     width: 100, height: 100, borderRadius: 12,
-                    background: selectedCup.imagePublicId ? '#f3f4f6' : selectedCup.gradient,
+                    background: previewCupImg ? '#f3f4f6' : selectedCup.gradient,
                     display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
                     fontWeight: 800, fontSize: '1.3rem', color: selectedCup.textColor,
                     boxShadow: '0 8px 24px rgba(0,0,0,0.13)', overflow: 'hidden',
                   }}>
-                    {selectedCup.imagePublicId ? (
+                    {previewCupImg ? (
                       // eslint-disable-next-line @next/next/no-img-element
-                      <img src={cfImg(selectedCup.imagePublicId, 200)} alt={selectedCup.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                      <img key={selectedColorIdx ?? 'base'} src={previewCupImg} alt={selectedCup.name} style={{ width: '100%', height: '100%', objectFit: 'cover', animation: 'galleryFadeIn 0.25s ease' }} />
                     ) : (
                       <><span>{selectedCup.code}</span><span style={{ fontSize: '0.7rem', opacity: 0.8 }}>☕</span></>
                     )}
                   </div>
-                  <span style={{ fontSize: 12, fontWeight: 600, color: '#6B7280' }}>{selectedCup.name}</span>
+                  <span style={{ fontSize: 12, fontWeight: 600, color: '#6B7280' }}>
+                    {selectedCup.name}{selectedColor ? ` — ${selectedColor.name}` : ''}
+                  </span>
                 </div>
               )}
 
@@ -400,7 +415,7 @@ export default function ConfiguratorClient() {
 
             {/* WhatsApp butonu */}
             <a
-              href={bothSelected ? buildWaUrl(selectedCup!, selectedDesign!) : '#'}
+              href={bothSelected ? buildWaUrl(selectedCup!, selectedDesign!, selectedColor?.name) : '#'}
               target="_blank"
               rel="noopener noreferrer"
               onClick={(e) => { if (!bothSelected) { e.preventDefault(); showToast('Lütfen hem bardak hem tasarım seçiniz.'); } }}
@@ -482,22 +497,35 @@ function SectionTitle({ number, title }: { number: number; title: string }) {
   );
 }
 
-function CupCard({ cup, selected, onClick }: { cup: Cup; selected: boolean; onClick: () => void }) {
+function CupCard({ cup, selected, selectedColorIdx, onClick, onSelectColor }: {
+  cup: Cup;
+  selected: boolean;
+  selectedColorIdx: number | null;
+  onClick: () => void;
+  onSelectColor: (i: number) => void;
+}) {
   const [hoverColor, setHoverColor] = useState<number | null>(null);
   const colors = cup.colors?.filter(c => c.images[0]) ?? [];
-  const activeImg = hoverColor !== null && colors[hoverColor]
-    ? cfImg(colors[hoverColor].images[0], 300)
+
+  // Gösterilecek görsel: hover > seçili renk > ana görsel
+  const displayIdx = hoverColor ?? selectedColorIdx;
+  const activeImg = displayIdx !== null && colors[displayIdx]
+    ? cfImg(colors[displayIdx].images[0], 300)
     : cup.imagePublicId ? cfImg(cup.imagePublicId, 300) : null;
+
+  // Seçili renk adı
+  const selectedColorName = selectedColorIdx !== null && colors[selectedColorIdx]
+    ? colors[selectedColorIdx].name : null;
 
   return (
     <CarouselCard selected={selected} onClick={onClick}>
       <div style={{ position: 'relative', width: '100%', aspectRatio: '1/1', borderRadius: 8, overflow: 'hidden', background: cup.imagePublicId ? '#f3f4f6' : (cup.gradient ?? '#f3f4f6'), marginBottom: 8 }}>
         {activeImg ? (
           <img
-            key={hoverColor ?? 'base'}
+            key={displayIdx ?? 'base'}
             src={activeImg}
             alt={cup.name}
-            style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', animation: hoverColor !== null ? 'galleryFadeIn 0.2s ease' : undefined }}
+            style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', animation: displayIdx !== null ? 'galleryFadeIn 0.2s ease' : undefined }}
           />
         ) : (
           <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.5rem' }}>☕</div>
@@ -509,29 +537,33 @@ function CupCard({ cup, selected, onClick }: { cup: Cup; selected: boolean; onCl
             style={{ position: 'absolute', top: 4, left: 4, bottom: 4, display: 'flex', flexDirection: 'column', gap: 4, overflowY: 'auto', scrollbarWidth: 'none', zIndex: 3 }}
             onMouseLeave={() => setHoverColor(null)}
           >
-            {colors.map((c, i) => (
-              <button
-                key={i}
-                onMouseEnter={e => { e.stopPropagation(); setHoverColor(i); }}
-                onTouchStart={e => { e.stopPropagation(); setHoverColor(i); }}
-                onTouchEnd={e => { e.stopPropagation(); setHoverColor(null); }}
-                onClick={e => e.stopPropagation()}
-                title={c.name}
-                style={{
-                  padding: 0, border: 'none', borderRadius: 5, overflow: 'hidden',
-                  cursor: 'pointer', flexShrink: 0, width: 28, height: 28,
-                  outline: hoverColor === i ? '2px solid #FF6B35' : '1.5px solid rgba(255,255,255,0.6)',
-                  outlineOffset: 1, opacity: hoverColor === i ? 1 : 0.75,
-                  transition: 'outline-color 0.12s, opacity 0.12s',
-                }}
-              >
-                <img src={cfImg(c.images[0], 80)} alt={c.name} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
-              </button>
-            ))}
+            {colors.map((c, i) => {
+              const isSelected = selected && selectedColorIdx === i;
+              return (
+                <button
+                  key={i}
+                  onMouseEnter={e => { e.stopPropagation(); setHoverColor(i); }}
+                  onMouseLeave={e => { e.stopPropagation(); setHoverColor(null); }}
+                  onTouchStart={e => { e.stopPropagation(); }}
+                  onClick={e => { e.stopPropagation(); onSelectColor(i); }}
+                  title={c.name}
+                  style={{
+                    padding: 0, border: 'none', borderRadius: 5, overflow: 'hidden',
+                    cursor: 'pointer', flexShrink: 0, width: 28, height: 28,
+                    outline: isSelected ? '2.5px solid #FF6B35' : '1.5px solid rgba(255,255,255,0.6)',
+                    outlineOffset: 1,
+                    opacity: isSelected || hoverColor === i ? 1 : 0.72,
+                    transition: 'outline-color 0.12s, opacity 0.12s',
+                  }}
+                >
+                  <img src={cfImg(c.images[0], 80)} alt={c.name} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+                </button>
+              );
+            })}
           </div>
         )}
       </div>
-      <div style={itemNameStyle}>{cup.name}</div>
+      <div style={itemNameStyle}>{cup.name}{selectedColorName ? ` — ${selectedColorName}` : ''}</div>
       <div style={{ fontSize: 12, fontWeight: 700, textAlign: 'center', color: '#FF6B35', marginTop: 2 }}>{cup.price}₺</div>
     </CarouselCard>
   );
