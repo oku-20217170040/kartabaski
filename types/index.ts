@@ -54,6 +54,7 @@ export interface ConfiguratorCup {
   name: string;
   price: number;
   imagePublicId?: string;
+  colors?: ProductColor[];
   gradient?: string;
   textColor?: string;
   active: boolean;

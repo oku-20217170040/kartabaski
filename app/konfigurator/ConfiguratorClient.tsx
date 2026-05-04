@@ -169,14 +169,15 @@ export default function ConfiguratorClient() {
   }
 
   function handleSelectCup(cup: Cup) {
+    if (selectedCup?.id === cup.id) { setSelectedCup(null); return; }
     setSelectedCup(cup);
-    // Zaten başka bir bardak seçiliyse sadece değiştir, scroll yok
     if (!selectedDesign) {
       setTimeout(() => designsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 150);
     }
   }
 
   function handleSelectDesign(design: Design) {
+    if (selectedDesign?.id === design.id) { setSelectedDesign(null); return; }
     setSelectedDesign(design);
     if (selectedCup) {
       setTimeout(() => previewRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 150);
@@ -230,15 +231,12 @@ export default function ConfiguratorClient() {
           ) : (
             <Carousel id="cups-track">
               {cups.map((cup) => (
-                <CarouselCard
+                <CupCard
                   key={cup.id}
+                  cup={cup}
                   selected={selectedCup?.id === cup.id}
                   onClick={() => handleSelectCup(cup)}
-                >
-                  <Visual imagePublicId={cup.imagePublicId} background={cup.gradient ?? ''} color={cup.textColor ?? ''} label={cup.code} emoji="☕" />
-                  <div style={itemNameStyle}>{cup.name}</div>
-                  <div style={{ fontSize: 12, fontWeight: 700, textAlign: 'center', color: '#FF6B35', marginTop: 2 }}>{cup.price}₺</div>
-                </CarouselCard>
+                />
               ))}
             </Carousel>
           )}
@@ -481,6 +479,61 @@ function SectionTitle({ number, title }: { number: number; title: string }) {
       }}>{number}</div>
       <h2 style={{ fontSize: '1.15rem', fontWeight: 700, letterSpacing: '-0.01em' }}>{title}</h2>
     </div>
+  );
+}
+
+function CupCard({ cup, selected, onClick }: { cup: Cup; selected: boolean; onClick: () => void }) {
+  const [hoverColor, setHoverColor] = useState<number | null>(null);
+  const colors = cup.colors?.filter(c => c.images[0]) ?? [];
+  const activeImg = hoverColor !== null && colors[hoverColor]
+    ? cfImg(colors[hoverColor].images[0], 300)
+    : cup.imagePublicId ? cfImg(cup.imagePublicId, 300) : null;
+
+  return (
+    <CarouselCard selected={selected} onClick={onClick}>
+      <div style={{ position: 'relative', width: '100%', aspectRatio: '1/1', borderRadius: 8, overflow: 'hidden', background: cup.imagePublicId ? '#f3f4f6' : (cup.gradient ?? '#f3f4f6'), marginBottom: 8 }}>
+        {activeImg ? (
+          <img
+            key={hoverColor ?? 'base'}
+            src={activeImg}
+            alt={cup.name}
+            style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', animation: hoverColor !== null ? 'galleryFadeIn 0.2s ease' : undefined }}
+          />
+        ) : (
+          <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.5rem' }}>☕</div>
+        )}
+
+        {/* Varyant thumbnail sidebar */}
+        {colors.length > 0 && (
+          <div
+            style={{ position: 'absolute', top: 4, left: 4, bottom: 4, display: 'flex', flexDirection: 'column', gap: 4, overflowY: 'auto', scrollbarWidth: 'none', zIndex: 3 }}
+            onMouseLeave={() => setHoverColor(null)}
+          >
+            {colors.map((c, i) => (
+              <button
+                key={i}
+                onMouseEnter={e => { e.stopPropagation(); setHoverColor(i); }}
+                onTouchStart={e => { e.stopPropagation(); setHoverColor(i); }}
+                onTouchEnd={e => { e.stopPropagation(); setHoverColor(null); }}
+                onClick={e => e.stopPropagation()}
+                title={c.name}
+                style={{
+                  padding: 0, border: 'none', borderRadius: 5, overflow: 'hidden',
+                  cursor: 'pointer', flexShrink: 0, width: 28, height: 28,
+                  outline: hoverColor === i ? '2px solid #FF6B35' : '1.5px solid rgba(255,255,255,0.6)',
+                  outlineOffset: 1, opacity: hoverColor === i ? 1 : 0.75,
+                  transition: 'outline-color 0.12s, opacity 0.12s',
+                }}
+              >
+                <img src={cfImg(c.images[0], 80)} alt={c.name} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+      <div style={itemNameStyle}>{cup.name}</div>
+      <div style={{ fontSize: 12, fontWeight: 700, textAlign: 'center', color: '#FF6B35', marginTop: 2 }}>{cup.price}₺</div>
+    </CarouselCard>
   );
 }
 
