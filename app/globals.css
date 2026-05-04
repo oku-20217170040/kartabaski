@@ -1575,6 +1575,29 @@ body::before { display: none; }
   backdrop-filter: blur(2px);
 }
 
+/* Mobil otomatik slayt nokta göstergesi */
+.tcard-slide-dots {
+  position: absolute;
+  bottom: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 5px;
+  z-index: 4;
+  pointer-events: none;
+}
+.tcard-slide-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.45);
+  transition: background 0.2s, transform 0.2s;
+}
+.tcard-slide-dot--active {
+  background: #fff;
+  transform: scale(1.4);
+}
+
 /* Bilgi alanı */
 .tcard-body {
   padding: 12px 14px 16px;

@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { Product } from '@/types';
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import {
   getTitle, getPriceMin, getPriceMax, getCategory,
   getSlug, getImageSrc, getFeatured,
@@ -12,11 +12,16 @@ import { formatPriceRange, cloudinaryUrl } from '@/lib/products';
 
 interface Props { product: Product }
 
+const SLIDE_INTERVAL = 900; // ms — her varyant arası süre
+
 export default function ProductCard({ product }: Props) {
   const [imgError, setImgError]     = useState(false);
   const [imgLoaded, setImgLoaded]   = useState(false);
   const [hoverColor, setHoverColor] = useState<number | null>(null);
-  const imgRef = useRef<HTMLImageElement>(null);
+  const cardRef   = useRef<HTMLAnchorElement>(null);
+  const imgRef    = useRef<HTMLImageElement>(null);
+  const timerRef  = useRef<ReturnType<typeof setInterval> | null>(null);
+  const indexRef  = useRef(0);
 
   useEffect(() => {
     if (imgRef.current?.complete && imgRef.current.naturalWidth > 0) {
@@ -33,6 +38,39 @@ export default function ProductCard({ product }: Props) {
   const priceLabel = formatPriceRange(priceMin, priceMax);
   const colors     = product.colors?.filter(c => c.images[0]) ?? [];
 
+  const stopSlide = useCallback(() => {
+    if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
+    indexRef.current = 0;
+    setHoverColor(null);
+  }, []);
+
+  const startSlide = useCallback(() => {
+    if (colors.length < 2) return;
+    indexRef.current = 0;
+    setHoverColor(0);
+    timerRef.current = setInterval(() => {
+      indexRef.current = (indexRef.current + 1) % colors.length;
+      setHoverColor(indexRef.current);
+    }, SLIDE_INTERVAL);
+  }, [colors.length]);
+
+  // Mobilde IntersectionObserver ile otomatik slayt
+  useEffect(() => {
+    if (colors.length < 2) return;
+    const isMobile = () => window.matchMedia('(pointer: coarse)').matches;
+    if (!isMobile()) return;
+
+    const el = cardRef.current;
+    if (!el) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => { entry.isIntersecting ? startSlide() : stopSlide(); },
+      { threshold: 0.6 }
+    );
+    observer.observe(el);
+    return () => { observer.disconnect(); stopSlide(); };
+  }, [colors.length, startSlide, stopSlide]);
+
   const baseImgSrc = imgError ? null : getImageSrc(product);
   const activeImgSrc = hoverColor !== null && colors[hoverColor]
     ? cloudinaryUrl(colors[hoverColor].images[0], 'f_auto,q_auto,w_600,h_600,c_fill')
@@ -40,6 +78,7 @@ export default function ProductCard({ product }: Props) {
 
   return (
     <Link
+      ref={cardRef}
       href={`/urun/${slug}`}
       className="tcard"
       onMouseLeave={() => setHoverColor(null)}
@@ -71,7 +110,7 @@ export default function ProductCard({ product }: Props) {
           <span className="tcard-badge">⭐ Öne Çıkan</span>
         )}
 
-        {/* Renk varyant thumbnail'leri — hover'da sol kenar */}
+        {/* Renk varyant thumbnail'leri — hover'da sol kenar (masaüstü) */}
         {colors.length > 0 && (
           <div className="tcard-colors">
             {colors.map((c, i) => {
@@ -90,6 +129,15 @@ export default function ProductCard({ product }: Props) {
                 </button>
               );
             })}
+          </div>
+        )}
+
+        {/* Mobil: alt nokta göstergesi */}
+        {colors.length > 1 && hoverColor !== null && (
+          <div className="tcard-slide-dots">
+            {colors.map((_, i) => (
+              <span key={i} className={`tcard-slide-dot${hoverColor === i ? ' tcard-slide-dot--active' : ''}`} />
+            ))}
           </div>
         )}
       </div>
