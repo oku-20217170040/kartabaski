@@ -8,7 +8,6 @@ function cfImg(publicId: string, w = 600) {
   return `https://res.cloudinary.com/${CLOUDINARY_CLOUD}/image/upload/f_auto,q_auto,w_${w},c_fill/${publicId}`;
 }
 
-
 export const DESIGN_CATEGORIES = [
   'Kahve & Çay',
   'Doğa & Botanik',
@@ -19,19 +18,22 @@ export const DESIGN_CATEGORIES = [
   'Diğer',
 ] as const;
 
+export interface CupColor { name: string; images: string[] }
+
 export interface ConfiguratorItemFormData {
   code: string;
   name: string;
   price?: number;
   imagePublicId?: string;
   category?: string;
+  colors?: CupColor[];
   active: boolean;
   order: number;
 }
 
 interface Props {
   type: 'cup' | 'design';
-  initial?: Partial<ConfiguratorItemFormData & { category?: string }>;
+  initial?: Partial<ConfiguratorItemFormData>;
   onSubmit: (data: ConfiguratorItemFormData) => Promise<void>;
   submitLabel: string;
   backHref: string;
@@ -49,41 +51,55 @@ async function uploadToCloudinary(file: File): Promise<string> {
   return data.public_id as string;
 }
 
-export default function ConfiguratorItemForm({ type, initial, onSubmit, submitLabel, backHref }: Props) {
+export default function ConfiguratorItemForm({ type, initial, onSubmit, submitLabel }: Props) {
   const [code,          setCode]          = useState(initial?.code          || '');
   const [name,          setName]          = useState(initial?.name          || '');
   const [price,         setPrice]         = useState(String(initial?.price  || ''));
   const [imagePublicId, setImagePublicId] = useState(initial?.imagePublicId || '');
   const [category,      setCategory]      = useState(initial?.category      || '');
+  const [colors,        setColors]        = useState<CupColor[]>(initial?.colors || []);
   const [active,        setActive]        = useState(initial?.active        ?? true);
   const [order,         setOrder]         = useState(String(initial?.order  ?? 1));
   const [uploading,     setUploading]     = useState(false);
+  const [colorUploading, setColorUploading] = useState<number | null>(null);
   const [saving,        setSaving]        = useState(false);
   const [error,         setError]         = useState('');
 
   const fileRef = useRef<HTMLInputElement>(null);
+  const colorFileRefs = useRef<(HTMLInputElement | null)[]>([]);
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    setUploading(true);
-    setError('');
+    setUploading(true); setError('');
+    try { setImagePublicId(await uploadToCloudinary(file)); }
+    catch (err) { setError(err instanceof Error ? err.message : 'Yükleme başarısız'); }
+    finally { setUploading(false); if (fileRef.current) fileRef.current.value = ''; }
+  };
+
+  const handleColorFileChange = async (i: number, e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setColorUploading(i); setError('');
     try {
       const pid = await uploadToCloudinary(file);
-      setImagePublicId(pid);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Yükleme başarısız');
-    } finally {
-      setUploading(false);
-      if (fileRef.current) fileRef.current.value = '';
+      setColors(prev => prev.map((c, idx) => idx === i ? { ...c, images: [pid] } : c));
+    } catch (err) { setError(err instanceof Error ? err.message : 'Yükleme başarısız'); }
+    finally {
+      setColorUploading(null);
+      if (colorFileRefs.current[i]) colorFileRefs.current[i]!.value = '';
     }
   };
+
+  const addColor   = () => setColors(prev => [...prev, { name: '', images: [] }]);
+  const removeColor = (i: number) => setColors(prev => prev.filter((_, idx) => idx !== i));
+  const updateColorName = (i: number, val: string) =>
+    setColors(prev => prev.map((c, idx) => idx === i ? { ...c, name: val } : c));
 
   const handleSubmit = async () => {
     if (!code.trim() || !name.trim()) { setError('Kod ve isim zorunludur.'); return; }
     if (type === 'cup' && (!price || Number(price) <= 0)) { setError('Geçerli bir fiyat girin.'); return; }
-    setSaving(true);
-    setError('');
+    setSaving(true); setError('');
     try {
       await onSubmit({
         code:          code.trim().toUpperCase(),
@@ -91,6 +107,7 @@ export default function ConfiguratorItemForm({ type, initial, onSubmit, submitLa
         price:         type === 'cup' ? Number(price) : undefined,
         imagePublicId: imagePublicId || undefined,
         category:      type === 'design' ? (category || undefined) : undefined,
+        colors:        type === 'cup' && colors.length > 0 ? colors.filter(c => c.name && c.images[0]) : undefined,
         active,
         order: Number(order) || 1,
       });
@@ -107,169 +124,132 @@ export default function ConfiguratorItemForm({ type, initial, onSubmit, submitLa
     <div style={{ display: 'grid', gridTemplateColumns: '1fr 320px', gap: 24, alignItems: 'start' }}>
 
       {/* Sol kolon */}
-      <div className="card" style={{ padding: 28 }}>
-        <h2 style={{ fontFamily: 'var(--font-display)', marginBottom: 20 }}>
-          {label} Bilgileri
-        </h2>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+        <div className="card" style={{ padding: 28 }}>
+          <h2 style={{ fontFamily: 'var(--font-display)', marginBottom: 20 }}>{label} Bilgileri</h2>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-          <div className="form-group">
-            <label className="form-label">Kod *</label>
-            <input
-              className="form-input"
-              value={code}
-              onChange={e => setCode(e.target.value)}
-              placeholder={type === 'cup' ? 'B1' : 'T1'}
-              style={{ fontFamily: 'monospace', textTransform: 'uppercase' }}
-            />
-            <p style={{ fontSize: 11, color: 'var(--muted)', marginTop: 4 }}>
-              {type === 'cup' ? 'Ör: B1, B2, B3' : 'Ör: T1, T2, T3'}
-            </p>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+            <div className="form-group">
+              <label className="form-label">Kod *</label>
+              <input className="form-input" value={code} onChange={e => setCode(e.target.value)}
+                placeholder={type === 'cup' ? 'B1' : 'T1'} style={{ fontFamily: 'monospace', textTransform: 'uppercase' }} />
+              <p style={{ fontSize: 11, color: 'var(--muted)', marginTop: 4 }}>{type === 'cup' ? 'Ör: B1, B2, B3' : 'Ör: T1, T2, T3'}</p>
+            </div>
+            <div className="form-group">
+              <label className="form-label">Sıra</label>
+              <input className="form-input" type="number" value={order} onChange={e => setOrder(e.target.value)} placeholder="1" />
+              <p style={{ fontSize: 11, color: 'var(--muted)', marginTop: 4 }}>Listede gösterim sırası</p>
+            </div>
           </div>
+
           <div className="form-group">
-            <label className="form-label">Sıra</label>
-            <input
-              className="form-input"
-              type="number"
-              value={order}
-              onChange={e => setOrder(e.target.value)}
-              placeholder="1"
-            />
-            <p style={{ fontSize: 11, color: 'var(--muted)', marginTop: 4 }}>Listede gösterim sırası</p>
+            <label className="form-label">İsim *</label>
+            <input className="form-input" value={name} onChange={e => setName(e.target.value)}
+              placeholder={type === 'cup' ? 'Klasik Mat Kupa' : 'Çiçekli Tasarım'} />
+          </div>
+
+          {type === 'cup' && (
+            <div className="form-group">
+              <label className="form-label">Fiyat (₺) *</label>
+              <input className="form-input" type="number" value={price} onChange={e => setPrice(e.target.value)} placeholder="250" />
+            </div>
+          )}
+
+          {type === 'design' && (
+            <div className="form-group">
+              <label className="form-label">Kategori</label>
+              <select className="form-select" value={category} onChange={e => setCategory(e.target.value)}>
+                <option value="">— Kategori seç —</option>
+                {DESIGN_CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+              </select>
+            </div>
+          )}
+
+          {/* Ana fotoğraf */}
+          <div className="form-group">
+            <label className="form-label">{label} Fotoğrafı</label>
+            <div style={{ border: '2px dashed var(--border)', borderRadius: 10, padding: 20, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12, background: 'var(--surface-raised)' }}>
+              {imagePublicId ? (
+                <div style={{ position: 'relative', width: '100%', maxWidth: 220 }}>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={cfImg(imagePublicId, 400)} alt="Yüklenen fotoğraf" style={{ width: '100%', borderRadius: 8, display: 'block', objectFit: 'cover', aspectRatio: '1/1' }} />
+                  <button type="button" onClick={() => setImagePublicId('')} style={{ position: 'absolute', top: 6, right: 6, background: 'rgba(0,0,0,0.6)', color: '#fff', border: 'none', borderRadius: '50%', width: 26, height: 26, cursor: 'pointer', fontSize: 14, display: 'flex', alignItems: 'center', justifyContent: 'center' }} title="Fotoğrafı kaldır">✕</button>
+                </div>
+              ) : (
+                <div style={{ textAlign: 'center', color: 'var(--muted)', fontSize: 13 }}>
+                  <div style={{ fontSize: 32, marginBottom: 6 }}>📷</div>
+                  <div>Fotoğraf yükle</div>
+                  <div style={{ fontSize: 11, marginTop: 2 }}>JPG, PNG — önerilen kare format</div>
+                </div>
+              )}
+              <input ref={fileRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handleFileChange} />
+              <button type="button" className="btn btn-secondary btn-sm" onClick={() => fileRef.current?.click()} disabled={uploading} style={{ minWidth: 140 }}>
+                {uploading ? 'Yükleniyor...' : imagePublicId ? 'Fotoğrafı Değiştir' : 'Fotoğraf Seç'}
+              </button>
+            </div>
           </div>
         </div>
 
-        <div className="form-group">
-          <label className="form-label">İsim *</label>
-          <input
-            className="form-input"
-            value={name}
-            onChange={e => setName(e.target.value)}
-            placeholder={type === 'cup' ? 'Klasik Mat Kupa' : 'Çiçekli Tasarım'}
-          />
-        </div>
-
+        {/* Renk varyantları — sadece bardak */}
         {type === 'cup' && (
-          <div className="form-group">
-            <label className="form-label">Fiyat (₺) *</label>
-            <input
-              className="form-input"
-              type="number"
-              value={price}
-              onChange={e => setPrice(e.target.value)}
-              placeholder="250"
-            />
-          </div>
-        )}
+          <div className="card" style={{ padding: 28 }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+              <h2 style={{ fontFamily: 'var(--font-display)' }}>Renk Varyantları</h2>
+              <button type="button" className="btn btn-secondary btn-sm" onClick={addColor}>+ Renk Ekle</button>
+            </div>
+            <p style={{ fontSize: 12, color: 'var(--muted)', marginBottom: 16 }}>Her renk için bir isim ve fotoğraf ekle. Konfiguratörde kartın sol kenarında küçük thumbnail olarak gösterilir.</p>
 
-        {type === 'design' && (
-          <div className="form-group">
-            <label className="form-label">Kategori</label>
-            <select className="form-select" value={category} onChange={e => setCategory(e.target.value)}>
-              <option value="">— Kategori seç —</option>
-              {DESIGN_CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
-            </select>
-          </div>
-        )}
-
-        {/* Fotoğraf yükleme */}
-        <div className="form-group">
-          <label className="form-label">{label} Fotoğrafı</label>
-          <div style={{
-            border: '2px dashed var(--border)',
-            borderRadius: 10,
-            padding: 20,
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            gap: 12,
-            background: 'var(--surface-raised)',
-          }}>
-            {imagePublicId ? (
-              <div style={{ position: 'relative', width: '100%', maxWidth: 220 }}>
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={cfImg(imagePublicId, 400)}
-                  alt="Yüklenen fotoğraf"
-                  style={{ width: '100%', borderRadius: 8, display: 'block', objectFit: 'cover', aspectRatio: '1/1' }}
-                />
-                <button
-                  type="button"
-                  onClick={() => setImagePublicId('')}
-                  style={{
-                    position: 'absolute', top: 6, right: 6,
-                    background: 'rgba(0,0,0,0.6)', color: '#fff',
-                    border: 'none', borderRadius: '50%',
-                    width: 26, height: 26, cursor: 'pointer',
-                    fontSize: 14, display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  }}
-                  title="Fotoğrafı kaldır"
-                >✕</button>
-              </div>
-            ) : (
-              <div style={{ textAlign: 'center', color: 'var(--muted)', fontSize: 13 }}>
-                <div style={{ fontSize: 32, marginBottom: 6 }}>📷</div>
-                <div>Fotoğraf yükle</div>
-                <div style={{ fontSize: 11, marginTop: 2 }}>JPG, PNG — önerilen kare format</div>
-              </div>
+            {colors.length === 0 && (
+              <p style={{ color: 'var(--muted)', fontSize: 13, textAlign: 'center', padding: '20px 0' }}>Henüz renk varyantı yok.</p>
             )}
-            <input
-              ref={fileRef}
-              type="file"
-              accept="image/*"
-              style={{ display: 'none' }}
-              onChange={handleFileChange}
-            />
-            <button
-              type="button"
-              className="btn btn-secondary btn-sm"
-              onClick={() => fileRef.current?.click()}
-              disabled={uploading}
-              style={{ minWidth: 140 }}
-            >
-              {uploading ? 'Yükleniyor...' : imagePublicId ? 'Fotoğrafı Değiştir' : 'Fotoğraf Seç'}
-            </button>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              {colors.map((c, i) => (
+                <div key={i} style={{ display: 'grid', gridTemplateColumns: '64px 1fr auto', gap: 12, alignItems: 'center', background: 'var(--surface-raised)', borderRadius: 8, padding: 12 }}>
+                  {/* Fotoğraf */}
+                  <div style={{ position: 'relative', width: 64, height: 64, borderRadius: 8, overflow: 'hidden', background: '#f3f4f6', cursor: 'pointer' }} onClick={() => colorFileRefs.current[i]?.click()}>
+                    {c.images[0] ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={cfImg(c.images[0], 128)} alt={c.name} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+                    ) : (
+                      <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, color: 'var(--muted)' }}>📷</div>
+                    )}
+                    {colorUploading === i && (
+                      <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <div className="spinner" style={{ width: 20, height: 20 }} />
+                      </div>
+                    )}
+                    <input ref={el => { colorFileRefs.current[i] = el; }} type="file" accept="image/*" style={{ display: 'none' }} onChange={e => handleColorFileChange(i, e)} />
+                  </div>
+
+                  {/* İsim */}
+                  <input className="form-input" value={c.name} onChange={e => updateColorName(i, e.target.value)} placeholder="Renk adı (ör: Kırmızı)" />
+
+                  {/* Sil */}
+                  <button type="button" onClick={() => removeColor(i)} style={{ background: 'none', border: 'none', color: 'var(--danger)', cursor: 'pointer', fontSize: 18, padding: 4 }} title="Sil">✕</button>
+                </div>
+              ))}
+            </div>
           </div>
-        </div>
+        )}
       </div>
 
       {/* Sağ kolon */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-
-        {/* Önizleme */}
         <div className="card" style={{ padding: 24 }}>
           <h2 style={{ fontFamily: 'var(--font-display)', marginBottom: 16 }}>Önizleme</h2>
-          <div style={{
-            width: '100%', aspectRatio: '1/1',
-            borderRadius: 12,
-            overflow: 'hidden',
-            background: '#f3f4f6',
-            display: 'flex', flexDirection: 'column',
-            alignItems: 'center', justifyContent: 'center',
-            marginBottom: 10,
-            boxShadow: '0 4px 20px rgba(0,0,0,0.12)',
-            position: 'relative',
-          }}>
+          <div style={{ width: '100%', aspectRatio: '1/1', borderRadius: 12, overflow: 'hidden', background: '#f3f4f6', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', marginBottom: 10, boxShadow: '0 4px 20px rgba(0,0,0,0.12)' }}>
             {imagePublicId ? (
               // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={cfImg(imagePublicId, 400)}
-                alt="Önizleme"
-                style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
-              />
+              <img src={cfImg(imagePublicId, 400)} alt="Önizleme" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
             ) : (
               <span style={{ fontSize: '3rem', opacity: 0.3 }}>{emoji}</span>
             )}
           </div>
           <div style={{ textAlign: 'center', fontSize: 14, fontWeight: 600 }}>{name || 'İsim girilmedi'}</div>
-          {type === 'cup' && (
-            <div style={{ textAlign: 'center', fontSize: 14, color: 'var(--accent)', fontWeight: 700, marginTop: 4 }}>
-              {price ? `${price}₺` : '—'}
-            </div>
-          )}
+          {type === 'cup' && <div style={{ textAlign: 'center', fontSize: 14, color: 'var(--accent)', fontWeight: 700, marginTop: 4 }}>{price ? `${price}₺` : '—'}</div>}
         </div>
 
-        {/* Durum */}
         <div className="card" style={{ padding: 24 }}>
           <h2 style={{ fontFamily: 'var(--font-display)', marginBottom: 16 }}>Durum</h2>
           <div className="form-group" style={{ marginBottom: 0 }}>
@@ -281,14 +261,9 @@ export default function ConfiguratorItemForm({ type, initial, onSubmit, submitLa
           </div>
         </div>
 
-        {/* Kaydet */}
         <div className="card" style={{ padding: 24 }}>
-          {error && (
-            <div style={{ background: 'rgba(248,81,73,0.1)', border: '1px solid rgba(248,81,73,0.25)', borderRadius: 8, padding: '10px 14px', fontSize: 13, color: 'var(--danger)', marginBottom: 16 }}>
-              {error}
-            </div>
-          )}
-          <button className="btn btn-primary btn-full btn-lg" onClick={handleSubmit} disabled={saving || uploading}>
+          {error && <div style={{ background: 'rgba(248,81,73,0.1)', border: '1px solid rgba(248,81,73,0.25)', borderRadius: 8, padding: '10px 14px', fontSize: 13, color: 'var(--danger)', marginBottom: 16 }}>{error}</div>}
+          <button className="btn btn-primary btn-full btn-lg" onClick={handleSubmit} disabled={saving || uploading || colorUploading !== null}>
             {saving ? 'Kaydediliyor...' : submitLabel}
           </button>
         </div>

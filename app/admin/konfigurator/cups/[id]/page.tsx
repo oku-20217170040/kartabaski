@@ -30,6 +30,7 @@ export default function EditCupPage() {
       name:          data.name,
       price:         data.price ?? 0,
       imagePublicId: data.imagePublicId,
+      colors:        data.colors,
       active:        data.active,
       order:         data.order,
     });
