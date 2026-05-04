@@ -391,6 +391,11 @@ input, select, textarea { font-family: var(--font-body); }
   .detail-grid { grid-template-columns: 1fr; gap: 40px; }
 }
 
+@keyframes galleryFadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
 /* Gallery sütunu */
 .detail-gallery { display: flex; flex-direction: column; gap: 12px; }
 

@@ -178,7 +178,7 @@ export default function ProductDetailClient({ slug, product, similar }: Props) {
                 }}
               >
                 {images ? (
-                  <img src={images[activeImg]} alt={title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  <img key={activeImg} src={images[activeImg]} alt={title} style={{ width: '100%', height: '100%', objectFit: 'cover', animation: 'galleryFadeIn 0.3s ease' }} />
                 ) : (
                   <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '5rem', opacity: 0.15 }}>☕</div>
                 )}
