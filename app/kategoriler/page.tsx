@@ -12,7 +12,7 @@ import Link from 'next/link';
 const CATEGORY_META: Record<Category, { icon: string; desc: string; color: string }> = {
   'Seramik Nescafe Fincanı':{ icon: '🫖', desc: 'Seramik malzemeden üretilmiş nescafe fincanları', color: '#c0632a' },
   'Lüks Kupa':              { icon: '💎', desc: 'Üst segment lüks baskı kupalar', color: '#8e44ad' },
-  'Nescafe Fincanı':        { icon: '☕', desc: 'Nescafe için özel tasarım fincanlar', color: '#b87333' },
+  'Kahve Fincanı':          { icon: '☕', desc: 'Kahve için özel tasarım fincanlar', color: '#b87333' },
   'Latte Fincanı':          { icon: '🥛', desc: 'Latte için özel tasarım fincanlar', color: '#d4a017' },
   'Pro Kupa':               { icon: '🏆', desc: 'Profesyonel kalitede özel baskı kupalar', color: '#2e7d9e' },
   'Büyük Kupa':             { icon: '🥤', desc: 'Büyük boyutlu kişiye özel baskı kupalar', color: '#6a8d73' },

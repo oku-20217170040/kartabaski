@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
-import { Product, FilterState } from '@/types';
+import { Product, FilterState, CATEGORIES } from '@/types';
 import ProductCard from '@/components/ProductCard';
 import FilterBar, { SortOption } from '@/components/FilterBar';
 import { getTitle, getCategory, getActive, getPriceMin, getFeatured } from '@/lib/product-utils';
@@ -20,6 +20,11 @@ export default function ProductsClient({ initialProducts }: Props) {
   const [minPrice, setMinPrice] = useState('');
   const [maxPrice, setMaxPrice] = useState('');
   const [page, setPage] = useState(1);
+
+  const availableCategories = useMemo(() => {
+    const used = new Set(initialProducts.filter(getActive).map(getCategory));
+    return CATEGORIES.filter((c) => used.has(c));
+  }, [initialProducts]);
 
   const filtered = useMemo(() => {
     let list = initialProducts.filter((p) => {
@@ -71,6 +76,7 @@ export default function ProductsClient({ initialProducts }: Props) {
         onMinPrice={setMinPrice}
         onMaxPrice={setMaxPrice}
         total={filtered.length}
+        availableCategories={availableCategories}
       />
 
       {filtered.length === 0 ? (

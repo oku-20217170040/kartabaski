@@ -92,7 +92,7 @@ export default function Footer() {
             <ul className="footer-nav">
               <li><Link href="/?category=Seramik%20Nescafe%20Fincan%C4%B1">Seramik Nescafe Fincanı</Link></li>
               <li><Link href="/?category=L%C3%BCks%20Kupa">Lüks Kupa</Link></li>
-              <li><Link href="/?category=Nescafe%20Fincan%C4%B1">Nescafe Fincanı</Link></li>
+              <li><Link href="/?category=Kahve%20Fincan%C4%B1">Kahve Fincanı</Link></li>
               <li><Link href="/?category=Latte%20Fincan%C4%B1">Latte Fincanı</Link></li>
               <li><Link href="/?category=Pro%20Kupa">Pro Kupa</Link></li>
               <li><Link href="/?category=B%C3%BCy%C3%BCk%20Kupa">Büyük Kupa</Link></li>

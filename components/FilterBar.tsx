@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { FilterState, CATEGORIES } from '@/types';
+import { FilterState, Category } from '@/types';
 
 export type SortOption = 'featured' | 'newest' | 'price_asc' | 'price_desc';
 
@@ -15,12 +15,13 @@ interface Props {
   onMinPrice: (v: string) => void;
   onMaxPrice: (v: string) => void;
   total: number;
+  availableCategories: Category[];
 }
 
 const activeCount = (f: FilterState, minPrice: string, maxPrice: string) =>
   [f.search, f.category, minPrice, maxPrice].filter(Boolean).length;
 
-export default function FilterBar({ filters, onChange, sort, onSortChange, minPrice, maxPrice, onMinPrice, onMaxPrice, total }: Props) {
+export default function FilterBar({ filters, onChange, sort, onSortChange, minPrice, maxPrice, onMinPrice, onMaxPrice, total, availableCategories }: Props) {
   const [open, setOpen] = useState(false);
   const set = (patch: Partial<FilterState>) => onChange({ ...filters, ...patch });
   const reset = () => {
@@ -49,7 +50,7 @@ export default function FilterBar({ filters, onChange, sort, onSortChange, minPr
           <select className="form-select" value={filters.category}
             onChange={(e) => set({ category: e.target.value as FilterState['category'] })}>
             <option value="">Tümü</option>
-            {CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
+            {availableCategories.map((c) => <option key={c} value={c}>{c}</option>)}
           </select>
         </div>
         <div className="filter-group">
@@ -142,7 +143,7 @@ export default function FilterBar({ filters, onChange, sort, onSortChange, minPr
                 <select className="form-select" value={filters.category}
                   onChange={(e) => set({ category: e.target.value as FilterState['category'] })}>
                   <option value="">Tümü</option>
-                  {CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
+                  {availableCategories.map((c) => <option key={c} value={c}>{c}</option>)}
                 </select>
               </div>
               <div className="filter-group" style={{ flex: 1 }}>

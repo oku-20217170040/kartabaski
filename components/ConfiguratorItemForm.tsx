@@ -18,6 +18,8 @@ export const DESIGN_CATEGORIES = [
   'Sevgi & Aile',
   'Seyahat & Şehir',
   'Sanat & Soyut',
+  'Ayet & Hadis',
+  'Özlü Sözler',
   'Diğer',
 ] as const;
 

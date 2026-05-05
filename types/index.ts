@@ -26,7 +26,7 @@ export interface Product {
 export type Category =
   | 'Seramik Nescafe Fincanı'
   | 'Lüks Kupa'
-  | 'Nescafe Fincanı'
+  | 'Kahve Fincanı'
   | 'Latte Fincanı'
   | 'Pro Kupa'
   | 'Büyük Kupa'
@@ -37,7 +37,7 @@ export type Category =
 export const CATEGORIES: Category[] = [
   'Seramik Nescafe Fincanı',
   'Lüks Kupa',
-  'Nescafe Fincanı',
+  'Kahve Fincanı',
   'Latte Fincanı',
   'Pro Kupa',
   'Büyük Kupa',

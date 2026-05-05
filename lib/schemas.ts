@@ -5,7 +5,7 @@ import { z } from 'zod';
 export const CategorySchema = z.enum([
   'Seramik Nescafe Fincanı',
   'Lüks Kupa',
-  'Nescafe Fincanı',
+  'Kahve Fincanı',
   'Latte Fincanı',
   'Pro Kupa',
   'Büyük Kupa',
