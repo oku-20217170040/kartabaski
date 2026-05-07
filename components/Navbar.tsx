@@ -17,6 +17,7 @@ const NAV_LINKS = [
   { href: '/',                      label: 'Ürünler',        exact: true  },
   { href: '/kategoriler',           label: 'Kategoriler',    exact: true  },
   { href: '/konfigurator',          label: '✦ Kombine Et',   exact: true  },
+  { href: '/kurumsal',              label: 'Kurumsal',       exact: true  },
   { href: '/nasil-siparis-verilir', label: 'Nasıl Sipariş?', exact: true  },
   { href: '/#iletisim',             label: 'İletişim',       exact: false },
 ];

@@ -4,6 +4,7 @@ import { cloudinaryThumb } from '@/lib/products';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import HeroSection from '@/components/HeroSection';
+import Testimonials from '@/components/Testimonials';
 import ProductsClient from './ProductsClient';
 import { PHONE, PHONE_DISPLAY, WHATSAPP_BASE, DEFAULT_WA_TEXT } from '@/lib/constants';
 
@@ -79,6 +80,13 @@ export default async function HomePage() {
                 Dene →
               </div>
             </a>
+
+            {/* Musteri Yorumlari */}
+            <section className="home-testimonials">
+              <h2>Musterilerimiz Ne Diyor?</h2>
+              <p>500+ mutlu siparisden gelen geri bildirimler</p>
+              <Testimonials maxItems={3} />
+            </section>
 
             {/* Contact Section */}
             <section id="iletisim" className="contact-pro">

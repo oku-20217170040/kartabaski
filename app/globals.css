@@ -2497,6 +2497,288 @@ body::before { display: none; }
   .products-grid { grid-template-columns: 1fr !important; }
 }
 
+/* ══════════════════════════════════════
+   KURUMSAL SAYFA
+══════════════════════════════════════ */
+.kurumsal-main {
+  min-height: 70vh;
+  padding: 60px 0;
+}
+.kurumsal-container {
+  max-width: 900px;
+}
+.kurumsal-breadcrumb {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 40px;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+/* Hero */
+.kurumsal-hero {
+  text-align: center;
+  margin-bottom: 64px;
+}
+.kurumsal-badge {
+  display: inline-block;
+  background: rgba(0,109,47,0.08);
+  color: var(--primary);
+  font-size: 13px;
+  font-weight: 600;
+  padding: 6px 16px;
+  border-radius: 20px;
+  margin-bottom: 16px;
+}
+.kurumsal-title {
+  font-size: clamp(1.6rem, 5vw, 2.8rem);
+  font-weight: 700;
+  margin-bottom: 16px;
+  line-height: 1.2;
+}
+.kurumsal-subtitle {
+  color: var(--muted);
+  font-size: clamp(14px, 2.5vw, 17px);
+  line-height: 1.7;
+  max-width: 600px;
+  margin: 0 auto 32px;
+}
+.kurumsal-hero-btns {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+.kurumsal-btn {
+  font-size: 15px;
+  padding: 14px 28px;
+}
+
+/* Sections */
+.kurumsal-section {
+  margin-bottom: 64px;
+}
+.kurumsal-h2 {
+  font-size: clamp(1.1rem, 3vw, 1.4rem);
+  font-weight: 700;
+  margin-bottom: 28px;
+  text-align: center;
+}
+.kurumsal-section-desc {
+  color: var(--muted);
+  font-size: 14px;
+  text-align: center;
+  margin-bottom: 28px;
+  margin-top: -20px;
+}
+.kurumsal-disclaimer {
+  color: var(--muted);
+  font-size: 12px;
+  text-align: center;
+  margin-top: 12px;
+}
+
+/* Grids */
+.kurumsal-grid {
+  display: grid;
+  gap: 16px;
+}
+.kurumsal-grid--pricing {
+  grid-template-columns: repeat(3, 1fr);
+}
+.kurumsal-grid--benefits {
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+}
+.kurumsal-grid--usecases {
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+}
+.kurumsal-grid--steps {
+  grid-template-columns: repeat(4, 1fr);
+}
+
+/* Cards */
+.kurumsal-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px 16px;
+}
+.kurumsal-card--center { text-align: center; }
+.kurumsal-card-icon { font-size: 1.6rem; margin-bottom: 8px; }
+.kurumsal-card-icon--lg { font-size: 2rem; margin-bottom: 10px; }
+.kurumsal-card-title { font-weight: 600; margin-bottom: 6px; font-size: 14px; }
+.kurumsal-card-desc { color: var(--muted); font-size: 13px; line-height: 1.6; }
+
+/* Pricing cards */
+.kurumsal-price-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 28px 24px;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+.kurumsal-price-card--highlight {
+  background: var(--primary);
+  color: #fff;
+  border: none;
+}
+.kurumsal-price-ribbon {
+  position: absolute;
+  top: 10px;
+  right: -28px;
+  background: rgba(255,255,255,0.25);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 36px;
+  transform: rotate(45deg);
+}
+.kurumsal-price-label {
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 8px;
+  opacity: 0.6;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.kurumsal-price-card--highlight .kurumsal-price-label { opacity: 0.9; }
+.kurumsal-price-value {
+  font-size: clamp(1.5rem, 4vw, 2rem);
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+.kurumsal-price-unit { font-size: 14px; font-weight: 400; }
+.kurumsal-price-note { font-size: 13px; opacity: 0.5; }
+.kurumsal-price-card--highlight .kurumsal-price-note { opacity: 0.85; }
+
+/* Step cards */
+.kurumsal-step-card {
+  position: relative;
+  padding-top: 24px;
+}
+.kurumsal-step-number {
+  position: absolute;
+  top: -10px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--primary);
+  color: #fff;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  font-size: 12px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* CTA */
+.kurumsal-cta {
+  background: var(--primary);
+  border-radius: var(--radius);
+  padding: 40px 32px;
+  text-align: center;
+  color: #fff;
+}
+.kurumsal-cta-title { font-size: clamp(1.2rem, 3vw, 1.5rem); font-weight: 700; margin-bottom: 8px; }
+.kurumsal-cta-desc { opacity: 0.85; font-size: 15px; max-width: 500px; margin: 0 auto 24px; }
+.kurumsal-cta-btns { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+.kurumsal-cta-btn-primary {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: #fff; color: var(--primary); font-weight: 700; font-size: 15px;
+  padding: 14px 28px; border-radius: 12px; text-decoration: none;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+}
+.kurumsal-cta-btn-secondary {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: rgba(255,255,255,0.15); color: #fff; font-weight: 600; font-size: 15px;
+  padding: 14px 28px; border-radius: 12px; text-decoration: none;
+  border: 1px solid rgba(255,255,255,0.3);
+}
+
+/* ── Kurumsal Responsive ── */
+@media (max-width: 760px) {
+  .kurumsal-main { padding: 32px 0; }
+  .kurumsal-hero { margin-bottom: 40px; }
+  .kurumsal-section { margin-bottom: 40px; }
+  .kurumsal-breadcrumb { margin-bottom: 24px; }
+
+  .kurumsal-grid--pricing { grid-template-columns: 1fr; }
+  .kurumsal-grid--steps { grid-template-columns: repeat(2, 1fr); }
+  .kurumsal-grid--usecases { grid-template-columns: repeat(2, 1fr); }
+
+  .kurumsal-hero-btns { flex-direction: column; align-items: center; }
+  .kurumsal-btn { width: 100%; max-width: 320px; text-align: center; justify-content: center; }
+
+  .kurumsal-cta { padding: 28px 20px; }
+  .kurumsal-cta-btns { flex-direction: column; align-items: center; }
+  .kurumsal-cta-btn-primary,
+  .kurumsal-cta-btn-secondary { width: 100%; max-width: 320px; text-align: center; justify-content: center; }
+
+  .kurumsal-price-card { padding: 20px 16px; }
+}
+@media (max-width: 480px) {
+  .kurumsal-grid--steps { grid-template-columns: 1fr; }
+  .kurumsal-grid--usecases { grid-template-columns: 1fr; }
+  .kurumsal-grid--benefits { grid-template-columns: 1fr; }
+}
+
+/* ══════════════════════════════════════
+   TESTIMONIALS BİLEŞENİ
+══════════════════════════════════════ */
+.testimonials-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 16px;
+}
+@media (max-width: 600px) {
+  .testimonials-grid { grid-template-columns: 1fr; }
+}
+.testimonial-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.testimonial-stars { display: flex; gap: 2px; }
+.testimonial-text { color: var(--text); font-size: 14px; line-height: 1.7; margin: 0; flex: 1; }
+.testimonial-author { display: flex; align-items: center; gap: 10px; }
+.testimonial-avatar {
+  width: 36px; height: 36px; border-radius: 50%;
+  background: var(--primary); color: #fff;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px; font-weight: 700; flex-shrink: 0;
+}
+.testimonial-name { font-weight: 600; font-size: 13px; }
+.testimonial-role { color: var(--muted); font-size: 12px; }
+
+/* ── Ana sayfa referans bölümü ── */
+.home-testimonials {
+  margin: 48px 0;
+}
+.home-testimonials h2 {
+  font-size: clamp(1.2rem, 3vw, 1.5rem);
+  font-weight: 700;
+  text-align: center;
+  margin-bottom: 8px;
+}
+.home-testimonials p {
+  color: var(--muted);
+  font-size: 14px;
+  text-align: center;
+  margin-bottom: 24px;
+}
+@media (max-width: 480px) {
+  .home-testimonials { margin: 32px 0; }
+}
+
 /* ── Ürün kartı (tcard) ── */
 @media (max-width: 768px) {
   .tcard { border-radius: 12px; }
