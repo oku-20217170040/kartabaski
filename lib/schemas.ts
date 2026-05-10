@@ -3,7 +3,7 @@ import { z } from 'zod';
 // ── Kategori ─────────────────────────────────────────────────────────────────
 
 export const CategorySchema = z.enum([
-  'Seramik Nescafe Fincanı',
+  'Seramik Kahve Fincanı',
   'Lüks Kupa',
   'Kahve Fincanı',
   'Latte Fincanı',

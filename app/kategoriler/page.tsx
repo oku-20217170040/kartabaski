@@ -10,7 +10,7 @@ import Footer from '@/components/Footer';
 import Link from 'next/link';
 
 const CATEGORY_META: Record<Category, { icon: string; desc: string; color: string }> = {
-  'Seramik Nescafe Fincanı':{ icon: '🫖', desc: 'Seramik malzemeden üretilmiş nescafe fincanları', color: '#c0632a' },
+  'Seramik Kahve Fincanı':{ icon: '🫖', desc: 'Seramik malzemeden üretilmiş kahve fincanları', color: '#c0632a' },
   'Lüks Kupa':              { icon: '💎', desc: 'Üst segment lüks baskı kupalar', color: '#8e44ad' },
   'Kahve Fincanı':          { icon: '☕', desc: 'Kahve için özel tasarım fincanlar', color: '#b87333' },
   'Latte Fincanı':          { icon: '🥛', desc: 'Latte için özel tasarım fincanlar', color: '#d4a017' },

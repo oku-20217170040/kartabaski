@@ -64,7 +64,7 @@ const localBusinessSchema = {
     itemListElement: [
       { '@type': 'Offer', itemOffered: { '@type': 'Product', name: 'Sihirli Mat Kupa' } },
       { '@type': 'Offer', itemOffered: { '@type': 'Product', name: 'Sihirli Konik Kupa' } },
-      { '@type': 'Offer', itemOffered: { '@type': 'Product', name: 'Seramik Nescafe Fincanı' } },
+      { '@type': 'Offer', itemOffered: { '@type': 'Product', name: 'Seramik Kahve Fincanı' } },
       { '@type': 'Offer', itemOffered: { '@type': 'Product', name: 'Sihirli Renkli Kupa' } },
       { '@type': 'Offer', itemOffered: { '@type': 'Product', name: 'Özel Tasarım' } },
     ],

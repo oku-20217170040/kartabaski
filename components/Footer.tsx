@@ -90,7 +90,7 @@ export default function Footer() {
           <div className="footer-col">
             <h4 className="footer-col-head">Kategoriler</h4>
             <ul className="footer-nav">
-              <li><Link href="/?category=Seramik%20Nescafe%20Fincan%C4%B1">Seramik Nescafe Fincanı</Link></li>
+              <li><Link href="/?category=Seramik%20Kahve%20Fincan%C4%B1">Seramik Kahve Fincanı</Link></li>
               <li><Link href="/?category=L%C3%BCks%20Kupa">Lüks Kupa</Link></li>
               <li><Link href="/?category=Kahve%20Fincan%C4%B1">Kahve Fincanı</Link></li>
               <li><Link href="/?category=Latte%20Fincan%C4%B1">Latte Fincanı</Link></li>
