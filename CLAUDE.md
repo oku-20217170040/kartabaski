@@ -164,8 +164,9 @@ Cloudinary cloud name is read from env variable, with fallback to `dwulzfmlu`.
 
 | Platform | Purpose |
 |---|---|
-| **Vercel** | Primary production hosting (`kartabaski.com`) |
-| **Railway** | Alternative deployment option |
+| **Oracle Cloud (Docker)** | Production hosting since Nov 2026 (`kartabaski.com`), see `docs/YAYIN.md` |
+| **Vercel** | Former hosting (Hobby plan paused 11 Nov 2026) |
+| **Railway** | Unused alternative (`railway.toml`) |
 | **Firebase** | Auth + Firestore database (project: `kartabaski-fcf0e`) |
 | **Cloudinary** | Image hosting & optimization (cloud: `dwulzfmlu`) |
 | **Porkbun** | Domain registrar (`kartabaski.com`) |
