@@ -2,6 +2,8 @@
 const { withSentryConfig } = require('@sentry/nextjs');
 
 const nextConfig = {
+  // Yalnızca Docker/VPS derlemesinde (DOCKER_BUILD=1) bağımsız çıktı; Vercel derlemesi değişmez
+  ...(process.env.DOCKER_BUILD === '1' ? { output: 'standalone' } : {}),
   images: {
     remotePatterns: [
       {

@@ -1,0 +1,16 @@
+# Sunucuda: docker compose up -d --build   (aynı klasörde .env olmalı)
+# HTTPS ve alan adı yönlendirmesi ortak kenar katmanında (Caddy, ~/edge); bu uygulama "web" ağına bağlanır.
+services:
+  kartabaski:
+    build: .
+    container_name: kartabaski
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      NODE_ENV: production
+    networks:
+      - web
+
+networks:
+  web:
+    external: true

@@ -1,0 +1,13 @@
+node_modules
+.next
+.git
+.claude
+.vercel
+.swc
+coverage
+__tests__
+stitch
+docs
+*.md
+tsconfig.tsbuildinfo
+.env.local
