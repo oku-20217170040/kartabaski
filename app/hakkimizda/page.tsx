@@ -55,7 +55,7 @@ export default function HakkimizdaPage() {
             <div className="cols-3">
               {WORKFLOW.map((w, i) => (
                 <div key={w.title}>
-                  <span className="eyebrow">{String(i + 1).padStart(2, '0')}</span>
+                  <span className="step-num">{i + 1}</span>
                   <h3>{w.title}</h3>
                   <p>{w.text}</p>
                 </div>
