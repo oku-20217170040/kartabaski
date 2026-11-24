@@ -1,10 +1,12 @@
 /* ==========================================================================
    KAR-TA BASKI — storefront design system
    Warm paper surfaces, ink text, a single forest-green accent.
-   Fonts come from next/font (see app/layout.tsx): --font-serif, --font-sans.
+   Fonts are self-hosted via @fontsource-variable (imported in app/layout.tsx); no network at build time.
    ========================================================================== */
 
 :root {
+  --font-display: 'Bricolage Grotesque Variable';
+  --font-sans: 'Instrument Sans Variable';
   --paper: #F5F2EC;
   --paper-2: #EDE8DF;
   --surface: #FFFFFF;
@@ -507,7 +509,7 @@ ul, ol { list-style: none; }
 .breadcrumb li { display: inline-flex; align-items: center; }
 
 /* ── Legacy configurator (kendi satır içi stilleriyle çalışır) ── */
-.cf-legacy { background: #fff; min-height: 100vh; }
+.cf-legacy { background: #fff; min-height: 100vh; font-family: 'Plus Jakarta Sans Variable', system-ui, sans-serif; }
 .cf-legacy button, .cf-legacy input { font-family: inherit; }
 .hide-scrollbar { scrollbar-width: none; }
 .hide-scrollbar::-webkit-scrollbar { display: none; }
@@ -604,3 +606,5 @@ ul, ol { list-style: none; }
 /* Shared CTA row (inner pages, 404) */
 .hero-ctas { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 32px; }
 @media (max-width: 560px) { .hero-ctas .btn { flex: 1 1 100%; } }
+
+.font-hand { font-family: 'Caveat Variable', cursive; font-weight: 600; }

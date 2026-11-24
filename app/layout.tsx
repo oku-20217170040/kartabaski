@@ -1,23 +1,13 @@
 import type { Metadata } from 'next';
-import { Bricolage_Grotesque, Instrument_Sans } from 'next/font/google';
+// Fontlar projeyle birlikte gelir (fontsource); build sırasında Google Fonts'a bağlanılmaz.
+import '@fontsource-variable/bricolage-grotesque';
+import '@fontsource-variable/instrument-sans';
 import './site.css';
 import WhatsAppFloat from '@/components/WhatsAppFloat';
 import ErrorBoundary from '@/components/ErrorBoundary';
 import { PHONE, SITE_NAME } from '@/lib/constants';
 import { SITE_URL, INSTAGRAM_URL, jsonLdString } from '@/lib/site';
 
-const display = Bricolage_Grotesque({
-  subsets: ['latin', 'latin-ext'],
-  weight: ['500', '600', '700', '800'],
-  variable: '--font-display',
-  display: 'swap',
-});
-const sans = Instrument_Sans({
-  subsets: ['latin', 'latin-ext'],
-  weight: ['400', '500', '600'],
-  variable: '--font-sans',
-  display: 'swap',
-});
 
 const OG_IMAGE = '/logo.png'; // public/logo.png
 const DESCRIPTION = 'Kişiye özel kupa baskı. Türkiye geneli hızlı kargo. Bireysel ve kurumsal siparişler. Ücretsiz tasarım desteği.';
@@ -93,7 +83,7 @@ const META_PIXEL_ID = process.env.NEXT_PUBLIC_META_PIXEL_ID || '4415269272076470
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="tr" className={`${display.variable} ${sans.variable}`} suppressHydrationWarning>
+    <html lang="tr" suppressHydrationWarning>
       <body suppressHydrationWarning>
         <a href="#icerik" className="skip-link">İçeriğe geç</a>
           <ErrorBoundary>

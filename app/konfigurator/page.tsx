@@ -1,13 +1,8 @@
 import type { Metadata } from 'next';
-import { Plus_Jakarta_Sans } from 'next/font/google';
+import '@fontsource-variable/plus-jakarta-sans';
 import ConfiguratorClient from './ConfiguratorClient';
 
 // Konfiguratör, sitenin geri kalanından bağımsız özgün tasarımıyla (ve fontuyla) çalışır.
-const jakarta = Plus_Jakarta_Sans({
-  subsets: ['latin', 'latin-ext'],
-  weight: ['400', '500', '600', '700', '800'],
-  display: 'swap',
-});
 
 export const metadata: Metadata = {
   title: 'Kendi Kombinasyonunu Oluştur',
@@ -17,7 +12,7 @@ export const metadata: Metadata = {
 
 export default function ConfiguratorPage() {
   return (
-    <div className={`${jakarta.className} cf-legacy`}>
+    <div className="cf-legacy">
       <ConfiguratorClient />
     </div>
   );
