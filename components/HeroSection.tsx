@@ -1,12 +1,12 @@
 'use client';
 
 import Link from 'next/link';
-import { Caveat } from 'next/font/google';
+import '@fontsource-variable/caveat';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { WhatsAppIcon, CheckIcon } from '@/components/icons';
 import { WHATSAPP_BASE } from '@/lib/constants';
 
-const handwriting = Caveat({ subsets: ['latin', 'latin-ext'], weight: ['600'], display: 'swap' });
+const handwriting = { className: 'font-hand' };
 
 /** Real handle colours offered on the Lüks Kupa. `soft` tints the backdrop disc. */
 const HANDLES = [
