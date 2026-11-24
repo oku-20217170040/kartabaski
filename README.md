@@ -24,10 +24,10 @@ cp .env.local.example .env.local
 Doldurulacak değişkenler:
 
 ```
-NEXT_PUBLIC_PHONE=905050874726
-NEXT_PUBLIC_PHONE_DISPLAY=0505 087 47 26
+NEXT_PUBLIC_PHONE=905458266508
+NEXT_PUBLIC_PHONE_DISPLAY=0545 826 65 08
 NEXT_PUBLIC_SITE_NAME=KAR-TA BASKI
-NEXT_PUBLIC_SITE_URL=https://kartabaski.com
+NEXT_PUBLIC_SITE_URL=https://www.kartabaski.com
 
 NEXT_PUBLIC_FIREBASE_API_KEY=
 NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=
@@ -114,21 +114,23 @@ npm run dev
 
 ## Ürün Kategorileri
 
-- Sihirli Mat Kupa
-- Sihirli Konik Kupa
-- Seramik Nescafe Fincanı
-- Sihirli Renkli Kupa
+- Seramik Kahve Fincanı
+- Lüks Kupa
+- Kahve Fincanı
+- Latte Fincanı
+- Pro Kupa
+- Büyük Kupa
+- Sihirli Kupa
 - Özel Tasarım
+- Kurumsal
+
+(Kaynak: `lib/schemas.ts`)
 
 ---
 
-## Vercel Deployment
+## Deployment
 
-1. [Vercel](https://vercel.com) hesabı aç
-2. Projeyi GitHub'a push et
-3. Vercel'de "Import Project" → GitHub repo'nu seç
-4. Environment Variables bölümüne `.env.local` değişkenlerini gir
-5. Deploy!
+Prodüksiyon: **Oracle Cloud (Docker)** — adım adım anlatım için [`docs/YAYIN.md`](docs/YAYIN.md). Vercel eski barındırmadır (Hobby plan 11 Kas 2026'da durduruldu); Railway kullanılmıyor.
 
 ---
 
@@ -136,6 +138,6 @@ npm run dev
 
 - **Ad:** KAR-TA BASKI
 - **Slogan:** Hayal Et, Biz Basalım
-- **Telefon:** 0505 087 47 26
-- **WhatsApp:** https://wa.me/905050874726
+- **Telefon:** 0545 826 65 08
+- **WhatsApp:** https://wa.me/905458266508
 - **Hizmet:** Türkiye geneli online kupa baskı

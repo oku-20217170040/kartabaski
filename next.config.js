@@ -4,6 +4,20 @@ const { withSentryConfig } = require('@sentry/nextjs');
 const nextConfig = {
   // Yalnızca Docker/VPS derlemesinde (DOCKER_BUILD=1) bağımsız çıktı; Vercel derlemesi değişmez
   ...(process.env.DOCKER_BUILD === '1' ? { output: 'standalone' } : {}),
+  async headers() {
+    return [
+      {
+        source: '/:path*',
+        headers: [
+          { key: 'Strict-Transport-Security', value: 'max-age=63072000; includeSubDomains; preload' },
+          { key: 'X-Content-Type-Options', value: 'nosniff' },
+          { key: 'X-Frame-Options', value: 'SAMEORIGIN' },
+          { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
+          { key: 'Permissions-Policy', value: 'camera=(self), microphone=(), geolocation=()' },
+        ],
+      },
+    ];
+  },
   images: {
     remotePatterns: [
       {

@@ -1,19 +1,10 @@
-'server-only';
+import 'server-only';
 
 import { adminDb } from './firebase-admin';
 import { Product } from '@/types';
-import { ProductSchema } from './schemas';
+import { parseProduct } from './product-utils';
 
 const COL = 'products';
-
-function parseProduct(id: string, data: Record<string, unknown>): Product | null {
-  const result = ProductSchema.safeParse({ id, ...data });
-  if (!result.success) {
-    console.warn(`[products-server] Geçersiz ürün (id: ${id}):`, result.error.flatten().fieldErrors);
-    return null;
-  }
-  return result.data as Product;
-}
 
 /** Tüm ürünleri döndürür (Admin SDK — Firestore kurallarını atlar) */
 export async function getProductsServer(): Promise<Product[]> {
@@ -24,7 +15,7 @@ export async function getProductsServer(): Promise<Product[]> {
       .get();
 
     return snap.docs
-      .map((d) => parseProduct(d.id, d.data() as Record<string, unknown>))
+      .map((d) => parseProduct(d.id, d.data() as Record<string, unknown>, 'products-server'))
       .filter((p): p is Product => p !== null);
   } catch (err) {
     console.error('[products-server] getProductsServer failed:', err);
@@ -43,7 +34,7 @@ export async function getProductBySlugServer(slug: string): Promise<Product | nu
 
     if (snap.empty) return null;
     const d = snap.docs[0];
-    return parseProduct(d.id, d.data() as Record<string, unknown>);
+    return parseProduct(d.id, d.data() as Record<string, unknown>, 'products-server');
   } catch (err) {
     console.error('[products-server] getProductBySlugServer failed:', err);
     return null;
@@ -65,7 +56,7 @@ export async function getSimilarProductsServer(
       .get();
 
     return snap.docs
-      .map((d) => parseProduct(d.id, d.data() as Record<string, unknown>))
+      .map((d) => parseProduct(d.id, d.data() as Record<string, unknown>, 'products-server'))
       .filter((p): p is Product => p !== null && p.id !== excludeId)
       .slice(0, limit);
   } catch (err) {

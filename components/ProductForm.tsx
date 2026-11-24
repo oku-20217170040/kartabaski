@@ -1,9 +1,14 @@
 'use client';
 
-import { useState, useRef, useEffect, useCallback } from 'react';
-import { createPortal } from 'react-dom';
+import { useState, useRef, useEffect } from 'react';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { Product, ProductColor, CATEGORIES, Category } from '@/types';
-import { cloudinaryUrl } from '@/lib/products';
+import ImageGallery from '@/components/admin/ImageGallery';
+import ColorVariants from '@/components/admin/ColorVariants';
+import { deleteUploaded, toSlug } from '@/components/admin/upload';
+import { useToast, errorMessage } from '@/components/admin/Toast';
+import { useConfirm } from '@/components/admin/ConfirmDialog';
 
 interface Props {
   initial?: Partial<Product>;
@@ -11,26 +16,29 @@ interface Props {
   submitLabel: string;
 }
 
-async function uploadToCloudinary(file: File): Promise<string> {
-  const form = new FormData();
-  form.append('file', file);
+type FieldErrors = Partial<Record<'title' | 'slug' | 'priceMin' | 'priceMax' | 'images' | 'deliveryDays', string>>;
 
-  const res = await fetch('/api/upload', {
-    method: 'POST',
-    body: form,
-  });
+const SLUG_RE = /^[a-z0-9-]+$/;
 
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({}));
-    throw new Error((err as { error?: string }).error || 'Upload failed');
-  }
-  const data = await res.json();
-  return data.public_id as string;
-}
+// Doğrulama sırasına göre ilk hatalı alanın DOM id'si
+const FIELD_ORDER: (keyof FieldErrors)[] = ['title', 'slug', 'priceMin', 'priceMax', 'deliveryDays', 'images'];
+const FIELD_IDS: Record<keyof FieldErrors, string> = {
+  title: 'pf-title',
+  slug: 'pf-slug',
+  priceMin: 'pf-priceMin',
+  priceMax: 'pf-priceMax',
+  deliveryDays: 'pf-deliveryDays',
+  images: 'pf-images',
+};
 
 export default function ProductForm({ initial, onSubmit, submitLabel }: Props) {
+  const router = useRouter();
+  const toast = useToast();
+  const { confirm, dialog } = useConfirm();
+
   const [title, setTitle] = useState(initial?.title || '');
   const [slug, setSlug] = useState(initial?.slug || '');
+  const [slugManual, setSlugManual] = useState(false);
   const [priceMin, setPriceMin] = useState(String(initial?.priceMin || ''));
   const [priceMax, setPriceMax] = useState(String(initial?.priceMax || ''));
   const [category, setCategory] = useState<Category>(initial?.category || 'Sihirli Kupa');
@@ -42,318 +50,112 @@ export default function ProductForm({ initial, onSubmit, submitLabel }: Props) {
   const [seoTags, setSeoTags] = useState<string[]>(initial?.seoTags || []);
   const [seoTagInput, setSeoTagInput] = useState('');
   const [colors, setColors] = useState<ProductColor[]>(initial?.colors || []);
-  const [newColorName, setNewColorName] = useState('');
-  const [colorUploading, setColorUploading] = useState<number | null>(null);
-  const colorFileRefs = useRef<(HTMLInputElement | null)[]>([]);
 
-  // Varyant sıralama (HTML5 drag)
-  const colorDragIndexRef = useRef<number | null>(null);
-  const [colorDragOver, setColorDragOver] = useState<number | null>(null);
-
-  // Varyant içi fotoğraf sıralama — her varyant için ayrı ref
-  const colorImgDragRef = useRef<{ colorIndex: number; imgIndex: number } | null>(null);
-  const [colorImgDragOver, setColorImgDragOver] = useState<{ colorIndex: number; imgIndex: number } | null>(null);
-
-  const [uploading, setUploading] = useState(false);
+  const [galleryBusy, setGalleryBusy] = useState(false);
+  const [colorBusy, setColorBusy] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
-  const [dragOver, setDragOver] = useState(false);
+  const [errors, setErrors] = useState<FieldErrors>({});
 
-  // Image reorder — desktop (HTML5 drag) + mobile (touch)
-  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
-  const dragIndexRef = useRef<number | null>(null);
-
-  // Touch drag
-  const [touchDragIndex, setTouchDragIndex] = useState<number | null>(null);
-  const [touchGhostPos, setTouchGhostPos] = useState<{ x: number; y: number } | null>(null);
-  const touchDragIndexRef = useRef<number | null>(null);
-  const imgGridRef = useRef<HTMLDivElement>(null);
-
-  // Camera
-  const [showCamera, setShowCamera] = useState(false);
-  const [cameraReady, setCameraReady] = useState(false);
-  const [cameraError, setCameraError] = useState('');
-  const [mounted, setMounted] = useState(false);
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const streamRef = useRef<MediaStream | null>(null);
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-
-  useEffect(() => { setMounted(true); }, []);
-
-  const fileRef = useRef<HTMLInputElement>(null);
-
+  // Bu oturumda yüklenen ve henüz kaydedilmemiş görseller
   const sessionUploads = useRef<Set<string>>(new Set());
   const savedRef = useRef(false);
 
-  const stopCamera = useCallback(() => {
-    streamRef.current?.getTracks().forEach((t) => t.stop());
-    streamRef.current = null;
-    setCameraReady(false);
-    setShowCamera(false);
-    setCameraError('');
-    const top = document.body.style.top;
-    document.body.style.position = '';
-    document.body.style.top = '';
-    document.body.style.width = '';
-    document.body.style.overflow = '';
-    if (top) window.scrollTo(0, -parseInt(top, 10));
-  }, []);
+  const isEdit = !!initial?.slug;
+  const slugChanged = isEdit && slug !== initial?.slug;
+
+  // ── Kaydedilmemiş değişiklik takibi ────────────────────────────────────────
+  const snapshot = JSON.stringify({
+    title, slug, priceMin, priceMax, category, active, deliveryDays,
+    description, images, productCode, seoTags, colors,
+  });
+  const initialSnapshot = useRef<string | null>(null);
+  if (initialSnapshot.current === null) initialSnapshot.current = snapshot;
+  const dirtyRef = useRef(false);
+  dirtyRef.current = snapshot !== initialSnapshot.current;
 
   useEffect(() => {
+    const onBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (dirtyRef.current && !savedRef.current) {
+        e.preventDefault();
+        e.returnValue = '';
+      }
+    };
+    window.addEventListener('beforeunload', onBeforeUnload);
+    return () => window.removeEventListener('beforeunload', onBeforeUnload);
+  }, []);
+
+  // Uygulama içi bağlantılar (sidebar, geri, iptal) için onay
+  useEffect(() => {
+    const onClick = (e: MouseEvent) => {
+      if (!dirtyRef.current || savedRef.current) return;
+      if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+      const a = (e.target as HTMLElement | null)?.closest?.('a');
+      if (!a || a.target === '_blank' || a.hasAttribute('download')) return;
+      const href = a.getAttribute('href');
+      if (!href || href.startsWith('#')) return;
+      let url: URL;
+      try { url = new URL(a.href, window.location.href); } catch { return; }
+      if (url.origin !== window.location.origin) return;
+      if (url.pathname === window.location.pathname && url.search === window.location.search) return;
+
+      e.preventDefault();
+      e.stopPropagation();
+      void confirm({
+        title: 'Kaydedilmemiş değişiklikler var',
+        message: 'Bu sayfadan ayrılırsanız yaptığınız değişiklikler ve yüklenen yeni görseller kaybolur.',
+        confirmLabel: 'Sayfadan ayrıl',
+        cancelLabel: 'Düzenlemeye devam et',
+        danger: true,
+      }).then((ok) => {
+        if (ok) router.push(url.pathname + url.search + url.hash);
+      });
+    };
+    document.addEventListener('click', onClick, true);
+    return () => document.removeEventListener('click', onClick, true);
+  }, [confirm, router]);
+
+  // Kaydedilmeden çıkılırsa yeni yüklenen görselleri temizle
+  useEffect(() => {
+    const uploads = sessionUploads.current;
     return () => {
-      stopCamera();
-      if (!savedRef.current && sessionUploads.current.size > 0) {
+      if (!savedRef.current && uploads.size > 0) {
         navigator.sendBeacon(
           '/api/cloudinary-delete',
-          new Blob(
-            [JSON.stringify({ publicIds: Array.from(sessionUploads.current) })],
-            { type: 'application/json' }
-          )
+          new Blob([JSON.stringify({ publicIds: Array.from(uploads) })], { type: 'application/json' })
         );
       }
     };
-  }, [stopCamera]);
-
-  // Auto-slug
-  const handleTitleChange = (v: string) => {
-    setTitle(v);
-    if (!initial?.slug) {
-      const s = v
-        .toLowerCase()
-        .replace(/ğ/g, 'g').replace(/ü/g, 'u').replace(/ş/g, 's')
-        .replace(/ı/g, 'i').replace(/ö/g, 'o').replace(/ç/g, 'c')
-        .replace(/[^a-z0-9\s-]/g, '')
-        .trim().replace(/\s+/g, '-');
-      setSlug(s);
-    }
-  };
-
-  const handleUpload = async (files: FileList | null) => {
-    if (!files || !files.length) return;
-    setUploading(true);
-    try {
-      const ids = await Promise.all(Array.from(files).map(uploadToCloudinary));
-      ids.forEach((id) => sessionUploads.current.add(id));
-      setImages((prev) => [...prev, ...ids]);
-    } catch {
-      setError('Görsel yüklenemedi. Cloudinary ayarlarını kontrol edin.');
-    } finally {
-      setUploading(false);
-    }
-  };
-
-  // ── Camera ────────────────────────────────────────────────────────────────────
-
-  const startCamera = async () => {
-    setCameraError('');
-    setCameraReady(false);
-    setShowCamera(true);
-    document.body.style.top = `-${window.scrollY}px`;
-    document.body.style.position = 'fixed';
-    document.body.style.width = '100%';
-    document.body.style.overflow = 'hidden';
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: { ideal: 'environment' }, width: { ideal: 1920 }, height: { ideal: 1080 } },
-      });
-      streamRef.current = stream;
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-      }
-    } catch {
-      setCameraError('Kameraya erişilemedi. Tarayıcı izinlerini kontrol edin.');
-      setShowCamera(false);
-    }
-  };
-
-  const capturePhoto = async () => {
-    if (!videoRef.current || !canvasRef.current) return;
-    const video = videoRef.current;
-    const canvas = canvasRef.current;
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
-    canvas.getContext('2d')?.drawImage(video, 0, 0);
-    canvas.toBlob(async (blob) => {
-      if (!blob) return;
-      const file = new File([blob], `kamera-${Date.now()}.jpg`, { type: 'image/jpeg' });
-      stopCamera();
-      setUploading(true);
-      try {
-        const id = await uploadToCloudinary(file);
-        sessionUploads.current.add(id);
-        setImages((prev) => [...prev, id]);
-      } catch {
-        setError('Fotoğraf yüklenemedi.');
-      } finally {
-        setUploading(false);
-      }
-    }, 'image/jpeg', 0.92);
-  };
-
-  // ── Image reorder (drag & drop) ───────────────────────────────────────────────
-
-  const handleImgDragStart = (index: number) => { dragIndexRef.current = index; };
-
-  const handleImgDragOver = (e: React.DragEvent, index: number) => {
-    e.preventDefault();
-    if (dragIndexRef.current !== null) setDragOverIndex(index);
-  };
-
-  const handleImgDrop = (e: React.DragEvent, dropIndex: number) => {
-    e.preventDefault();
-    const from = dragIndexRef.current;
-    if (from === null || from === dropIndex) { setDragOverIndex(null); return; }
-    setImages((prev) => {
-      const next = [...prev];
-      const [moved] = next.splice(from, 1);
-      next.splice(dropIndex, 0, moved);
-      return next;
-    });
-    dragIndexRef.current = null;
-    setDragOverIndex(null);
-  };
-
-  const handleImgDragEnd = () => {
-    dragIndexRef.current = null;
-    setDragOverIndex(null);
-  };
-
-  // ── Image reorder — touch (mobile) ───────────────────────────────────────────
-
-  useEffect(() => {
-    const grid = imgGridRef.current;
-    if (!grid) return;
-
-    const onTouchMove = (e: TouchEvent) => {
-      if (touchDragIndexRef.current === null) return;
-      e.preventDefault();
-      const touch = e.touches[0];
-      setTouchGhostPos({ x: touch.clientX, y: touch.clientY });
-      const el = document.elementFromPoint(touch.clientX, touch.clientY);
-      const item = el?.closest('[data-img-index]') as HTMLElement | null;
-      if (item) {
-        const idx = parseInt(item.dataset.imgIndex ?? '-1', 10);
-        if (idx >= 0) setDragOverIndex(idx);
-      }
-    };
-
-    grid.addEventListener('touchmove', onTouchMove, { passive: false });
-    return () => grid.removeEventListener('touchmove', onTouchMove);
   }, []);
 
-  const handleImgTouchStart = (e: React.TouchEvent, index: number) => {
-    touchDragIndexRef.current = index;
-    setTouchDragIndex(index);
-    const touch = e.touches[0];
-    setTouchGhostPos({ x: touch.clientX, y: touch.clientY });
-    setDragOverIndex(index);
-  };
+  // ── Alan işleyicileri ──────────────────────────────────────────────────────
 
-  const handleImgTouchEnd = () => {
-    const from = touchDragIndexRef.current;
-    const to = dragOverIndex;
-    if (from !== null && to !== null && from !== to) {
-      setImages((prev) => {
-        const next = [...prev];
-        const [moved] = next.splice(from, 1);
-        next.splice(to, 0, moved);
-        return next;
-      });
-    }
-    touchDragIndexRef.current = null;
-    setTouchDragIndex(null);
-    setTouchGhostPos(null);
-    setDragOverIndex(null);
-  };
+  const clearError = (k: keyof FieldErrors) =>
+    setErrors((prev) => (prev[k] ? { ...prev, [k]: undefined } : prev));
 
-  // ─────────────────────────────────────────────────────────────────────────────
-
-  // ── Varyant sıralama ─────────────────────────────────────────────────────────
-  const handleColorDragStart = (i: number) => { colorDragIndexRef.current = i; };
-  const handleColorDragOver = (e: React.DragEvent, i: number) => {
-    e.preventDefault();
-    if (colorDragIndexRef.current !== null) setColorDragOver(i);
-  };
-  const handleColorDrop = (e: React.DragEvent, to: number) => {
-    e.preventDefault();
-    const from = colorDragIndexRef.current;
-    if (from === null || from === to) { setColorDragOver(null); return; }
-    setColors(prev => {
-      const next = [...prev];
-      const [moved] = next.splice(from, 1);
-      next.splice(to, 0, moved);
-      return next;
-    });
-    colorDragIndexRef.current = null;
-    setColorDragOver(null);
-  };
-  const handleColorDragEnd = () => { colorDragIndexRef.current = null; setColorDragOver(null); };
-
-  // ── Varyant içi fotoğraf sıralama ────────────────────────────────────────────
-  const handleColorImgDragStart = (colorIndex: number, imgIndex: number) => {
-    colorImgDragRef.current = { colorIndex, imgIndex };
-  };
-  const handleColorImgDragOver = (e: React.DragEvent, colorIndex: number, imgIndex: number) => {
-    e.preventDefault();
-    if (colorImgDragRef.current) setColorImgDragOver({ colorIndex, imgIndex });
-  };
-  const handleColorImgDrop = (e: React.DragEvent, colorIndex: number, toIndex: number) => {
-    e.preventDefault();
-    const src = colorImgDragRef.current;
-    if (!src || src.colorIndex !== colorIndex || src.imgIndex === toIndex) {
-      setColorImgDragOver(null); return;
-    }
-    setColors(prev => prev.map((c, ci) => {
-      if (ci !== colorIndex) return c;
-      const imgs = [...c.images];
-      const [moved] = imgs.splice(src.imgIndex, 1);
-      imgs.splice(toIndex, 0, moved);
-      return { ...c, images: imgs };
-    }));
-    colorImgDragRef.current = null;
-    setColorImgDragOver(null);
-  };
-  const handleColorImgDragEnd = () => { colorImgDragRef.current = null; setColorImgDragOver(null); };
-
-  const addColor = () => {
-    const name = newColorName.trim();
-    if (!name) return;
-    setColors(prev => [...prev, { name, images: [] }]);
-    setNewColorName('');
-  };
-
-  const removeColor = (i: number) => {
-    setColors(prev => prev.filter((_, j) => j !== i));
-  };
-
-  const handleColorUpload = async (colorIndex: number, files: FileList | null) => {
-    if (!files || !files.length) return;
-    setColorUploading(colorIndex);
-    try {
-      const ids = await Promise.all(Array.from(files).map(uploadToCloudinary));
-      ids.forEach(id => sessionUploads.current.add(id));
-      setColors(prev => prev.map((c, i) =>
-        i === colorIndex ? { ...c, images: [...c.images, ...ids] } : c
-      ));
-    } catch {
-      setError('Renk görseli yüklenemedi.');
-    } finally {
-      setColorUploading(null);
+  const handleTitleChange = (v: string) => {
+    setTitle(v);
+    clearError('title');
+    if (!initial?.slug && !slugManual) {
+      setSlug(toSlug(v));
+      clearError('slug');
     }
   };
 
-  const removeColorImage = (colorIndex: number, imgIndex: number, id: string) => {
+  const handleSlugChange = (v: string) => {
+    setSlugManual(true);
+    setSlug(toSlug(v, { trimEnds: false }));
+    clearError('slug');
+  };
+
+  const trackUpload = (ids: string[]) => ids.forEach((id) => sessionUploads.current.add(id));
+
+  const handleRemoveImage = (id: string) => {
+    // Yalnızca bu oturumda yüklenenler hemen silinir; mevcutlar kayıtta sunucuda temizlenir
     if (sessionUploads.current.has(id)) {
       sessionUploads.current.delete(id);
-      fetch('/api/cloudinary-delete', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ publicIds: [id] }),
-      });
+      deleteUploaded([id]);
     }
-    setColors(prev => prev.map((c, i) =>
-      i === colorIndex ? { ...c, images: c.images.filter((_, j) => j !== imgIndex) } : c
-    ));
   };
 
   const addSeoTag = () => {
@@ -362,20 +164,63 @@ export default function ProductForm({ initial, onSubmit, submitLabel }: Props) {
     setSeoTagInput('');
   };
 
-  const removeSeoTag = (t: string) => setSeoTags((prev) => prev.filter((x) => x !== t));
+  // ── Doğrulama ──────────────────────────────────────────────────────────────
 
-  const handleSubmit = async () => {
-    if (!title || !slug) {
-      setError('Başlık ve slug zorunludur.');
+  const validate = (): FieldErrors => {
+    const e: FieldErrors = {};
+    const finalSlug = toSlug(slug);
+
+    if (!title.trim()) e.title = 'Başlık zorunludur.';
+
+    if (!finalSlug) e.slug = 'Slug zorunludur.';
+    else if (!SLUG_RE.test(finalSlug)) e.slug = 'Slug yalnızca küçük harf, rakam ve tire içerebilir.';
+
+    const min = Number(priceMin);
+    if (!priceMin.trim() || !Number.isFinite(min) || min <= 0) e.priceMin = 'Min fiyat 0\'dan büyük olmalıdır.';
+
+    if (priceMax.trim()) {
+      const max = Number(priceMax);
+      if (!Number.isFinite(max) || max <= 0) e.priceMax = 'Geçerli bir fiyat girin.';
+      else if (Number.isFinite(min) && max < min) e.priceMax = 'Max fiyat, min fiyattan küçük olamaz.';
+    }
+
+    const days = Number(deliveryDays);
+    if (!deliveryDays.trim() || !Number.isInteger(days) || days < 1 || days > 30) {
+      e.deliveryDays = 'Teslimat süresi 1 ile 30 arasında tam sayı olmalıdır.';
+    }
+
+    if (images.length < 1) e.images = 'En az 1 görsel eklemelisiniz.';
+
+    return e;
+  };
+
+  const handleSubmit = async (ev?: React.FormEvent) => {
+    ev?.preventDefault();
+    if (saving) return;
+
+    const v = validate();
+    setErrors(v);
+    const first = FIELD_ORDER.find((k) => v[k]);
+    if (first) {
+      setError('');
+      toast.error('Lütfen formdaki hataları düzeltin.');
+      const el = document.getElementById(FIELD_IDS[first]);
+      el?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      (el as HTMLElement | null)?.focus?.({ preventScroll: true });
       return;
     }
+
     setSaving(true);
     setError('');
+    // ÖNEMLİ: onSubmit içinde router.push çağrılırsa bileşen unmount olur ve
+    // temizlik efekti çalışır. Yeni yüklenen görsellerin silinmemesi için
+    // bayrak, kaydetme çağrısından ÖNCE kaldırılır; hata olursa geri alınır.
+    savedRef.current = true;
     try {
       await onSubmit({
-        title,
-        slug,
-        priceMin: Number(priceMin) || 0,
+        title: title.trim(),
+        slug: toSlug(slug),
+        priceMin: Number(priceMin),
         priceMax: Number(priceMax) || 0,
         category,
         active,
@@ -383,520 +228,223 @@ export default function ProductForm({ initial, onSubmit, submitLabel }: Props) {
         description,
         images,
         colors: colors.length > 0 ? colors : undefined,
-        deliveryDays: Number(deliveryDays) || 3,
+        deliveryDays: Number(deliveryDays),
         seoTags,
         productCode: productCode.trim() || undefined,
       });
-      savedRef.current = true;
       sessionUploads.current.clear();
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : 'Bir hata oluştu.');
+      savedRef.current = false;
+      const msg = errorMessage(e);
+      setError(msg);
+      toast.error(msg);
     } finally {
       setSaving(false);
     }
   };
 
+  const busy = saving || galleryBusy || colorBusy;
+
+  const fieldProps = (k: keyof FieldErrors) => ({
+    id: FIELD_IDS[k],
+    'aria-invalid': errors[k] ? true : undefined,
+    'aria-describedby': errors[k] ? `${FIELD_IDS[k]}-err` : undefined,
+  });
+
+  const FieldError = ({ k }: { k: keyof FieldErrors }) =>
+    errors[k] ? <div id={`${FIELD_IDS[k]}-err`} className="adm-field-error" role="alert">{errors[k]}</div> : null;
+
   return (
-    <>
-      {/* ── Camera Modal ── */}
-      {showCamera && mounted && createPortal(
-        <div
-          style={{
-            position: 'fixed',
-            top: 0, left: 0,
-            width: '100vw', height: '100vh',
-            zIndex: 99999,
-            background: '#000',
-            overflow: 'hidden',
-            touchAction: 'none',
-            transform: 'translateZ(0)',
-          }}
-        >
-          {cameraError ? (
-            <div style={{
-              position: 'absolute', inset: 0,
-              display: 'flex', flexDirection: 'column',
-              alignItems: 'center', justifyContent: 'center', gap: 20,
-            }}>
-              <p style={{ color: '#f85149', fontSize: 15, textAlign: 'center', padding: '0 32px' }}>
-                {cameraError}
-              </p>
-              <button onClick={stopCamera} style={{
-                padding: '10px 28px', borderRadius: 8,
-                background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)',
-                color: '#fff', fontSize: 14, cursor: 'pointer',
-              }}>Kapat</button>
-            </div>
-          ) : (
-            <>
-              <video
-                ref={videoRef}
-                autoPlay
-                playsInline
-                muted
-                onCanPlay={() => setCameraReady(true)}
-                style={{
-                  position: 'absolute',
-                  top: 0, left: 0,
-                  width: '100%', height: '100%',
-                  objectFit: 'cover',
-                  display: 'block',
-                }}
-              />
-              <canvas ref={canvasRef} style={{ display: 'none' }} />
+    <form onSubmit={handleSubmit} noValidate className="adm-form-grid">
+      {/* Sol sütun */}
+      <div className="adm-form-col">
+        <div className="card adm-card-pad">
+          <h2 className="adm-card-title">Temel Bilgiler</h2>
 
-              <button
-                onClick={stopCamera}
-                style={{
-                  position: 'absolute', top: 20, right: 20, zIndex: 10,
-                  background: 'rgba(0,0,0,0.5)',
-                  border: '1px solid rgba(255,255,255,0.25)',
-                  borderRadius: '50%',
-                  width: 44, height: 44,
-                  color: '#fff', fontSize: 18,
-                  cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                }}
-                aria-label="Kamerayı kapat"
-              >✕</button>
-
-              <div style={{
-                position: 'absolute', bottom: 0, left: 0, right: 0, zIndex: 10,
-                display: 'flex', justifyContent: 'center', alignItems: 'center',
-                paddingTop: 24,
-                paddingBottom: 'max(40px, env(safe-area-inset-bottom, 40px))',
-                background: 'linear-gradient(to top, rgba(0,0,0,0.55) 0%, transparent 100%)',
-              }}>
-                {!cameraReady ? (
-                  <span style={{ color: 'rgba(255,255,255,0.6)', fontSize: 14 }}>Kamera başlatılıyor...</span>
-                ) : (
-                  <button
-                    onClick={capturePhoto}
-                    style={{
-                      width: 76, height: 76,
-                      borderRadius: '50%',
-                      background: '#fff',
-                      border: '4px solid rgba(255,255,255,0.5)',
-                      boxShadow: '0 0 0 4px rgba(255,255,255,0.2)',
-                      cursor: 'pointer',
-                      transition: 'transform 0.1s',
-                    }}
-                    onMouseDown={(e) => { (e.currentTarget as HTMLButtonElement).style.transform = 'scale(0.91)'; }}
-                    onMouseUp={(e) => { (e.currentTarget as HTMLButtonElement).style.transform = 'scale(1)'; }}
-                    onTouchStart={(e) => { e.stopPropagation(); (e.currentTarget as HTMLButtonElement).style.transform = 'scale(0.91)'; }}
-                    onTouchEnd={(e) => { e.stopPropagation(); (e.currentTarget as HTMLButtonElement).style.transform = 'scale(1)'; }}
-                    aria-label="Fotoğraf çek"
-                  />
-                )}
-              </div>
-            </>
-          )}
-        </div>
-      , document.body)}
-
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 360px', gap: 28, alignItems: 'start' }}>
-        {/* Left column */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
-          <div className="card" style={{ padding: 28, marginBottom: 20 }}>
-            <h2 style={{ fontFamily: 'var(--font-display)', marginBottom: 20 }}>Temel Bilgiler</h2>
-
-            <div className="form-group">
-              <label className="form-label">Başlık *</label>
-              <input className="form-input" value={title} onChange={(e) => handleTitleChange(e.target.value)} placeholder="Sihirli Kupa - 330ml" />
-            </div>
-
-            <div className="form-group">
-              <label className="form-label">Slug *</label>
-              <input className="form-input" value={slug} onChange={(e) => setSlug(e.target.value)} placeholder="sihirli-mat-kupa-330ml" />
-            </div>
-
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 16 }}>
-              <div className="form-group">
-                <label className="form-label">Min Fiyat (TL)</label>
-                <input className="form-input" type="number" value={priceMin} onChange={(e) => setPriceMin(e.target.value)} placeholder="150" />
-              </div>
-              <div className="form-group">
-                <label className="form-label">Max Fiyat (TL)</label>
-                <input className="form-input" type="number" value={priceMax} onChange={(e) => setPriceMax(e.target.value)} placeholder="350" />
-              </div>
-              <div className="form-group">
-                <label className="form-label">Teslimat (iş günü)</label>
-                <input className="form-input" type="number" value={deliveryDays} onChange={(e) => setDeliveryDays(e.target.value)} placeholder="3" />
-              </div>
-            </div>
-
-            <div className="form-group">
-              <label className="form-label">Kategori</label>
-              <select className="form-select" value={category} onChange={(e) => setCategory(e.target.value as Category)}>
-                {CATEGORIES.map((c) => <option key={c}>{c}</option>)}
-              </select>
-            </div>
-
-            <div className="form-group">
-              <label className="form-label">Detaylı Açıklama</label>
-              <textarea className="form-textarea" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Ürün hakkında detaylı bilgi..." style={{ minHeight: 120 }} />
-            </div>
-          </div>
-
-          {/* Images */}
-          <div className="card" style={{ padding: 28 }}>
-            <h2 style={{ fontFamily: 'var(--font-display)', marginBottom: 16 }}>Görseller</h2>
-
-            <div style={{ display: 'flex', gap: 10, marginBottom: images.length > 0 ? 0 : undefined }}>
-              <div
-                className={`img-upload-zone ${dragOver ? 'drag-over' : ''}`}
-                style={{ flex: 1, marginBottom: 0 }}
-                onClick={() => fileRef.current?.click()}
-                onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
-                onDragLeave={() => setDragOver(false)}
-                onDrop={(e) => { e.preventDefault(); setDragOver(false); handleUpload(e.dataTransfer.files); }}
-              >
-                {uploading ? '⏳ Yükleniyor...' : '📁 Dosya seç veya sürükle'}
-              </div>
-
-              <button
-                type="button"
-                onClick={startCamera}
-                disabled={uploading}
-                style={{
-                  display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-                  gap: 4, padding: '12px 18px',
-                  border: '2px dashed var(--border)',
-                  borderRadius: 'var(--radius-sm)',
-                  background: 'transparent',
-                  color: 'var(--muted)',
-                  fontSize: 12, cursor: 'pointer',
-                  transition: 'all 0.2s',
-                  whiteSpace: 'nowrap', flexShrink: 0,
-                }}
-                onMouseOver={(e) => {
-                  (e.currentTarget as HTMLButtonElement).style.borderColor = 'var(--accent)';
-                  (e.currentTarget as HTMLButtonElement).style.color = 'var(--accent)';
-                }}
-                onMouseOut={(e) => {
-                  (e.currentTarget as HTMLButtonElement).style.borderColor = 'var(--border)';
-                  (e.currentTarget as HTMLButtonElement).style.color = 'var(--muted)';
-                }}
-              >
-                <span style={{ fontSize: 22 }}>📷</span>
-                Kamera
-              </button>
-            </div>
-
+          <div className="form-group">
+            <label className="form-label" htmlFor="pf-title">Başlık *</label>
             <input
-              ref={fileRef}
-              type="file"
-              accept="image/*"
-              multiple
-              style={{ display: 'none' }}
-              onChange={(e) => handleUpload(e.target.files)}
+              {...fieldProps('title')}
+              className={`form-input ${errors.title ? 'has-error' : ''}`}
+              value={title}
+              onChange={(e) => handleTitleChange(e.target.value)}
+              placeholder="Sihirli Kupa - 330ml"
             />
+            <FieldError k="title" />
+          </div>
 
-            {images.length > 0 && (
-              <>
-                {images.length > 1 && (
-                  <p style={{ fontSize: 11, color: 'var(--muted)', margin: '10px 0 6px', userSelect: 'none' }}>
-                    Sıralamak için görselleri sürükleyin — ilk görsel ürün kapak fotoğrafı olur
-                  </p>
-                )}
-                {touchGhostPos && touchDragIndex !== null && (
-                  <div style={{
-                    position: 'fixed',
-                    left: touchGhostPos.x - 45,
-                    top: touchGhostPos.y - 38,
-                    width: 90, height: 75,
-                    borderRadius: 8, overflow: 'hidden',
-                    border: '2px solid var(--accent)',
-                    boxShadow: '0 8px 24px rgba(0,0,0,0.5)',
-                    opacity: 0.9, pointerEvents: 'none', zIndex: 999,
-                    transform: 'scale(1.08)',
-                  }}>
-                    <img
-                      src={cloudinaryUrl(images[touchDragIndex], 'f_auto,q_auto,w_200,h_160,c_fill')}
-                      style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                      alt=""
-                    />
-                  </div>
-                )}
-
-                <div className="img-preview-grid" ref={imgGridRef}>
-                  {images.map((id, i) => (
-                    <div
-                      key={id}
-                      className="img-preview-item"
-                      data-img-index={i}
-                      draggable
-                      onDragStart={() => handleImgDragStart(i)}
-                      onDragOver={(e) => handleImgDragOver(e, i)}
-                      onDrop={(e) => handleImgDrop(e, i)}
-                      onDragEnd={handleImgDragEnd}
-                      onTouchStart={(e) => handleImgTouchStart(e, i)}
-                      onTouchEnd={handleImgTouchEnd}
-                      style={{
-                        cursor: 'grab',
-                        outline: dragOverIndex === i && (dragIndexRef.current !== i && touchDragIndex !== i)
-                          ? '2px solid var(--accent)'
-                          : undefined,
-                        opacity: dragIndexRef.current === i || touchDragIndex === i ? 0.35 : 1,
-                        transition: 'outline 0.1s, opacity 0.1s',
-                      }}
-                    >
-                      <img src={cloudinaryUrl(id, 'f_auto,q_auto,w_200,h_160,c_fill')} alt={`img-${i}`} draggable={false} />
-
-                      <span style={{
-                        position: 'absolute', bottom: 4, left: 4,
-                        background: i === 0 ? 'var(--accent)' : 'rgba(0,0,0,0.65)',
-                        color: i === 0 ? '#0a0a0a' : '#fff',
-                        fontSize: 10, fontWeight: 700,
-                        padding: '1px 5px', borderRadius: 4,
-                        lineHeight: '16px', userSelect: 'none', pointerEvents: 'none',
-                      }}>
-                        {i === 0 ? 'Kapak' : `#${i + 1}`}
-                      </span>
-
-                      <button
-                        className="img-preview-remove"
-                        onClick={() => {
-                          if (sessionUploads.current.has(id)) {
-                            sessionUploads.current.delete(id);
-                            fetch('/api/cloudinary-delete', {
-                              method: 'POST',
-                              headers: { 'Content-Type': 'application/json' },
-                              body: JSON.stringify({ publicIds: [id] }),
-                            });
-                          }
-                          setImages((prev) => prev.filter((_, j) => j !== i));
-                        }}
-                      >×</button>
-                    </div>
-                  ))}
-                </div>
-              </>
+          <div className="form-group">
+            <label className="form-label" htmlFor="pf-slug">Slug (URL) *</label>
+            <input
+              {...fieldProps('slug')}
+              className={`form-input ${errors.slug ? 'has-error' : ''}`}
+              value={slug}
+              onChange={(e) => handleSlugChange(e.target.value)}
+              onBlur={() => setSlug((s) => toSlug(s))}
+              placeholder="sihirli-mat-kupa-330ml"
+              autoCapitalize="none"
+              spellCheck={false}
+            />
+            <FieldError k="slug" />
+            {!errors.slug && <div className="adm-field-hint">Küçük harf, rakam ve tire. Türkçe karakterler otomatik dönüştürülür.</div>}
+            {slugChanged && (
+              <div className="adm-field-warn" role="note">
+                Slug değiştiriliyor: URL değişir, eski bağlantılar kırılır.
+              </div>
             )}
           </div>
-          {/* Renk Varyantları */}
-          <div className="card" style={{ padding: 28, marginTop: 20 }}>
-            <h2 style={{ fontFamily: 'var(--font-display)', marginBottom: 4 }}>Renk Varyantları</h2>
-            <p style={{ fontSize: 12, color: 'var(--muted)', marginBottom: 16 }}>
-              Her renk için ayrı fotoğraf ekleyin. Müşteri ürün sayfasında renk seçip WhatsApp mesajına yansıtır.
-            </p>
 
-            {/* Yeni renk ekle */}
-            <div style={{ display: 'flex', gap: 8, marginBottom: 20 }}>
+          <div className="adm-field-row">
+            <div className="form-group">
+              <label className="form-label" htmlFor="pf-priceMin">Min Fiyat (TL) *</label>
               <input
-                className="form-input"
-                placeholder="Renk adı — örn: Turuncu, Koyu Mavi"
-                value={newColorName}
-                onChange={e => setNewColorName(e.target.value)}
-                onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addColor(); } }}
-                style={{ flex: 1 }}
+                {...fieldProps('priceMin')}
+                className={`form-input ${errors.priceMin ? 'has-error' : ''}`}
+                type="number" inputMode="decimal" min="0" step="any"
+                value={priceMin}
+                onChange={(e) => { setPriceMin(e.target.value); clearError('priceMin'); clearError('priceMax'); }}
+                placeholder="150"
               />
-              <button
-                type="button"
-                onClick={addColor}
-                disabled={!newColorName.trim()}
-                className="btn btn-secondary"
-                style={{ whiteSpace: 'nowrap', padding: '0 18px' }}
-              >
-                + Renk Ekle
-              </button>
+              <FieldError k="priceMin" />
             </div>
+            <div className="form-group">
+              <label className="form-label" htmlFor="pf-priceMax">Max Fiyat (TL)</label>
+              <input
+                {...fieldProps('priceMax')}
+                className={`form-input ${errors.priceMax ? 'has-error' : ''}`}
+                type="number" inputMode="decimal" min="0" step="any"
+                value={priceMax}
+                onChange={(e) => { setPriceMax(e.target.value); clearError('priceMax'); }}
+                placeholder="350"
+              />
+              <FieldError k="priceMax" />
+            </div>
+            <div className="form-group">
+              <label className="form-label" htmlFor="pf-deliveryDays">Teslimat (iş günü)</label>
+              <input
+                {...fieldProps('deliveryDays')}
+                className={`form-input ${errors.deliveryDays ? 'has-error' : ''}`}
+                type="number" inputMode="numeric" min="1" max="30" step="1"
+                value={deliveryDays}
+                onChange={(e) => { setDeliveryDays(e.target.value); clearError('deliveryDays'); }}
+                placeholder="3"
+              />
+              <FieldError k="deliveryDays" />
+            </div>
+          </div>
 
-            {colors.length === 0 && (
-              <p style={{ fontSize: 13, color: 'var(--muted)', textAlign: 'center', padding: '16px 0' }}>
-                Henüz renk varyantı eklenmedi.
-              </p>
-            )}
+          <div className="form-group">
+            <label className="form-label" htmlFor="pf-category">Kategori</label>
+            <select id="pf-category" className="form-select" value={category} onChange={(e) => setCategory(e.target.value as Category)}>
+              {CATEGORIES.map((c) => <option key={c}>{c}</option>)}
+            </select>
+          </div>
 
-            {colors.map((color, ci) => (
-              <div
-                key={ci}
-                draggable
-                onDragStart={() => handleColorDragStart(ci)}
-                onDragOver={e => handleColorDragOver(e, ci)}
-                onDrop={e => handleColorDrop(e, ci)}
-                onDragEnd={handleColorDragEnd}
-                style={{
-                  border: colorDragOver === ci && colorDragIndexRef.current !== ci
-                    ? '2px solid var(--accent)'
-                    : '1px solid var(--border)',
-                  borderRadius: 10,
-                  padding: 16,
-                  marginBottom: 12,
-                  background: 'var(--surface)',
-                  opacity: colorDragIndexRef.current === ci ? 0.4 : 1,
-                  transition: 'opacity 0.1s, border-color 0.1s',
-                  cursor: 'grab',
-                }}
-              >
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <span style={{ color: 'var(--muted)', fontSize: 16, lineHeight: 1, userSelect: 'none' }}>⠿</span>
-                    <span style={{ fontWeight: 700, fontSize: 14, color: 'var(--text)' }}>{color.name}</span>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => removeColor(ci)}
-                    style={{
-                      background: 'none', border: 'none',
-                      color: 'var(--danger)', cursor: 'pointer',
-                      fontSize: 13, padding: '2px 8px',
-                    }}
-                  >
-                    Sil
-                  </button>
-                </div>
-
-                {/* Renk görselleri — sürükleyerek sıralanabilir */}
-                {color.images.length > 1 && (
-                  <p style={{ fontSize: 11, color: 'var(--muted)', margin: '0 0 6px', userSelect: 'none' }}>
-                    Sıralamak için sürükleyin — ilk görsel sidebar'da gösterilir
-                  </p>
-                )}
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 8 }}>
-                  {color.images.map((id, ii) => {
-                    const isImgDragging = colorImgDragRef.current?.colorIndex === ci && colorImgDragRef.current?.imgIndex === ii;
-                    const isImgOver = colorImgDragOver?.colorIndex === ci && colorImgDragOver?.imgIndex === ii && !isImgDragging;
-                    return (
-                    <div
-                      key={id}
-                      draggable
-                      onDragStart={e => { e.stopPropagation(); handleColorImgDragStart(ci, ii); }}
-                      onDragOver={e => { e.stopPropagation(); handleColorImgDragOver(e, ci, ii); }}
-                      onDrop={e => { e.stopPropagation(); handleColorImgDrop(e, ci, ii); }}
-                      onDragEnd={e => { e.stopPropagation(); handleColorImgDragEnd(); }}
-                      style={{
-                        position: 'relative', width: 80, height: 64,
-                        borderRadius: 8, overflow: 'hidden', flexShrink: 0,
-                        cursor: 'grab',
-                        outline: isImgOver ? '2px solid var(--accent)' : ii === 0 ? '2px solid var(--accent)' : 'none',
-                        outlineOffset: 2,
-                        opacity: isImgDragging ? 0.35 : 1,
-                        transition: 'opacity 0.1s, outline 0.1s',
-                      }}
-                    >
-                      <img src={cloudinaryUrl(id, 'f_auto,q_auto,w_200,h_160,c_fill')} alt="" draggable={false} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                      {ii === 0 && (
-                        <span style={{
-                          position: 'absolute', bottom: 3, left: 3,
-                          background: 'var(--accent)', color: '#0a0a0a',
-                          fontSize: 9, fontWeight: 700, padding: '1px 4px', borderRadius: 3,
-                          pointerEvents: 'none',
-                        }}>Kapak</span>
-                      )}
-                      <button
-                        type="button"
-                        onClick={() => removeColorImage(ci, ii, id)}
-                        style={{
-                          position: 'absolute', top: 2, right: 2,
-                          width: 18, height: 18, borderRadius: '50%',
-                          background: 'rgba(0,0,0,0.7)', border: 'none',
-                          color: '#fff', fontSize: 11, cursor: 'pointer',
-                          display: 'flex', alignItems: 'center', justifyContent: 'center',
-                          lineHeight: 1,
-                        }}
-                      >×</button>
-                    </div>
-                    );
-                  })}
-
-                  {/* Yükle butonu */}
-                  <label style={{
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    width: 80, height: 64, borderRadius: 8,
-                    border: '2px dashed var(--border)',
-                    cursor: colorUploading === ci ? 'wait' : 'pointer',
-                    fontSize: 11, color: 'var(--muted)',
-                    flexShrink: 0, flexDirection: 'column', gap: 2,
-                  }}>
-                    {colorUploading === ci ? '⏳' : '📁'}
-                    <span>{colorUploading === ci ? 'Yükleniyor' : 'Ekle'}</span>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      multiple
-                      style={{ display: 'none' }}
-                      ref={el => { colorFileRefs.current[ci] = el; }}
-                      onChange={e => handleColorUpload(ci, e.target.files)}
-                      disabled={colorUploading !== null}
-                    />
-                  </label>
-                </div>
-              </div>
-            ))}
+          <div className="form-group" style={{ marginBottom: 0 }}>
+            <label className="form-label" htmlFor="pf-description">Detaylı Açıklama</label>
+            <textarea
+              id="pf-description"
+              className="form-textarea"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="Ürün hakkında detaylı bilgi..."
+              style={{ minHeight: 120 }}
+            />
           </div>
         </div>
 
-        {/* Right column */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-          {/* Status */}
-          <div className="card" style={{ padding: 24 }}>
-            <h2 style={{ fontFamily: 'var(--font-display)', marginBottom: 16 }}>Durum</h2>
+        <div className="card adm-card-pad" id="pf-images" tabIndex={-1}>
+          <h2 className="adm-card-title">Görseller *</h2>
+          <ImageGallery
+            images={images}
+            setImages={(u) => { setImages(u); clearError('images'); }}
+            onUploaded={trackUpload}
+            onRemove={handleRemoveImage}
+            onBusyChange={setGalleryBusy}
+            error={errors.images}
+          />
+        </div>
 
-            <div className="form-group">
-              <label className="form-label">Ürün Durumu</label>
-              <select className="form-select" value={String(active)} onChange={(e) => setActive(e.target.value === 'true')}>
-                <option value="true">Aktif (Sitede görünür)</option>
-                <option value="false">Pasif (Gizli)</option>
-              </select>
-            </div>
-          </div>
-
-          {/* Admin Bilgileri */}
-          <div className="card" style={{ padding: 24 }}>
-            <h2 style={{ fontFamily: 'var(--font-display)', marginBottom: 4 }}>Admin Bilgileri 🔒</h2>
-            <p style={{ fontSize: 12, color: 'var(--muted)', marginBottom: 12 }}>Bu alan yalnızca admin panelinde görünür, müşterilere gösterilmez.</p>
-            <div className="form-group" style={{ marginBottom: 0 }}>
-              <label className="form-label">Ürün Kodu</label>
-              <input
-                className="form-input"
-                value={productCode}
-                onChange={(e) => setProductCode(e.target.value)}
-                placeholder="KB-001"
-                style={{ fontFamily: 'monospace', letterSpacing: '0.05em' }}
-              />
-              <p style={{ fontSize: 11, color: 'var(--muted)', marginTop: 6 }}>Örn: KB-001, SMK-02, KNK-03 — sipariş takibi ve stok yönetimi için</p>
-            </div>
-          </div>
-
-          {/* SEO Tags */}
-          <div className="card" style={{ padding: 24 }}>
-            <h2 style={{ fontFamily: 'var(--font-display)', marginBottom: 4 }}>SEO Etiketleri 🔍</h2>
-            <p style={{ fontSize: 12, color: 'var(--muted)', marginBottom: 12 }}>Müşterilere gösterilmez — sadece arama motorları için JSON-LD&apos;ye gömülür.</p>
-            <div className="tags-wrap">
-              {seoTags.map((t) => (
-                <span key={t} className="tag-chip" style={{ opacity: 0.75 }}>
-                  {t}
-                  <button onClick={() => removeSeoTag(t)}>×</button>
-                </span>
-              ))}
-              <input
-                className="tags-input"
-                placeholder="SEO etiketi ekle..."
-                value={seoTagInput}
-                onChange={(e) => setSeoTagInput(e.target.value)}
-                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ',') { e.preventDefault(); addSeoTag(); } }}
-              />
-            </div>
-            <p style={{ fontSize: 11, color: 'var(--muted)', marginTop: 8 }}>Örn: kişiye özel kupa, sihirli kupa baskı, hediye kupa</p>
-          </div>
-
-          {/* Submit */}
-          <div className="card" style={{ padding: 24 }}>
-            {error && (
-              <div style={{ background: 'rgba(248,81,73,0.1)', border: '1px solid rgba(248,81,73,0.25)', borderRadius: 8, padding: '10px 14px', fontSize: 13, color: 'var(--danger)', marginBottom: 16 }}>
-                {error}
-              </div>
-            )}
-            <button
-              className="btn btn-primary btn-full btn-lg"
-              onClick={handleSubmit}
-              disabled={saving || uploading}
-            >
-              {saving ? 'Kaydediliyor...' : submitLabel}
-            </button>
-          </div>
+        <div className="card adm-card-pad">
+          <h2 className="adm-card-title">Renk Varyantları</h2>
+          <p className="adm-card-sub">
+            Her renk için ayrı fotoğraf ekleyin. Müşteri ürün sayfasında renk seçip WhatsApp mesajına yansıtır.
+          </p>
+          <ColorVariants
+            colors={colors}
+            setColors={setColors}
+            onUploaded={trackUpload}
+            onRemoveImage={handleRemoveImage}
+            onBusyChange={setColorBusy}
+          />
         </div>
       </div>
-    </>
+
+      {/* Sağ sütun */}
+      <div className="adm-form-col">
+        <div className="card adm-card-pad">
+          <h2 className="adm-card-title">Durum</h2>
+          <div className="form-group" style={{ marginBottom: 0 }}>
+            <label className="form-label" htmlFor="pf-active">Ürün Durumu</label>
+            <select id="pf-active" className="form-select" value={String(active)} onChange={(e) => setActive(e.target.value === 'true')}>
+              <option value="true">Aktif (sitede görünür)</option>
+              <option value="false">Pasif (gizli)</option>
+            </select>
+          </div>
+        </div>
+
+        <div className="card adm-card-pad">
+          <h2 className="adm-card-title">Admin Bilgileri</h2>
+          <p className="adm-card-sub">Bu alan yalnızca admin panelinde görünür, müşterilere gösterilmez.</p>
+          <div className="form-group" style={{ marginBottom: 0 }}>
+            <label className="form-label" htmlFor="pf-code">Ürün Kodu</label>
+            <input
+              id="pf-code"
+              className="form-input"
+              value={productCode}
+              onChange={(e) => setProductCode(e.target.value)}
+              placeholder="KB-001"
+              style={{ fontFamily: 'ui-monospace, Menlo, monospace', letterSpacing: '0.05em' }}
+            />
+            <div className="adm-field-hint">Örn: KB-001, SMK-02. Sipariş takibi ve stok yönetimi için.</div>
+          </div>
+        </div>
+
+        <div className="card adm-card-pad">
+          <h2 className="adm-card-title">SEO Etiketleri</h2>
+          <p className="adm-card-sub">Müşterilere gösterilmez, yalnızca arama motorları için JSON-LD&apos;ye gömülür.</p>
+          <div className="tags-wrap">
+            {seoTags.map((t) => (
+              <span key={t} className="tag-chip">
+                {t}
+                <button type="button" onClick={() => setSeoTags((prev) => prev.filter((x) => x !== t))} aria-label={`${t} etiketini kaldır`}>×</button>
+              </span>
+            ))}
+            <input
+              className="tags-input"
+              placeholder="SEO etiketi ekle..."
+              aria-label="SEO etiketi ekle"
+              value={seoTagInput}
+              onChange={(e) => setSeoTagInput(e.target.value)}
+              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ',') { e.preventDefault(); addSeoTag(); } }}
+              onBlur={addSeoTag}
+            />
+          </div>
+          <div className="adm-field-hint" style={{ marginTop: 8 }}>Örn: kişiye özel kupa, sihirli kupa baskı, hediye kupa</div>
+        </div>
+
+        <div className="card adm-card-pad adm-sticky">
+          {error && <div className="adm-alert" role="alert">{error}</div>}
+          <button type="submit" className="btn btn-primary btn-full btn-lg" disabled={busy}>
+            {saving ? 'Kaydediliyor...' : galleryBusy || colorBusy ? 'Görseller yükleniyor...' : submitLabel}
+          </button>
+          <Link href="/admin/products" className="btn btn-secondary btn-full" style={{ marginTop: 10 }}>
+            İptal
+          </Link>
+        </div>
+      </div>
+
+      {dialog}
+    </form>
   );
 }

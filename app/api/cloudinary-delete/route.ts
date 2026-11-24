@@ -1,29 +1,45 @@
 import { NextRequest, NextResponse } from 'next/server';
 import crypto from 'crypto';
-import { cookies } from 'next/headers';
+import { getAdminSession } from '@/lib/require-admin';
 
 const CLOUD_NAME = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME!;
 const API_KEY = process.env.CLOUDINARY_API_KEY!;
 const API_SECRET = process.env.CLOUDINARY_API_SECRET!;
+const ALLOWED_PREFIX = 'karta-baski/';
+const MAX_IDS = 50;
 
 export async function POST(req: NextRequest) {
-  // Sadece oturum açmış adminler silebilir
-  const session = cookies().get('__session');
-  if (!session?.value) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  // Sadece doğrulanmış adminler silebilir
+  if (!(await getAdminSession())) {
+    return NextResponse.json({ error: 'Yetkisiz' }, { status: 401 });
   }
 
   if (!CLOUD_NAME || !API_KEY || !API_SECRET) {
     return NextResponse.json({ error: 'Cloudinary yapılandırması eksik.' }, { status: 500 });
   }
 
-  const { publicIds } = await req.json();
+  let body: { publicIds?: unknown };
+  try {
+    body = await req.json();
+  } catch {
+    return NextResponse.json({ error: 'Geçersiz istek.' }, { status: 400 });
+  }
+  const { publicIds } = body;
   if (!Array.isArray(publicIds) || publicIds.length === 0) {
     return NextResponse.json({ ok: true });
   }
+  if (publicIds.length > MAX_IDS) {
+    return NextResponse.json({ error: `En fazla ${MAX_IDS} görsel silinebilir.` }, { status: 400 });
+  }
+  const valid = publicIds.every(
+    (id) => typeof id === 'string' && id.startsWith(ALLOWED_PREFIX) && !id.includes('..') && !/[&=\s]/.test(id)
+  );
+  if (!valid) {
+    return NextResponse.json({ error: 'Geçersiz görsel kimliği.' }, { status: 400 });
+  }
 
   await Promise.allSettled(
-    publicIds.map(async (publicId: string) => {
+    (publicIds as string[]).map(async (publicId) => {
       const timestamp = Math.round(Date.now() / 1000);
       const signature = crypto
         .createHash('sha256')

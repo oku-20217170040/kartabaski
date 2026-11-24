@@ -28,12 +28,14 @@ No cart or checkout — all sales happen via WhatsApp.
 - `app/page.tsx` (Server Component) calls `lib/products.ts` → Firestore, wrapped with `unstable_cache` (tags: `['products']`)
 - When a product is created/updated/deleted, `revalidateTag('products')` is called via Server Actions in `lib/actions.ts`
 - Product images are hosted on Cloudinary; use `cloudinaryUrl()` and `cloudinaryThumb()` helpers from `lib/products.ts`
-- WhatsApp order links are generated via `whatsappLink()` in `lib/products.ts`
+- Pure helpers (`cloudinaryUrl`, `cloudinaryThumb`, `formatPriceRange`, `whatsappLink`) live in `lib/format.ts` (re-exported from `lib/products.ts`); site URL in `lib/site.ts` (`SITE_URL`)
+- Sitemap uses `getProductsServer()` (Admin SDK) because Firestore rules deny public reads
 - Client-side filtering/sorting/pagination (12 items/page) is handled in `app/ProductsClient.tsx`
 
 ### Data Validation
 
 - All Firestore documents are validated at runtime using **Zod** schemas defined in `lib/schemas.ts`
+- Legacy category names (`Seramik Nescafe Fincanı`, `Nescafe Fincanı`) are mapped to the new ones; unknown categories fall back to `Özel Tasarım` with a `console.warn`
 - `ProductSchema` uses `.passthrough()` to allow alias fields and `.catch()/.default()` to tolerate missing/invalid values
 - `safeParse()` is used throughout — invalid documents are logged with `console.warn` and skipped
 - Never use `as any` to read product fields — use the typed helpers from `lib/product-utils.ts`
@@ -80,9 +82,12 @@ These rules must be deployed via Firebase Console (Firestore → Rules tab).
 
 ### Styling
 
-- Hybrid approach: **CSS custom properties** (defined in `app/globals.css`) + **Tailwind CSS** classes
-- Dark gold theme; use CSS vars like `--accent` (`#C9A84C` — gold), `--accent2` (`#ffffff`), `--surface` (`#111111`)
-- Tailwind color tokens map to these CSS vars
+- Storefront design system lives in `app/site.css` (plain CSS, loaded from `app/layout.tsx`): warm paper background (`--paper #F5F2EC`), ink text (`--ink #1B1A17`), single accent `--brand #1F4A36` (forest green). Reuse its classes (`.btn`, `.section`, `.page-head`, `.product-grid`, `.pdp-*`, …) instead of inline styles; never add hardcoded hex colours in components
+- Fonts via `next/font`: Newsreader (`--font-serif`, headings) + Instrument Sans (`--font-sans`, body)
+- Admin styles live in `app/admin/admin.css`, scoped under `.admin-layout` / `.adm-login`
+- Icons: inline SVG components in `components/icons.tsx` (storefront) and `components/admin/icons.tsx` — no emoji in UI
+- Product names are shown through `displayTitle()` (`lib/format.ts`), which strips the "— Kişiye Özel Baskı" suffix and fixes ALL-CAPS titles
+- Mobile is a hard requirement: no horizontal overflow at 360px, tap targets ≥ 44px, inputs 16px
 - Use `cn()` from `lib/utils.ts` for conditional class merging
 
 ### Product Data Fields
@@ -102,7 +107,7 @@ These rules must be deployed via Firebase Console (Firestore → Rules tab).
 | `deliveryDays` | number | Kargo süresi (iş günü, varsayılan: 3) |
 | `seoTags` | string[]? | Gizli SEO etiketleri |
 
-Valid categories: `Seramik Nescafe Fincanı`, `Lüks Kupa`, `Nescafe Fincanı`, `Latte Fincanı`, `Pro Kupa`, `Büyük Kupa`, `Sihirli Kupa`, `Özel Tasarım`, `Kurumsal`
+Valid categories (source of truth: `lib/schemas.ts`): `Seramik Kahve Fincanı`, `Lüks Kupa`, `Kahve Fincanı`, `Latte Fincanı`, `Pro Kupa`, `Büyük Kupa`, `Sihirli Kupa`, `Özel Tasarım`, `Kurumsal`
 
 ### Price Helpers
 
@@ -113,21 +118,21 @@ Valid categories: `Seramik Nescafe Fincanı`, `Lüks Kupa`, `Nescafe Fincanı`, 
 
 - `whatsappLink(productTitle?)` — ürüne özel veya genel sipariş mesajı linki oluşturur
 - `DEFAULT_WA_TEXT` ve `PHONE` constants `lib/constants.ts`'de tanımlı
-- Telefon: `905050874726`
+- Telefon: `905458266508`
 
 ### Constants
 
 Phone number and WhatsApp base URL live in `lib/constants.ts` (reads from `NEXT_PUBLIC_PHONE` env var).
-Never hardcode `905050874726` anywhere in the codebase.
+Never hardcode `905458266508` anywhere (outside `lib/constants.ts` fallback) in the codebase.
 
 ### Environment Variables
 
 Copy `.env.local.example` to `.env.local` and fill in:
 - `NEXT_PUBLIC_FIREBASE_*` — Firebase web SDK config
-- `NEXT_PUBLIC_PHONE` — Contact phone number (`905050874726`)
-- `NEXT_PUBLIC_PHONE_DISPLAY` — Human-readable display (`0505 087 47 26`)
+- `NEXT_PUBLIC_PHONE` — Contact phone number (`905458266508`)
+- `NEXT_PUBLIC_PHONE_DISPLAY` — Human-readable display (`0545 826 65 08`)
 - `NEXT_PUBLIC_SITE_NAME` — Site name (`KAR-TA BASKI`)
-- `NEXT_PUBLIC_SITE_URL` — Production URL (`https://kartabaski.com`)
+- `NEXT_PUBLIC_SITE_URL` — Production URL (`https://www.kartabaski.com`)
 - `NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME` — Cloudinary cloud name (`dwulzfmlu`)
 - `CLOUDINARY_API_KEY` — Cloudinary API key (server-side)
 - `CLOUDINARY_API_SECRET` — Cloudinary API secret (server-side)

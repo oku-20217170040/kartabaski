@@ -7,10 +7,12 @@ import { updateProductAction } from '@/lib/actions';
 import { Product } from '@/types';
 import ProductForm from '@/components/ProductForm';
 import Link from 'next/link';
+import { useToast } from '@/components/admin/Toast';
 
 export default function EditProductPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
+  const toast = useToast();
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -22,6 +24,7 @@ export default function EditProductPage() {
 
   const handleSubmit = async (data: Omit<Product, 'id' | 'createdAt' | 'updatedAt'>) => {
     await updateProductAction(id, data);
+    toast.success('Değişiklikler kaydedildi.');
     router.push('/admin/products');
   };
 
@@ -36,8 +39,8 @@ export default function EditProductPage() {
   if (!product) {
     return (
       <div className="empty-state">
-        <div className="empty-state-icon">❌</div>
         <div className="empty-state-title">Ürün bulunamadı</div>
+        <Link href="/admin/products" className="btn btn-secondary" style={{ marginTop: 12 }}>← Ürünler</Link>
       </div>
     );
   }
@@ -46,11 +49,9 @@ export default function EditProductPage() {
     <div>
       <div className="admin-header">
         <div>
-          <div style={{ marginBottom: 6 }}>
-            <Link href="/admin/products" style={{ color: 'var(--muted)', fontSize: 14 }}>← Ürünler</Link>
-          </div>
-          <h1 style={{ fontFamily: 'var(--font-display)', fontSize: '1.8rem' }}>Ürünü Düzenle</h1>
-          <p style={{ color: 'var(--muted)', fontSize: 13, marginTop: 4 }}>{product.title}</p>
+          <Link href="/admin/products" className="adm-back-link">← Ürünler</Link>
+          <h1 className="adm-page-title">Ürünü Düzenle</h1>
+          <p className="adm-page-sub">{product.title}</p>
         </div>
       </div>
       <ProductForm initial={product} onSubmit={handleSubmit} submitLabel="Değişiklikleri Kaydet" />

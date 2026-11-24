@@ -1,12 +1,26 @@
 import type { Metadata } from 'next';
-import './globals.css';
-import { AuthProvider } from '@/lib/auth-context';
+import { Newsreader, Instrument_Sans } from 'next/font/google';
+import './site.css';
 import WhatsAppFloat from '@/components/WhatsAppFloat';
 import ErrorBoundary from '@/components/ErrorBoundary';
-import { PHONE } from '@/lib/constants';
+import { PHONE, SITE_NAME } from '@/lib/constants';
+import { SITE_URL, INSTAGRAM_URL, jsonLdString } from '@/lib/site';
 
-const SITE_NAME = 'KAR-TA BASKI';
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://kartabaski.com';
+const serif = Newsreader({
+  subsets: ['latin', 'latin-ext'],
+  weight: ['400', '500'],
+  style: ['normal', 'italic'],
+  variable: '--font-serif',
+  display: 'swap',
+});
+const sans = Instrument_Sans({
+  subsets: ['latin', 'latin-ext'],
+  weight: ['400', '500', '600'],
+  variable: '--font-sans',
+  display: 'swap',
+});
+
+const OG_IMAGE = '/logo.png'; // public/logo.png
 const DESCRIPTION = 'Kişiye özel kupa baskı. Türkiye geneli hızlı kargo. Bireysel ve kurumsal siparişler. Ücretsiz tasarım desteği.';
 
 export const metadata: Metadata = {
@@ -38,11 +52,13 @@ export const metadata: Metadata = {
     siteName: SITE_NAME,
     title: `${SITE_NAME} – Kişiye Özel Kupa Baskı`,
     description: DESCRIPTION,
+    images: [{ url: OG_IMAGE, alt: SITE_NAME }],
   },
   twitter: {
     card: 'summary_large_image',
     title: `${SITE_NAME} – Kişiye Özel Kupa Baskı`,
     description: DESCRIPTION,
+    images: [OG_IMAGE],
   },
 };
 
@@ -52,6 +68,9 @@ const localBusinessSchema = {
   name: SITE_NAME,
   description: DESCRIPTION,
   url: SITE_URL,
+  logo: `${SITE_URL}/logo.png`,
+  image: `${SITE_URL}/logo.png`,
+  sameAs: [INSTAGRAM_URL],
   telephone: `+${PHONE}`,
   priceRange: '₺₺',
   currenciesAccepted: 'TRY',
@@ -65,63 +84,24 @@ const localBusinessSchema = {
       { '@type': 'Offer', itemOffered: { '@type': 'Product', name: 'Sihirli Mat Kupa' } },
       { '@type': 'Offer', itemOffered: { '@type': 'Product', name: 'Sihirli Konik Kupa' } },
       { '@type': 'Offer', itemOffered: { '@type': 'Product', name: 'Seramik Kahve Fincanı' } },
-      { '@type': 'Offer', itemOffered: { '@type': 'Product', name: 'Sihirli Renkli Kupa' } },
       { '@type': 'Offer', itemOffered: { '@type': 'Product', name: 'Özel Tasarım' } },
     ],
   },
 };
 
-const faqSchema = {
-  '@context': 'https://schema.org',
-  '@type': 'FAQPage',
-  mainEntity: [
-    {
-      '@type': 'Question',
-      name: 'Kupa baskı siparişi nasıl verilir?',
-      acceptedAnswer: {
-        '@type': 'Answer',
-        text: 'Katalogumuzdan istediğiniz kupa modelini seçin, ardından WhatsApp üzerinden bize ulaşın. Tasarımınızı gönderin veya ücretsiz tasarım desteğimizden yararlanın.',
-      },
-    },
-    {
-      '@type': 'Question',
-      name: 'Kupa baskı kaç günde teslim edilir?',
-      acceptedAnswer: {
-        '@type': 'Answer',
-        text: 'Siparişiniz onaylandıktan sonra 3 iş günü içinde kargoya verilir. Türkiye\'nin her yerine kargo hizmeti sunmaktayız.',
-      },
-    },
-    {
-      '@type': 'Question',
-      name: 'Tasarımım yoksa ne yapmalıyım?',
-      acceptedAnswer: {
-        '@type': 'Answer',
-        text: 'Endişelenmeyin! Ücretsiz tasarım desteği sunuyoruz. İsteğinizi WhatsApp üzerinden bize iletin, biz tasarlayalım.',
-      },
-    },
-    {
-      '@type': 'Question',
-      name: 'Kurumsal sipariş verebilir miyim?',
-      acceptedAnswer: {
-        '@type': 'Answer',
-        text: 'Evet, bireysel ve kurumsal siparişler alıyoruz. Toplu sipariş için özel fiyatlandırma için WhatsApp üzerinden iletişime geçin.',
-      },
-    },
-  ],
-};
-
 const GA_ID = process.env.NEXT_PUBLIC_GA_ID || '';
+const META_PIXEL_ID = process.env.NEXT_PUBLIC_META_PIXEL_ID || '4415269272076470';
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="tr" suppressHydrationWarning>
+    <html lang="tr" className={`${serif.variable} ${sans.variable}`} suppressHydrationWarning>
       <body suppressHydrationWarning>
-        <AuthProvider>
+        <a href="#icerik" className="skip-link">İçeriğe geç</a>
           <ErrorBoundary>
             {children}
           </ErrorBoundary>
           <WhatsAppFloat />
-        </AuthProvider>
+        {/* ── ANALYTICS (GA + Meta Pixel): ileride çerez onayına bağlanacak — tek blok ── */}
         {GA_ID && (
           <>
             <script async src={`https://www.googletagmanager.com/gtag/js?id=${GA_ID}`} />
@@ -142,17 +122,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           t.src=v;s=b.getElementsByTagName(e)[0];
           s.parentNode.insertBefore(t,s)}(window, document,'script',
           'https://connect.facebook.net/en_US/fbevents.js');
-          fbq('init', '4415269272076470');
+          fbq('init', '${META_PIXEL_ID}');
           fbq('track', 'PageView');
         `}} />
-        <noscript dangerouslySetInnerHTML={{ __html: `<img height="1" width="1" style="display:none" src="https://www.facebook.com/tr?id=4415269272076470&ev=PageView&noscript=1" />` }} />
+        <noscript dangerouslySetInnerHTML={{ __html: `<img height="1" width="1" style="display:none" src="https://www.facebook.com/tr?id=${META_PIXEL_ID}&ev=PageView&noscript=1" />` }} />
+        {/* ── /ANALYTICS ── */}
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(localBusinessSchema) }}
-        />
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
+          dangerouslySetInnerHTML={{ __html: jsonLdString(localBusinessSchema) }}
         />
       </body>
     </html>

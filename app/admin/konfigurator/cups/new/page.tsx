@@ -2,11 +2,13 @@
 
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { useToast } from '@/components/admin/Toast';
 import ConfiguratorItemForm, { ConfiguratorItemFormData } from '@/components/ConfiguratorItemForm';
 import { createCupAction } from '@/lib/actions';
 
 export default function NewCupPage() {
   const router = useRouter();
+  const toast = useToast();
 
   const handleSubmit = async (data: ConfiguratorItemFormData) => {
     await createCupAction({
@@ -18,6 +20,7 @@ export default function NewCupPage() {
       active:        data.active,
       order:         data.order,
     });
+    toast.success('Bardak eklendi.');
     router.push('/admin/konfigurator');
   };
 
@@ -26,9 +29,9 @@ export default function NewCupPage() {
       <div className="admin-header">
         <div>
           <div style={{ marginBottom: 6 }}>
-            <Link href="/admin/konfigurator" style={{ color: 'var(--muted)', fontSize: 14 }}>← Konfiguratör</Link>
+            <Link href="/admin/konfigurator" className="adm-back-link">← Konfiguratör</Link>
           </div>
-          <h1 style={{ fontFamily: 'var(--font-display)', fontSize: '1.8rem' }}>Yeni Bardak Ekle</h1>
+          <h1 className="adm-page-title">Yeni Bardak Ekle</h1>
         </div>
       </div>
       <ConfiguratorItemForm

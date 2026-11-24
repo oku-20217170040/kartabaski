@@ -1,6 +1,7 @@
-'server-only';
+import 'server-only';
 
 import { adminDb } from './firebase-admin';
+import { deleteCloudinaryImages } from './products-admin';
 import { ConfiguratorCup, ConfiguratorDesign } from '@/types';
 
 const CUPS_COL    = 'configurator_cups';
@@ -27,7 +28,14 @@ export async function updateCup(id: string, data: Partial<ConfiguratorCup>): Pro
 }
 
 export async function deleteCup(id: string): Promise<void> {
-  await adminDb.collection(CUPS_COL).doc(id).delete();
+  const ref = adminDb.collection(CUPS_COL).doc(id);
+  const data = (await ref.get()).data() as Partial<ConfiguratorCup> | undefined;
+  await ref.delete();
+  const ids = [
+    data?.imagePublicId,
+    ...(data?.colors ?? []).flatMap((c) => c.images ?? []),
+  ].filter((x): x is string => !!x);
+  await deleteCloudinaryImages(ids);
 }
 
 // ── Tasarım CRUD ──────────────────────────────────────────────────────────────
@@ -51,5 +59,8 @@ export async function updateDesign(id: string, data: Partial<ConfiguratorDesign>
 }
 
 export async function deleteDesign(id: string): Promise<void> {
-  await adminDb.collection(DESIGNS_COL).doc(id).delete();
+  const ref = adminDb.collection(DESIGNS_COL).doc(id);
+  const data = (await ref.get()).data() as Partial<ConfiguratorDesign> | undefined;
+  await ref.delete();
+  await deleteCloudinaryImages(data?.imagePublicId ? [data.imagePublicId] : []);
 }

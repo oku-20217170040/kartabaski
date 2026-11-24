@@ -60,11 +60,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!auth) throw new Error('Firebase yapılandırılmamış.');
     const cred = await signInWithEmailAndPassword(auth, email, password);
     const idToken = await cred.user.getIdToken();
-    await fetch('/api/auth/session', {
+    const res = await fetch('/api/auth/session', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ idToken }),
     });
+    if (!res.ok) {
+      // Sunucu oturumu açılamadı (örn. admin değil): istemci oturumunu da kapat
+      await signOut(auth);
+      const data = await res.json().catch(() => ({}));
+      const err = new Error(data?.error || 'Giriş başarısız.') as Error & { status?: number };
+      err.status = res.status;
+      throw err;
+    }
   };
 
   const logout = async () => {

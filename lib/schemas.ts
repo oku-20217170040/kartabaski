@@ -2,7 +2,7 @@ import { z } from 'zod';
 
 // ── Kategori ─────────────────────────────────────────────────────────────────
 
-export const CategorySchema = z.enum([
+const CategoryEnum = z.enum([
   'Seramik Kahve Fincanı',
   'Lüks Kupa',
   'Kahve Fincanı',
@@ -13,6 +13,20 @@ export const CategorySchema = z.enum([
   'Özel Tasarım',
   'Kurumsal',
 ]);
+
+// Eski (yeniden adlandırılmış) kategori adları → güncel karşılıkları
+const LEGACY_CATEGORIES: Record<string, z.infer<typeof CategoryEnum>> = {
+  'Seramik Nescafe Fincanı': 'Seramik Kahve Fincanı',
+  'Nescafe Fincanı': 'Kahve Fincanı',
+};
+
+export const CategorySchema = z.preprocess((v) => {
+  if (typeof v !== 'string') return 'Özel Tasarım';
+  if (CategoryEnum.safeParse(v).success) return v;
+  if (LEGACY_CATEGORIES[v]) return LEGACY_CATEGORIES[v];
+  console.warn(`[schemas] Bilinmeyen kategori: "${v}" — 'Özel Tasarım' olarak ele alındı`);
+  return 'Özel Tasarım';
+}, CategoryEnum);
 
 // ── Ürün ─────────────────────────────────────────────────────────────────────
 //
@@ -25,7 +39,7 @@ export const ProductSchema = z.object({
   slug:         z.string().optional().default(''),
   priceMin:     z.number().default(0),
   priceMax:     z.number().default(0),
-  category:     CategorySchema.catch('Özel Tasarım'),
+  category:     CategorySchema,
   active:       z.boolean().default(true),
   featured:     z.boolean().optional(),
   shortDesc:    z.string().default(''),

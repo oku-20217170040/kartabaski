@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
+import { useToast } from '@/components/admin/Toast';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { updateCupAction } from '@/lib/actions';
@@ -11,6 +12,7 @@ import ConfiguratorItemForm, { ConfiguratorItemFormData } from '@/components/Con
 
 export default function EditCupPage() {
   const router = useRouter();
+  const toast = useToast();
   const params = useParams();
   const id = params.id as string;
 
@@ -34,6 +36,7 @@ export default function EditCupPage() {
       active:        data.active,
       order:         data.order,
     });
+    toast.success('Bardak güncellendi.');
     router.push('/admin/konfigurator');
   };
 
@@ -53,9 +56,9 @@ export default function EditCupPage() {
       <div className="admin-header">
         <div>
           <div style={{ marginBottom: 6 }}>
-            <Link href="/admin/konfigurator" style={{ color: 'var(--muted)', fontSize: 14 }}>← Konfiguratör</Link>
+            <Link href="/admin/konfigurator" className="adm-back-link">← Konfiguratör</Link>
           </div>
-          <h1 style={{ fontFamily: 'var(--font-display)', fontSize: '1.8rem' }}>Bardağı Düzenle — {cup.name}</h1>
+          <h1 className="adm-page-title">Bardağı Düzenle — {cup.name}</h1>
         </div>
       </div>
       <ConfiguratorItemForm
