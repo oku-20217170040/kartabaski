@@ -1,30 +1,58 @@
 import { NextRequest, NextResponse } from 'next/server';
 import crypto from 'crypto';
+import { getAdminSession } from '@/lib/require-admin';
 
 const CLOUD_NAME = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME!;
 const API_KEY = process.env.CLOUDINARY_API_KEY!;
 const API_SECRET = process.env.CLOUDINARY_API_SECRET!;
 const FOLDER = 'karta-baski/urunler';
+const MAX_BYTES = 10 * 1024 * 1024;
+
+const ascii = (b: Uint8Array, start: number, s: string) =>
+  b.length >= start + s.length && s.split('').every((c, i) => b[start + i] === c.charCodeAt(0));
+
+function isAllowedImage(b: Uint8Array): boolean {
+  if (b.length < 12) return false;
+  if (b[0] === 0xff && b[1] === 0xd8 && b[2] === 0xff) return true; // jpeg
+  if (b[0] === 0x89 && ascii(b, 1, 'PNG\r\n') && b[6] === 0x1a && b[7] === 0x0a) return true; // png
+  if (ascii(b, 0, 'GIF87a') || ascii(b, 0, 'GIF89a')) return true; // gif
+  if (ascii(b, 0, 'RIFF') && ascii(b, 8, 'WEBP')) return true; // webp
+  if (ascii(b, 4, 'ftyp')) {
+    const brand = String.fromCharCode(b[8], b[9], b[10], b[11]);
+    return ['avif', 'avis', 'heic', 'heix', 'hevc', 'hevx', 'heim', 'heis', 'mif1', 'msf1'].includes(brand);
+  }
+  return false;
+}
 
 export async function POST(req: NextRequest) {
   if (!CLOUD_NAME || !API_KEY || !API_SECRET) {
     return NextResponse.json({ error: 'Cloudinary yapılandırması eksik.' }, { status: 500 });
   }
 
-  const formData = await req.formData();
-  const file = formData.get('file') as File | null;
+  if (!(await getAdminSession())) {
+    return NextResponse.json({ error: 'Yetkisiz' }, { status: 401 });
+  }
 
-  if (!file) {
+  // Gövde boyutu: formData okunmadan önce reddet (multipart ek yükü için küçük pay)
+  const contentLength = Number(req.headers.get('content-length') || 0);
+  if (!contentLength || contentLength > MAX_BYTES + 64 * 1024) {
+    return NextResponse.json({ error: 'Dosya 10 MB\'dan büyük olamaz.' }, { status: 413 });
+  }
+
+  const formData = await req.formData();
+  const file = formData.get('file');
+
+  if (!file || typeof file === 'string') {
     return NextResponse.json({ error: 'Dosya bulunamadı.' }, { status: 400 });
   }
 
-  // Dosya boyutu kontrolü: max 10 MB
-  if (file.size > 10 * 1024 * 1024) {
-    return NextResponse.json({ error: 'Dosya 10 MB\'dan büyük olamaz.' }, { status: 400 });
+  if (file.size > MAX_BYTES) {
+    return NextResponse.json({ error: 'Dosya 10 MB\'dan büyük olamaz.' }, { status: 413 });
   }
 
-  // Dosya türü kontrolü
-  if (!file.type.startsWith('image/')) {
+  // Gerçek içerik kontrolü (magic bytes) — client'ın file.type değerine güvenilmez
+  const head = new Uint8Array(await file.slice(0, 32).arrayBuffer());
+  if (!isAllowedImage(head)) {
     return NextResponse.json({ error: 'Sadece görsel dosyaları yüklenebilir.' }, { status: 400 });
   }
 

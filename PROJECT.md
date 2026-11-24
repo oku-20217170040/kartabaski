@@ -305,7 +305,7 @@ AuthProvider → useAuth() → isAdmin kontrolü
 `app/admin/[yeni-sayfa]/page.tsx` → `useAuth()` ile isAdmin kontrolü yap, admin layout (`app/admin/layout.tsx`) otomatik uygulanır.
 
 ### WhatsApp Numarasını Değiştirmek
-`lib/constants.ts` → `PHONE` env var'dan okunur. Sadece `.env.local` ve Vercel env var'ını güncelle.
+`lib/constants.ts` → `PHONE` env var'dan okunur. Sadece `.env.local` ve sunucu env'ini güncelle.
 
 ---
 
@@ -330,13 +330,11 @@ Server Actions (`lib/actions.ts`) her CRUD işleminden sonra `revalidateTag('pro
 
 ## 14. Deployment
 
-### Vercel (Birincil)
-```
-GitHub push → Vercel otomatik deploy
-   │
-   ├── main branch push → production deploy
-   └── .env.local değişkenleri → Vercel dashboard'a elle girilmeli
-```
+### Oracle Cloud + Docker (Birincil, Kas 2026'dan beri)
+Ayrıntılar: `docs/YAYIN.md`. `.env` değişkenleri sunucuda ayarlanır.
+
+### Vercel (Eski)
+Hobby plan 11 Kas 2026'da durduruldu; artık kullanılmıyor.
 
 ### Railway (Alternatif)
 `railway.toml` dosyasında yapılandırma var. Nixpacks builder kullanır.
@@ -347,7 +345,7 @@ GitHub push → Vercel otomatik deploy
 - Firestore: `products` ve `users` koleksiyonları
 - Kurallar: Firebase Console → Firestore → Rules sekmesinden güncellenir
 
-### Environment variables (Vercel'de):
+### Environment variables (sunucuda):
 - `NEXT_PUBLIC_*` prefix'liler → browser'da da erişilebilir (Firebase web config, Cloudinary)
 - `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET` → sadece server-side
 
@@ -359,11 +357,11 @@ GitHub push → Vercel otomatik deploy
 |---|---|
 | İşletme Adı | KAR-TA BASKI |
 | Slogan | Hayal Et, Biz Basalım |
-| Telefon | 0505 087 47 26 → `+905050874726` |
-| Site URL | `https://kartabaski.com` |
+| Telefon | 0545 826 65 08 → `+905458266508` |
+| Site URL | `https://www.kartabaski.com` |
 | Cloudinary cloud | `dwulzfmlu` |
 | Firebase project | `kartabaski-fcf0e` |
 | GitHub repo | `oku-20217170040/kartabaski` |
-| Vercel | `kartabaski.vercel.app` |
+| Vercel | (eski) `kartabaski.vercel.app` |
 
-Telefon numarası `lib/constants.ts`'den env var ile yönetilir. Sadece `.env.local`'ı ve Vercel env var'ını güncelle.
+Telefon numarası `lib/constants.ts`'den env var ile yönetilir. Sadece `.env.local`'ı ve sunucu env'ini güncelle.

@@ -4,3 +4,7 @@ node_modules/
 *.json.key
 *firebase-adminsdk*.json
 *service-account*.json
+.env
+.env*.local
+!.env.local.example
+tsconfig.tsbuildinfo

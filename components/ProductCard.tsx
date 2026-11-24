@@ -1,105 +1,86 @@
-'use client';
-
 import Link from 'next/link';
-import { motion } from 'framer-motion';
-import { Product } from '@/types';
-import { useState, useRef, useEffect } from 'react';
+import Image from 'next/image';
+import type { Product } from '@/types';
 import {
-  getTitle, getPriceMin, getPriceMax, getCategory,
-  getSlug, getImageSrc, getFeatured,
+  getTitle, getPriceMin, getPriceMax, getCategory, getSlug, getFeatured,
 } from '@/lib/product-utils';
-import { formatPriceRange, cloudinaryUrl } from '@/lib/products';
+import { formatPriceRange, cloudinaryUrl, displayTitle, colorSwatch } from '@/lib/format';
 
-interface Props { product: Product }
+interface Props {
+  product: Product;
+  /** Above-the-fold cards load eagerly. */
+  priority?: boolean;
+}
 
-export default function ProductCard({ product }: Props) {
-  const [imgError, setImgError]     = useState(false);
-  const [imgLoaded, setImgLoaded]   = useState(false);
-  const [hoverColor, setHoverColor] = useState<number | null>(null);
-  const imgRef = useRef<HTMLImageElement>(null);
+const CARD_TRANSFORM = 'f_auto,q_auto,w_640,h_800,c_fill';
+const MAX_SWATCHES = 6;
 
-  useEffect(() => {
-    if (imgRef.current?.complete && imgRef.current.naturalWidth > 0) {
-      setImgLoaded(true);
-    }
-  }, []);
+function imageSrc(id: string) {
+  return id.startsWith('http') ? id : cloudinaryUrl(id, CARD_TRANSFORM);
+}
 
-  const title      = getTitle(product);
-  const priceMin   = getPriceMin(product);
-  const priceMax   = getPriceMax(product);
-  const category   = getCategory(product);
-  const featured   = getFeatured(product);
-  const slug       = getSlug(product);
-  const priceLabel = formatPriceRange(priceMin, priceMax);
-  const colors     = product.colors?.filter(c => c.images[0]) ?? [];
+export default function ProductCard({ product, priority = false }: Props) {
+  const title = displayTitle(getTitle(product));
+  const priceMin = getPriceMin(product);
+  const priceMax = getPriceMax(product);
+  const ranged = priceMax > priceMin && priceMin > 0;
+  const images = product.images ?? [];
+  const primary = images[0] ?? product.colors?.find((c) => c.images[0])?.images[0];
+  const alternate = images[1];
 
-  const baseImgSrc = imgError ? null : getImageSrc(product);
-  const activeImgSrc = hoverColor !== null && colors[hoverColor]
-    ? cloudinaryUrl(colors[hoverColor].images[0], 'f_auto,q_auto,w_600,h_600,c_fill')
-    : baseImgSrc;
+  const swatches = (product.colors ?? [])
+    .map((c) => ({ name: c.name, value: colorSwatch(c.name) }))
+    .filter((c): c is { name: string; value: string } => Boolean(c.value));
 
   return (
-    <Link
-      href={`/urun/${slug}`}
-      className="tcard"
-      onMouseLeave={() => setHoverColor(null)}
-    >
-      <div className="tcard-img-wrap">
-        {activeImgSrc ? (
+    <Link href={`/urun/${getSlug(product)}`} className="product-card">
+      <div className="product-card-media">
+        {primary ? (
           <>
-            {!imgLoaded && <div className="tcard-skeleton" />}
-            <motion.img
-              ref={imgRef}
-              key={hoverColor ?? 'base'}
-              src={activeImgSrc}
+            <Image
+              src={imageSrc(primary)}
               alt={title}
-              loading="eager"
-              onLoad={() => setImgLoaded(true)}
-              onError={() => setImgError(true)}
-              className="tcard-img"
-              style={{ opacity: imgLoaded ? 1 : 0, transition: 'opacity 0.3s ease', animation: hoverColor !== null ? 'galleryFadeIn 0.25s ease' : undefined }}
-              whileHover={{ scale: 1.06 }}
-              transition={{ duration: 0.4, ease: 'easeOut' }}
+              fill
+              sizes="(max-width: 960px) 50vw, (max-width: 1080px) 33vw, 25vw"
+              priority={priority}
             />
+            {alternate && (
+              <Image
+                src={imageSrc(alternate)}
+                alt=""
+                fill
+                className="is-alt"
+                sizes="(max-width: 960px) 50vw, (max-width: 1080px) 33vw, 25vw"
+              />
+            )}
           </>
         ) : (
-          <div className="tcard-no-img">☕</div>
+          <span className="product-card-noimg">Görsel hazırlanıyor</span>
         )}
-
-        {featured && (
-          <span className="tcard-badge">⭐ Öne Çıkan</span>
-        )}
-
-        {/* Renk varyant thumbnail'leri — her zaman görünür */}
-        {colors.length > 0 && (
-          <div className="tcard-colors">
-            {colors.map((c, i) => {
-              const thumb = cloudinaryUrl(c.images[0], 'f_auto,q_auto,w_80,h_80,c_fill');
-              return (
-                <button
-                  key={i}
-                  className={`tcard-color-btn${hoverColor === i ? ' tcard-color-btn--active' : ''}`}
-                  onMouseEnter={e => { e.preventDefault(); setHoverColor(i); }}
-                  onTouchStart={e => { e.preventDefault(); setHoverColor(i); }}
-                  onTouchEnd={e => { e.preventDefault(); setHoverColor(null); }}
-                  onClick={e => e.preventDefault()}
-                  title={c.name}
-                  tabIndex={-1}
-                >
-                  <img src={thumb} alt={c.name} />
-                  <span>{c.name}</span>
-                </button>
-              );
-            })}
-          </div>
-        )}
+        {getFeatured(product) && <span className="product-card-badge">Öne çıkan</span>}
       </div>
 
-      <div className="tcard-body">
-        <p className="tcard-cat">{category}</p>
-        <h3 className="tcard-title">{title}</h3>
-        <p className="tcard-price">{priceLabel}</p>
+      <div className="product-card-body">
+        <div>
+          <h3 className="product-card-title">{title}</h3>
+          <p className="product-card-cat">{getCategory(product)}</p>
+        </div>
+        <p className="product-card-price">
+          {ranged && <small>başlayan</small>}
+          {ranged ? formatPriceRange(priceMin, 0) : formatPriceRange(priceMin, priceMax)}
+        </p>
       </div>
+
+      {swatches.length > 0 && (
+        <div className="swatches" aria-label={`${swatches.length} renk seçeneği`}>
+          {swatches.slice(0, MAX_SWATCHES).map((s) => (
+            <span key={s.name} className="swatch" style={{ background: s.value }} title={s.name} />
+          ))}
+          {swatches.length > MAX_SWATCHES && (
+            <span className="swatches-more">+{swatches.length - MAX_SWATCHES}</span>
+          )}
+        </div>
+      )}
     </Link>
   );
 }

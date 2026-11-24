@@ -1,189 +1,117 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import { unstable_cache } from 'next/cache';
+import { getProductsServer } from '@/lib/products-server';
+import { getActive, getSlug } from '@/lib/product-utils';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
-import Testimonials from '@/components/Testimonials';
+import ProductCard from '@/components/ProductCard';
+import { WhatsAppIcon } from '@/components/icons';
 import { WHATSAPP_BASE } from '@/lib/constants';
 
 export const metadata: Metadata = {
-  title: 'Kurumsal Kupa Baski | Toplu Siparis & Ozel Fiyat',
-  description:
-    'Kurumsal kupa baski hizmeti. 10+ adet ozel fiyat, ucretsiz tasarim, logo baski, 3 is gunu teslimat. Promosyon, personel hediyesi, etkinlik icin ideal.',
-  keywords: [
-    'kurumsal kupa baski',
-    'toplu kupa siparis',
-    'promosyon kupa',
-    'logo baski kupa',
-    'kurumsal hediye',
-    'personel hediyesi kupa',
-    'toplu siparis kupa fiyat',
-  ],
+  title: 'Kurumsal Kupa Baskı',
+  description: 'Firmanız ve etkinlikleriniz için logolu kupa. 45 adet ve üzerinde adet başı indirimli fiyat, baskı öncesi önizleme, Türkiye geneline toplu gönderim.',
+  alternates: { canonical: '/kurumsal' },
 };
 
-const PRICING_TIERS = [
-  { range: '1 adet', price: '200 - 350', note: 'Bireysel fiyat', highlight: false },
-  { range: '10 - 49 adet', price: '110 - 170', note: 'Adet basi', highlight: false },
-  { range: '50+ adet', price: '85 - 160', note: 'Adet basi', highlight: true },
-];
+const getProducts = unstable_cache(() => getProductsServer(), ['products'], {
+  tags: ['products'],
+  revalidate: 3600,
+});
+
+const QUOTE_TEXT = 'Merhaba, kurumsal kupa siparişi için teklif almak istiyorum. Firma: … Adet: … Ürün: …';
+const QUOTE_HREF = `${WHATSAPP_BASE}?text=${encodeURIComponent(QUOTE_TEXT)}`;
 
 const BENEFITS = [
-  { icon: '🎨', title: 'Ucretsiz Tasarim', desc: 'Logonuzu veya ozel tasariminizi ucretsiz hazirliyoruz. Onay sizde.' },
-  { icon: '📦', title: '3 Is Gunu Teslimat', desc: 'Onayli siparisler 3 is gunu icinde kargoya verilir.' },
-  { icon: '💰', title: 'Toplu Siparis Indirimi', desc: '10+ adet siparislerde ozel kurumsal fiyatlandirma.' },
-  { icon: '✨', title: 'Yuksek Kalite Baski', desc: 'Solmayan, bulasik makinesine dayanikli profesyonel baski.' },
-  { icon: '🚚', title: 'Turkiye Geneli Kargo', desc: '81 ile guvenli ve hizli kargo. Toplu siparislerde ozel paketleme.' },
-  { icon: '🤝', title: 'Ozel Muhatap', desc: 'Kurumsal siparisleriniz icin WhatsApp uzerinden bire bir iletisim.' },
+  { title: 'Adede göre fiyat', text: '45 adet ve üzeri siparişlerde adet başı fiyat düşer. Adedinizi yazın, size özel teklif hazırlayalım.' },
+  { title: 'Baskı öncesi önizleme', text: 'Logonuzun kupadaki yerleşimini dijital önizlemeyle gönderiyoruz. Onayınız olmadan baskı yapılmaz.' },
+  { title: 'Toplu gönderim', text: 'Onaydan sonra 3 iş günü içinde kargoya veriyoruz. Türkiye’nin her yerine gönderim yapıyoruz.' },
 ];
 
-const USE_CASES = [
-  { icon: '🏢', title: 'Personel Hediyesi', desc: 'Dogum gunu, yildonumu veya hosgeldin hediyesi olarak kisisellestirilmis kupalar.' },
-  { icon: '🎉', title: 'Etkinlik & Lansman', desc: 'Konferans, seminer veya lansmanlarinizda katilimcilara ozel hatira.' },
-  { icon: '📈', title: 'Promosyon & Tanitim', desc: 'Logolu kupalarla markanizi musterilerinizin masasina tasiyin.' },
-  { icon: '🎁', title: 'Ozel Gun Hediyeleri', desc: 'Yilbasi, Ogretmenler Gunu, Anneler Gunu icin toplu hediye cozumu.' },
+const QUOTE_STEPS = [
+  { title: 'Bize yazın', text: 'Firma adınızı, adedi ve istediğiniz ürünü WhatsApp’tan iletin.' },
+  { title: 'Logonuzu gönderin', text: 'Logonuzu JPG, PNG ya da PDF olarak gönderin. Hazır tasarım yoksa ücretsiz hazırlarız.' },
+  { title: 'Teklifi ve önizlemeyi onaylayın', text: 'Size fiyat teklifi ve dijital önizleme göndeririz. Onayınızdan sonra baskıya alırız.' },
 ];
 
-const WA_KURUMSAL = `${WHATSAPP_BASE}?text=${encodeURIComponent(
-  'Merhaba, kurumsal toplu kupa siparişi hakkında bilgi almak istiyorum.'
-)}`;
+export default async function KurumsalPage() {
+  const products = (await getProducts()).filter(getActive).slice(0, 4);
 
-const WA_SVG = (
-  <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
-  </svg>
-);
-
-export default function KurumsalPage() {
   return (
     <>
       <Navbar />
-      <main className="kurumsal-main">
-        <div className="container kurumsal-container">
-
-          {/* Breadcrumb */}
-          <div className="kurumsal-breadcrumb">
-            <Link href="/" style={{ color: 'var(--muted)' }}>Ana Sayfa</Link>
-            <span>&rsaquo;</span>
-            <span style={{ color: 'var(--text)' }}>Kurumsal</span>
-          </div>
-
-          {/* Hero */}
-          <section className="kurumsal-hero">
-            <div className="kurumsal-badge">Kurumsal Cozumler</div>
-            <h1 className="kurumsal-title">
-              Markanizi Her <span style={{ color: 'var(--accent)' }}>Masaya</span> Tasiyin
-            </h1>
-            <p className="kurumsal-subtitle">
-              Logolu kupalar, personel hediyeleri, etkinlik promosyonlari.
-              10+ adet siparislerde ozel fiyat ve ucretsiz tasarim destegi.
-            </p>
-            <div className="kurumsal-hero-btns">
-              <a href={WA_KURUMSAL} target="_blank" rel="noopener noreferrer" className="btn-whatsapp kurumsal-btn">
-                {WA_SVG} Kurumsal Teklif Al
-              </a>
-              <Link href="/" className="btn btn-secondary kurumsal-btn">
-                Urunlere Goz At
-              </Link>
-            </div>
-          </section>
-
-          {/* Fiyat Tablosu */}
-          <section className="kurumsal-section">
-            <h2 className="kurumsal-h2">Toplu Siparis Fiyatlari</h2>
-            <p className="kurumsal-section-desc">
-              Tum modeller icin gecerli genel fiyat araliklari. Kesin fiyat icin WhatsApp&apos;tan ulasin.
-            </p>
-            <div className="kurumsal-grid kurumsal-grid--pricing">
-              {PRICING_TIERS.map((tier) => (
-                <div key={tier.range} className={`kurumsal-price-card ${tier.highlight ? 'kurumsal-price-card--highlight' : ''}`}>
-                  {tier.highlight && <div className="kurumsal-price-ribbon">EN AVANTAJLI</div>}
-                  <div className="kurumsal-price-label">{tier.range}</div>
-                  <div className="kurumsal-price-value">
-                    {tier.price}<span className="kurumsal-price-unit"> TL</span>
-                  </div>
-                  <div className="kurumsal-price-note">{tier.note}</div>
-                </div>
-              ))}
-            </div>
-            <p className="kurumsal-disclaimer">
-              * Fiyatlar urune ve miktara gore degisiklik gosterebilir. KDV dahildir.
-            </p>
-          </section>
-
-          {/* Avantajlar */}
-          <section className="kurumsal-section">
-            <h2 className="kurumsal-h2">Neden KAR-TA BASKI?</h2>
-            <div className="kurumsal-grid kurumsal-grid--benefits">
-              {BENEFITS.map((b) => (
-                <div key={b.title} className="kurumsal-card">
-                  <div className="kurumsal-card-icon">{b.icon}</div>
-                  <div className="kurumsal-card-title">{b.title}</div>
-                  <div className="kurumsal-card-desc">{b.desc}</div>
-                </div>
-              ))}
-            </div>
-          </section>
-
-          {/* Kullanim Alanlari */}
-          <section className="kurumsal-section">
-            <h2 className="kurumsal-h2">Kimler Icin?</h2>
-            <div className="kurumsal-grid kurumsal-grid--usecases">
-              {USE_CASES.map((uc) => (
-                <div key={uc.title} className="kurumsal-card kurumsal-card--center">
-                  <div className="kurumsal-card-icon kurumsal-card-icon--lg">{uc.icon}</div>
-                  <div className="kurumsal-card-title" style={{ fontSize: 15 }}>{uc.title}</div>
-                  <div className="kurumsal-card-desc">{uc.desc}</div>
-                </div>
-              ))}
-            </div>
-          </section>
-
-          {/* Referanslar */}
-          <section className="kurumsal-section">
-            <h2 className="kurumsal-h2">Musterilerimiz Ne Diyor?</h2>
-            <p className="kurumsal-section-desc">
-              500+ mutlu siparisin arkasindan gelen gercek geri bildirimler.
-            </p>
-            <Testimonials />
-          </section>
-
-          {/* Siparis Sureci */}
-          <section className="kurumsal-section">
-            <h2 className="kurumsal-h2">Kurumsal Siparis Nasil Verilir?</h2>
-            <div className="kurumsal-grid kurumsal-grid--steps">
-              {[
-                { step: '1', icon: '📞', title: 'Bize Ulasin', desc: 'WhatsApp veya e-posta ile ihtiyacinizi bildirin.' },
-                { step: '2', icon: '🎨', title: 'Tasarim Onayi', desc: 'Logonuz veya tasariminiz ile mockup hazirliyoruz.' },
-                { step: '3', icon: '✅', title: 'Siparis Onayi', desc: 'Tasarimi onaylayin, odeme bilgilerini iletin.' },
-                { step: '4', icon: '📦', title: 'Uretim & Kargo', desc: '3 is gunu icinde uretilip kargoya verilir.' },
-              ].map((s) => (
-                <div key={s.step} className="kurumsal-card kurumsal-card--center kurumsal-step-card">
-                  <div className="kurumsal-step-number">{s.step}</div>
-                  <div className="kurumsal-card-icon kurumsal-card-icon--lg" style={{ marginTop: 8 }}>{s.icon}</div>
-                  <div className="kurumsal-card-title">{s.title}</div>
-                  <div className="kurumsal-card-desc">{s.desc}</div>
-                </div>
-              ))}
-            </div>
-          </section>
-
-          {/* CTA */}
-          <section className="kurumsal-cta">
-            <h2 className="kurumsal-cta-title">Kurumsal Teklifinizi Hemen Alin</h2>
-            <p className="kurumsal-cta-desc">
-              Miktar, model ve tasarim detaylarinizi WhatsApp uzerinden iletin.
-              Size ozel fiyat teklifi hazirlayalim.
-            </p>
-            <div className="kurumsal-cta-btns">
-              <a href={WA_KURUMSAL} target="_blank" rel="noopener noreferrer" className="kurumsal-cta-btn-primary">
-                {WA_SVG} WhatsApp ile Teklif Al
-              </a>
-              <a href="mailto:info@kartabaski.com" className="kurumsal-cta-btn-secondary">
-                E-posta Gonder
+      <main id="icerik">
+        <div className="wrap">
+          <header className="page-head">
+            <nav aria-label="Sayfa yolu">
+              <ol className="breadcrumb">
+                <li><Link href="/">Ana sayfa</Link></li>
+                <li aria-current="page">Kurumsal</li>
+              </ol>
+            </nav>
+            <h1 className="display">Firmanız için <em>logolu</em> kupa.</h1>
+            <p className="lead">Ekibiniz, müşterileriniz ve etkinlikleriniz için logolu kupa. Adede göre fiyat, önizleme ve toplu gönderim bir arada.</p>
+            <div className="hero-ctas">
+              <a className="btn btn-primary" href={QUOTE_HREF} target="_blank" rel="noopener noreferrer">
+                <WhatsAppIcon size={18} /> Teklif isteyin
               </a>
             </div>
-          </section>
-
+          </header>
         </div>
+
+        <section className="section" aria-labelledby="avantaj-baslik">
+          <div className="wrap">
+            <h2 id="avantaj-baslik" className="sr-only">Kurumsal siparişte neler var?</h2>
+            <div className="cols-3">
+              {BENEFITS.map((b, i) => (
+                <div key={b.title}>
+                  <span className="eyebrow">{String(i + 1).padStart(2, '0')}</span>
+                  <h3>{b.title}</h3>
+                  <p>{b.text}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section className="section-tight" aria-labelledby="teklif-baslik">
+          <div className="wrap">
+            <div className="section-head">
+              <h2 id="teklif-baslik" className="h2">Nasıl teklif alırsınız?</h2>
+            </div>
+            <div className="cols-3">
+              {QUOTE_STEPS.map((s, i) => (
+                <div key={s.title}>
+                  <span className="eyebrow">{String(i + 1).padStart(2, '0')}</span>
+                  <h3>{s.title}</h3>
+                  <p>{s.text}</p>
+                </div>
+              ))}
+            </div>
+            <div className="hero-ctas">
+              <a className="btn btn-primary" href={QUOTE_HREF} target="_blank" rel="noopener noreferrer">
+                <WhatsAppIcon size={18} /> WhatsApp’tan teklif isteyin
+              </a>
+            </div>
+          </div>
+        </section>
+
+        {products.length > 0 && (
+          <section className="section" aria-labelledby="urun-baslik">
+            <div className="wrap">
+              <div className="section-head">
+                <h2 id="urun-baslik" className="h2">Ürünlerimiz</h2>
+                <Link href="/#urunler" className="text-link">Tüm ürünler</Link>
+              </div>
+              <div className="product-grid">
+                {products.map((p) => (
+                  <ProductCard key={getSlug(p)} product={p} />
+                ))}
+              </div>
+            </div>
+          </section>
+        )}
       </main>
       <Footer />
     </>

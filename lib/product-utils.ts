@@ -1,5 +1,16 @@
 import { Product } from '@/types';
-import { cloudinaryThumb } from './products';
+import { cloudinaryThumb } from './format';
+import { ProductSchema } from './schemas';
+
+/** Firestore dokümanını Zod ile doğrular; geçersizse uyarı basıp null döner (client + server ortak). */
+export function parseProduct(id: string, data: Record<string, unknown>, source = 'products'): Product | null {
+  const result = ProductSchema.safeParse({ id, ...data });
+  if (!result.success) {
+    console.warn(`[${source}] Geçersiz ürün verisi (id: ${id}):`, result.error.flatten().fieldErrors);
+    return null;
+  }
+  return result.data as Product;
+}
 
 // Firestore belgelerinden gelebilecek tüm alias'ları kapsayan tip
 type RawProduct = Product & Record<string, unknown>;
@@ -11,7 +22,7 @@ export function getTitle(p: Product): string {
 
 export function getPriceMin(p: Product): number {
   const r = p as RawProduct;
-  return ((r.priceMin as number) || (r.priceTRY as number) || (r.price as number) || (r.fiyat as number) || 0);
+  return ((r.priceMin as number) || (r.priceTRY as number) || (r.price as number) || (r.fiyat as number) || (r.priceMax as number) || 0);
 }
 
 export function getPriceMax(p: Product): number {

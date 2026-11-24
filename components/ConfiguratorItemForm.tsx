@@ -4,6 +4,8 @@ import { useState, useRef, useEffect } from 'react';
 import { collection, getDocs, orderBy, query } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { Product, ProductColor } from '@/types';
+import { IconCamera, IconClose, IconCup, IconPalette } from '@/components/admin/icons';
+import { useToast, errorMessage } from '@/components/admin/Toast';
 
 const CLOUDINARY_CLOUD = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || 'dwulzfmlu';
 
@@ -57,6 +59,7 @@ async function uploadToCloudinary(file: File): Promise<string> {
 }
 
 export default function ConfiguratorItemForm({ type, initial, onSubmit, submitLabel }: Props) {
+  const toast = useToast();
   const [code,          setCode]          = useState(initial?.code          || '');
   const [name,          setName]          = useState(initial?.name          || '');
   const [price,         setPrice]         = useState(String(initial?.price  || ''));
@@ -135,25 +138,27 @@ export default function ConfiguratorItemForm({ type, initial, onSubmit, submitLa
         order: Number(order) || 1,
       });
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : 'Bir hata oluştu.');
+      const msg = errorMessage(e);
+      setError(msg);
+      toast.error(msg);
       setSaving(false);
     }
   };
 
-  const emoji = type === 'cup' ? '☕' : '🎨';
+  const TypeIcon = type === 'cup' ? IconCup : IconPalette;
   const label = type === 'cup' ? 'Bardak' : 'Tasarım';
 
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: '1fr 320px', gap: 24, alignItems: 'start' }}>
+    <div className="adm-form-grid">
 
       {/* Sol kolon */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+      <div className="adm-form-col">
 
         {/* Temel bilgiler */}
-        <div className="card" style={{ padding: 28 }}>
-          <h2 style={{ fontFamily: 'var(--font-display)', marginBottom: 20 }}>{label} Bilgileri</h2>
+        <div className="card adm-card-pad">
+          <h2 className="adm-card-title">{label} Bilgileri</h2>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+          <div className="adm-field-row adm-field-row-2">
             <div className="form-group">
               <label className="form-label">Kod *</label>
               <input className="form-input" value={code} onChange={e => setCode(e.target.value)}
@@ -191,16 +196,16 @@ export default function ConfiguratorItemForm({ type, initial, onSubmit, submitLa
           {/* Ana fotoğraf */}
           <div className="form-group" style={{ marginBottom: 0 }}>
             <label className="form-label">{label} Fotoğrafı</label>
-            <div style={{ border: '2px dashed var(--border)', borderRadius: 10, padding: 20, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12, background: 'var(--surface-raised)' }}>
+            <div className="adm-photo-box">
               {imagePublicId ? (
                 <div style={{ position: 'relative', width: '100%', maxWidth: 220 }}>
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={cfImg(imagePublicId, 400)} alt="Yüklenen fotoğraf" style={{ width: '100%', borderRadius: 8, display: 'block', objectFit: 'cover', aspectRatio: '1/1' }} />
-                  <button type="button" onClick={() => setImagePublicId('')} style={{ position: 'absolute', top: 6, right: 6, background: 'rgba(0,0,0,0.6)', color: '#fff', border: 'none', borderRadius: '50%', width: 26, height: 26, cursor: 'pointer', fontSize: 14, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>
+                  <button type="button" onClick={() => setImagePublicId('')} className="adm-thumb-remove adm-thumb-remove-lg" aria-label="Görseli kaldır"><IconClose size={14} /></button>
                 </div>
               ) : (
                 <div style={{ textAlign: 'center', color: 'var(--muted)', fontSize: 13 }}>
-                  <div style={{ fontSize: 32, marginBottom: 6 }}>📷</div>
+                  <div style={{ marginBottom: 6, display: 'flex', justifyContent: 'center' }}><IconCamera size={32} /></div>
                   <div>Fotoğraf yükle</div>
                 </div>
               )}
@@ -214,9 +219,9 @@ export default function ConfiguratorItemForm({ type, initial, onSubmit, submitLa
 
         {/* Renk varyantları — sadece bardak */}
         {type === 'cup' && (
-          <div className="card" style={{ padding: 28 }}>
-            <h2 style={{ fontFamily: 'var(--font-display)', marginBottom: 6 }}>Renk Varyantları</h2>
-            <p style={{ fontSize: 13, color: 'var(--muted)', marginBottom: 20 }}>Mevcut bir ürüne bağlayarak varyant fotoğraflarını otomatik çek, ya da her varyant için hangi fotoğrafın gösterileceğini seç.</p>
+          <div className="card adm-card-pad">
+            <h2 className="adm-card-title">Renk Varyantları</h2>
+            <p className="adm-card-sub">Mevcut bir ürüne bağlayarak varyant fotoğraflarını otomatik çek, ya da her varyant için hangi fotoğrafın gösterileceğini seç.</p>
 
             {/* Ürün seçici */}
             <div className="form-group">
@@ -232,7 +237,7 @@ export default function ConfiguratorItemForm({ type, initial, onSubmit, submitLa
                   <option key={p.id} value={p.id}>{p.title}</option>
                 ))}
               </select>
-              <p style={{ fontSize: 11, color: 'var(--muted)', marginTop: 4 }}>Sadece renk varyantı olan ürünler listelenir.</p>
+              <p className="adm-field-hint">Sadece renk varyantı olan ürünler listelenir.</p>
             </div>
 
             {/* Varyant fotoğraf seçici */}
@@ -250,8 +255,8 @@ export default function ConfiguratorItemForm({ type, initial, onSubmit, submitLa
                             onClick={() => setSelectedImgIdx(prev => ({ ...prev, [ci]: ii }))}
                             style={{
                               padding: 0, border: 'none', borderRadius: 8, overflow: 'hidden',
-                              width: 72, height: 72, cursor: 'pointer', flexShrink: 0,
-                              outline: (selectedImgIdx[ci] ?? 0) === ii ? '3px solid var(--primary)' : '2px solid var(--border)',
+                              width: 72, height: 72, minWidth: 44, cursor: 'pointer', flexShrink: 0,
+                              outline: (selectedImgIdx[ci] ?? 0) === ii ? '3px solid var(--brand)' : '2px solid var(--line)',
                               outlineOffset: 2,
                               transition: 'outline-color 0.12s',
                             }}
@@ -283,14 +288,14 @@ export default function ConfiguratorItemForm({ type, initial, onSubmit, submitLa
                         // eslint-disable-next-line @next/next/no-img-element
                         <img src={cfImg(c.images[0], 128)} alt={c.name} style={{ width: 56, height: 56, objectFit: 'cover', borderRadius: 8, display: 'block' }} />
                       ) : (
-                        <div style={{ width: 56, height: 56, borderRadius: 8, background: 'var(--surface-raised)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20 }}>☕</div>
+                        <div style={{ width: 56, height: 56, borderRadius: 8, background: 'var(--paper-2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><IconCup size={22} /></div>
                       )}
                       <p style={{ fontSize: 10, color: 'var(--muted)', marginTop: 3 }}>{c.name}</p>
                     </div>
                   ))}
                 </div>
-                <button type="button" onClick={() => { setColors([]); setLinkedProductId(''); setProductColors([]); setSelectedImgIdx({}); }}
-                  style={{ marginTop: 10, background: 'none', border: 'none', color: 'var(--danger)', fontSize: 12, cursor: 'pointer', padding: 0 }}>
+                <button type="button" className="adm-link-danger" onClick={() => { setColors([]); setLinkedProductId(''); setProductColors([]); setSelectedImgIdx({}); }}
+                  >
                   Varyantları Temizle
                 </button>
               </div>
@@ -300,21 +305,21 @@ export default function ConfiguratorItemForm({ type, initial, onSubmit, submitLa
       </div>
 
       {/* Sağ kolon */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-        <div className="card" style={{ padding: 24 }}>
-          <h2 style={{ fontFamily: 'var(--font-display)', marginBottom: 16 }}>Önizleme</h2>
-          <div style={{ width: '100%', aspectRatio: '1/1', borderRadius: 12, overflow: 'hidden', background: '#f3f4f6', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 10, boxShadow: '0 4px 20px rgba(0,0,0,0.12)' }}>
+      <div className="adm-form-col">
+        <div className="card adm-card-pad">
+          <h2 className="adm-card-title">Önizleme</h2>
+          <div className="adm-preview">
             {imagePublicId
               ? <img src={cfImg(imagePublicId, 400)} alt="Önizleme" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} /> // eslint-disable-line @next/next/no-img-element
-              : <span style={{ fontSize: '3rem', opacity: 0.3 }}>{emoji}</span>
+              : <span style={{ opacity: 0.3 }}><TypeIcon size={48} /></span>
             }
           </div>
           <div style={{ textAlign: 'center', fontSize: 14, fontWeight: 600 }}>{name || 'İsim girilmedi'}</div>
           {type === 'cup' && <div style={{ textAlign: 'center', fontSize: 14, color: 'var(--accent)', fontWeight: 700, marginTop: 4 }}>{price ? `${price}₺` : '—'}</div>}
         </div>
 
-        <div className="card" style={{ padding: 24 }}>
-          <h2 style={{ fontFamily: 'var(--font-display)', marginBottom: 16 }}>Durum</h2>
+        <div className="card adm-card-pad">
+          <h2 className="adm-card-title">Durum</h2>
           <div className="form-group" style={{ marginBottom: 0 }}>
             <label className="form-label">Görünürlük</label>
             <select className="form-select" value={String(active)} onChange={e => setActive(e.target.value === 'true')}>
@@ -324,8 +329,8 @@ export default function ConfiguratorItemForm({ type, initial, onSubmit, submitLa
           </div>
         </div>
 
-        <div className="card" style={{ padding: 24 }}>
-          {error && <div style={{ background: 'rgba(248,81,73,0.1)', border: '1px solid rgba(248,81,73,0.25)', borderRadius: 8, padding: '10px 14px', fontSize: 13, color: 'var(--danger)', marginBottom: 16 }}>{error}</div>}
+        <div className="card adm-card-pad">
+          {error && <div className="adm-alert" role="alert">{error}</div>}
           <button className="btn btn-primary btn-full btn-lg" onClick={handleSubmit} disabled={saving || uploading}>
             {saving ? 'Kaydediliyor...' : submitLabel}
           </button>

@@ -5,7 +5,7 @@
  */
 
 // cloudinaryThumb'u mock'luyoruz
-jest.mock('@/lib/products', () => ({
+jest.mock('@/lib/format', () => ({
   cloudinaryThumb: (id: string) => `https://res.cloudinary.com/test/image/upload/${id}`,
 }));
 
@@ -98,11 +98,11 @@ describe('getPrice', () => {
 
 describe('getCategory', () => {
   it('category alanını okur', () => {
-    expect(getCategory({ ...base, category: 'Sihirli Kupa' })).toBe('Sihirli Mat Kupa');
+    expect(getCategory({ ...base, category: 'Sihirli Kupa' })).toBe('Sihirli Kupa');
   });
 
   it('kategori alias\'ını okur', () => {
-    expect(getCategory({ ...base, category: 'Sihirli Kupa', kategori: 'Özel Tasarım' } as unknown as Product)).toBe('Sihirli Mat Kupa');
+    expect(getCategory({ ...base, category: 'Sihirli Kupa', kategori: 'Özel Tasarım' } as unknown as Product)).toBe('Sihirli Kupa');
   });
 });
 

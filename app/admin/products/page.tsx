@@ -1,209 +1,347 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { getProducts, cloudinaryThumb, formatPriceRange } from '@/lib/products';
-import { deleteProductAction, toggleFeaturedAction, toggleActiveAction } from '@/lib/actions';
-import { Product } from '@/types';
+import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
+import { getProducts, getProductById, cloudinaryThumb, formatPriceRange } from '@/lib/products';
+import {
+  createProductAction,
+  deleteProductAction,
+  toggleFeaturedAction,
+  toggleActiveAction,
+} from '@/lib/actions';
+import { Product, CATEGORIES } from '@/types';
 import { getActive, getPriceMin, getPriceMax } from '@/lib/product-utils';
+import { useToast, errorMessage } from '@/components/admin/Toast';
+import { useConfirm } from '@/components/admin/ConfirmDialog';
+import { IconBox, IconCopy, IconEdit, IconExternal, IconPlus, IconStar, IconTrash } from '@/components/admin/icons';
+
+type StatusFilter = 'all' | 'active' | 'passive';
+type FeaturedFilter = 'all' | 'featured' | 'normal';
+type SortKey = 'newest' | 'name' | 'price-asc' | 'price-desc';
 
 export default function AdminProductsPage() {
+  const toast = useToast();
+  const { confirm, dialog } = useConfirm();
+
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
   const [search, setSearch] = useState('');
-  const [deleting, setDeleting] = useState<string | null>(null);
-  const [togglingFeatured, setTogglingFeatured] = useState<string | null>(null);
-  const [togglingActive, setTogglingActive] = useState<string | null>(null);
+  const [category, setCategory] = useState('');
+  const [status, setStatus] = useState<StatusFilter>('all');
+  const [featuredFilter, setFeaturedFilter] = useState<FeaturedFilter>('all');
+  const [sort, setSort] = useState<SortKey>('newest');
 
-  const load = () => {
+  // İşlem yapılan ürün id'leri
+  const [busy, setBusy] = useState<Record<string, 'delete' | 'active' | 'featured' | 'copy' | undefined>>({});
+  const setBusyFor = (id: string, v: 'delete' | 'active' | 'featured' | 'copy' | undefined) =>
+    setBusy((prev) => ({ ...prev, [id]: v }));
+
+  const load = async () => {
     setLoading(true);
-    getProducts().then(setProducts).finally(() => setLoading(false));
+    setLoadError(false);
+    try {
+      setProducts(await getProducts());
+    } catch {
+      setLoadError(true);
+      toast.error('Ürünler yüklenemedi.');
+    } finally {
+      setLoading(false);
+    }
   };
 
-  useEffect(() => { load(); }, []);
-
-  const filtered = products
-    .filter((p) => {
-      const q = search.toLowerCase();
-      return !q
-        || p.title.toLowerCase().includes(q)
-        || p.category.toLowerCase().includes(q)
-        || (p.productCode?.toLowerCase().includes(q) ?? false);
-    })
-    .sort((a, b) => (getActive(a) === getActive(b) ? 0 : getActive(a) ? -1 : 1));
-
-  const handleDelete = async (id: string, title: string) => {
-    if (!confirm(`"${title}" silinsin mi?`)) return;
-    setDeleting(id);
-    await deleteProductAction(id);
+  useEffect(() => {
     load();
-    setDeleting(null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const filtered = useMemo(() => {
+    const q = search.trim().toLocaleLowerCase('tr-TR');
+    const list = products.filter((p) => {
+      if (q) {
+        const hit =
+          p.title.toLocaleLowerCase('tr-TR').includes(q) ||
+          p.category.toLocaleLowerCase('tr-TR').includes(q) ||
+          (p.productCode?.toLocaleLowerCase('tr-TR').includes(q) ?? false);
+        if (!hit) return false;
+      }
+      if (category && p.category !== category) return false;
+      if (status === 'active' && !getActive(p)) return false;
+      if (status === 'passive' && getActive(p)) return false;
+      if (featuredFilter === 'featured' && !p.featured) return false;
+      if (featuredFilter === 'normal' && p.featured) return false;
+      return true;
+    });
+
+    const sorted = [...list];
+    switch (sort) {
+      case 'name':
+        sorted.sort((a, b) => a.title.localeCompare(b.title, 'tr'));
+        break;
+      case 'price-asc':
+        sorted.sort((a, b) => getPriceMin(a) - getPriceMin(b));
+        break;
+      case 'price-desc':
+        sorted.sort((a, b) => getPriceMin(b) - getPriceMin(a));
+        break;
+      default:
+        sorted.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+    }
+    return sorted;
+  }, [products, search, category, status, featuredFilter, sort]);
+
+  // ── Aksiyonlar ──────────────────────────────────────────────────────────────
+
+  const handleDelete = async (p: Product) => {
+    const ok = await confirm({
+      title: 'Ürün silinsin mi?',
+      message: (
+        <>
+          <strong>{p.title}</strong> ve görselleri kalıcı olarak silinecek. Bu işlem geri alınamaz.
+        </>
+      ),
+      confirmLabel: 'Sil',
+      danger: true,
+    });
+    if (!ok) return;
+
+    setBusyFor(p.id, 'delete');
+    try {
+      await deleteProductAction(p.id);
+      setProducts((prev) => prev.filter((x) => x.id !== p.id));
+      toast.success(`"${p.title}" silindi.`);
+    } catch (e) {
+      toast.error(errorMessage(e, 'Ürün silinemedi.'));
+    } finally {
+      setBusyFor(p.id, undefined);
+    }
   };
 
   const handleToggleFeatured = async (p: Product) => {
-    setTogglingFeatured(p.id);
-    await toggleFeaturedAction(p.id, !p.featured);
-    setProducts((prev) => prev.map((x) => x.id === p.id ? { ...x, featured: !p.featured } : x));
-    setTogglingFeatured(null);
+    const next = !p.featured;
+    setBusyFor(p.id, 'featured');
+    setProducts((prev) => prev.map((x) => (x.id === p.id ? { ...x, featured: next } : x)));
+    try {
+      await toggleFeaturedAction(p.id, next);
+      toast.success(next ? 'Öne çıkarıldı.' : 'Öne çıkarma kaldırıldı.');
+    } catch (e) {
+      setProducts((prev) => prev.map((x) => (x.id === p.id ? { ...x, featured: p.featured } : x)));
+      toast.error(errorMessage(e, 'Öne çıkarma değiştirilemedi.'));
+    } finally {
+      setBusyFor(p.id, undefined);
+    }
   };
 
   const handleToggleActive = async (p: Product) => {
-    setTogglingActive(p.id);
-    const newActive = !getActive(p);
-    await toggleActiveAction(p.id, newActive);
-    setProducts((prev) => prev.map((x) => x.id === p.id ? { ...x, active: newActive } : x));
-    setTogglingActive(null);
+    const prevActive = getActive(p);
+    const next = !prevActive;
+    setBusyFor(p.id, 'active');
+    setProducts((prev) => prev.map((x) => (x.id === p.id ? { ...x, active: next } : x)));
+    try {
+      await toggleActiveAction(p.id, next);
+      toast.success(next ? 'Ürün aktifleştirildi.' : 'Ürün pasife alındı.');
+    } catch (e) {
+      setProducts((prev) => prev.map((x) => (x.id === p.id ? { ...x, active: prevActive } : x)));
+      toast.error(errorMessage(e, 'Durum değiştirilemedi.'));
+    } finally {
+      setBusyFor(p.id, undefined);
+    }
+  };
+
+  const handleDuplicate = async (p: Product) => {
+    setBusyFor(p.id, 'copy');
+    try {
+      const source = (await getProductById(p.id)) ?? p;
+      const { id: _id, ...rest } = source;
+      void _id;
+
+      // Benzersiz slug: slug-kopya, slug-kopya-2, ...
+      const taken = new Set(products.map((x) => x.slug));
+      const base = `${source.slug}-kopya`;
+      let slug = base;
+      for (let n = 2; taken.has(slug); n++) slug = `${base}-${n}`;
+
+      const now = Date.now();
+      const newId = await createProductAction({
+        ...rest,
+        title: `${source.title} (Kopya)`,
+        slug,
+        active: false,
+        featured: false,
+        productCode: undefined,
+        createdAt: now,
+        updatedAt: now,
+      });
+      toast.success('Ürün kopyalandı (pasif olarak eklendi).');
+      const created = await getProductById(newId);
+      if (created) setProducts((prev) => [created, ...prev]);
+      else await load();
+    } catch (e) {
+      toast.error(errorMessage(e, 'Ürün kopyalanamadı.'));
+    } finally {
+      setBusyFor(p.id, undefined);
+    }
   };
 
   const featuredCount = products.filter((p) => p.featured).length;
   const activeCount = products.filter((p) => getActive(p)).length;
+  const hasFilters = !!(search || category || status !== 'all' || featuredFilter !== 'all');
+
+  const clearFilters = () => {
+    setSearch('');
+    setCategory('');
+    setStatus('all');
+    setFeaturedFilter('all');
+  };
 
   return (
     <div>
       <div className="admin-header">
         <div>
-          <h1 style={{ fontFamily: 'var(--font-display)', fontSize: '1.8rem' }}>Ürünler</h1>
-          <p style={{ color: 'var(--muted)', fontSize: 14, marginTop: 4 }}>
-            {products.length} ürün · {activeCount} aktif
-            {featuredCount > 0 && (
-              <span style={{ marginLeft: 10, color: 'var(--accent)' }}>⭐ {featuredCount} öne çıkan</span>
-            )}
+          <h1 className="adm-page-title">Ürünler</h1>
+          <p className="adm-page-sub">
+            {products.length} ürün · {activeCount} aktif · {featuredCount} öne çıkan
           </p>
         </div>
-        <Link href="/admin/products/new" className="btn btn-primary">+ Yeni Ürün</Link>
+        <Link href="/admin/products/new" className="btn btn-primary adm-btn-icon-label">
+          <IconPlus size={16} /> Yeni Ürün
+        </Link>
       </div>
 
-      {/* Search */}
-      <div style={{ marginBottom: 20 }}>
+      {/* Araç çubuğu */}
+      <div className="adm-toolbar">
         <input
           className="form-input"
-          placeholder="Ürün veya kategori ara..."
+          placeholder="Ürün, kategori veya kod ara..."
+          aria-label="Ürün ara"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          style={{ maxWidth: 360 }}
         />
+        <select className="form-select" aria-label="Kategori" value={category} onChange={(e) => setCategory(e.target.value)}>
+          <option value="">Tüm kategoriler</option>
+          {CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
+        </select>
+        <select className="form-select" aria-label="Durum" value={status} onChange={(e) => setStatus(e.target.value as StatusFilter)}>
+          <option value="all">Tüm durumlar</option>
+          <option value="active">Aktif</option>
+          <option value="passive">Pasif</option>
+        </select>
+        <select className="form-select" aria-label="Öne çıkan" value={featuredFilter} onChange={(e) => setFeaturedFilter(e.target.value as FeaturedFilter)}>
+          <option value="all">Öne çıkan: hepsi</option>
+          <option value="featured">Yalnızca öne çıkanlar</option>
+          <option value="normal">Öne çıkmayanlar</option>
+        </select>
+        <select className="form-select" aria-label="Sırala" value={sort} onChange={(e) => setSort(e.target.value as SortKey)}>
+          <option value="newest">En yeni</option>
+          <option value="name">Ada göre (A-Z)</option>
+          <option value="price-asc">Fiyat (artan)</option>
+          <option value="price-desc">Fiyat (azalan)</option>
+        </select>
+        {hasFilters && (
+          <button type="button" className="btn btn-secondary btn-sm" onClick={clearFilters}>Filtreleri temizle</button>
+        )}
+        <span className="adm-toolbar-count" aria-live="polite">{filtered.length} sonuç</span>
       </div>
 
-      {/* Cards */}
       {loading ? (
         <div style={{ padding: 40, display: 'flex', justifyContent: 'center' }}>
           <div className="spinner" />
         </div>
+      ) : loadError ? (
+        <div className="adm-empty">
+          <div className="adm-empty-title">Ürünler yüklenemedi</div>
+          <button type="button" className="btn btn-secondary" onClick={load}>Tekrar dene</button>
+        </div>
       ) : filtered.length === 0 ? (
-        <div className="empty-state">
-          <div className="empty-state-icon">📦</div>
-          <div className="empty-state-title">Ürün bulunamadı</div>
+        <div className="adm-empty">
+          <div className="adm-empty-title">Ürün bulunamadı</div>
+          {hasFilters && <button type="button" className="btn btn-secondary" onClick={clearFilters}>Filtreleri temizle</button>}
         </div>
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+        <div className="adm-list">
           {filtered.map((p) => {
             const thumb = p.images?.[0] ? cloudinaryThumb(p.images[0]) : null;
-            const priceLabel = formatPriceRange(getPriceMin(p), getPriceMax(p));
             const active = getActive(p);
-            const isDeleting = deleting === p.id;
-            const isTogglingFeatured = togglingFeatured === p.id;
-            const isTogglingActive = togglingActive === p.id;
+            const b = busy[p.id];
 
             return (
-              <div
-                key={p.id}
-                className="card"
-                style={{
-                  padding: '14px 16px',
-                  display: 'flex',
-                  gap: 14,
-                  alignItems: 'center',
-                  background: p.featured ? 'rgba(201,168,76,0.06)' : undefined,
-                  borderLeft: p.featured ? '3px solid var(--accent)' : '3px solid transparent',
-                  opacity: active ? 1 : 0.6,
-                }}
-              >
-                {/* Thumbnail */}
-                <div style={{ flexShrink: 0 }}>
-                  {thumb ? (
-                    <img
-                      src={thumb}
-                      alt={p.title}
-                      style={{ width: 64, height: 64, objectFit: 'cover', borderRadius: 8 }}
-                    />
-                  ) : (
-                    <div style={{
-                      width: 64, height: 64, borderRadius: 8,
-                      background: 'var(--surface)', display: 'flex',
-                      alignItems: 'center', justifyContent: 'center', fontSize: '1.4rem',
-                    }}>
-                      ☕
-                    </div>
-                  )}
-                </div>
+              <div key={p.id} className={`card adm-row ${active ? '' : 'is-inactive'}`}>
+                {thumb ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={thumb} alt={p.title} className="adm-row-thumb" />
+                ) : (
+                  <div className="adm-row-thumb"><IconBox size={24} /></div>
+                )}
 
-                {/* Info */}
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-                    {p.featured && <span title="Öne Çıkan" style={{ fontSize: '0.9rem' }}>⭐</span>}
-                    <span style={{ fontWeight: 600, fontSize: 14, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                      {p.title}
-                    </span>
+                <div className="adm-row-main">
+                  <div className="adm-row-title">
+                    {p.featured && <span className="adm-star-on"><IconStar size={15} filled aria-label="Öne çıkan" role="img" /></span>}
+                    <span>{p.title}</span>
                   </div>
-                  <div style={{ fontSize: 12, color: 'var(--muted)', marginTop: 2, display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <span>{p.slug}</span>
-                    {p.productCode && (
-                      <span style={{
-                        fontFamily: 'monospace', fontSize: 11, fontWeight: 700,
-                        background: 'rgba(201,168,76,0.12)', color: 'var(--accent)',
-                        border: '1px solid rgba(201,168,76,0.25)',
-                        borderRadius: 4, padding: '1px 6px', letterSpacing: '0.04em',
-                      }}>
-                        {p.productCode}
-                      </span>
-                    )}
+                  <div className="adm-row-slug">
+                    <span>/{p.slug}</span>
+                    {p.productCode && <span className="adm-code">{p.productCode}</span>}
                   </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 6, flexWrap: 'wrap' }}>
-                    <span style={{ fontWeight: 700, color: 'var(--accent)', fontSize: 13 }}>{priceLabel}</span>
+                  <div className="adm-row-meta">
+                    <span className="adm-price">{formatPriceRange(getPriceMin(p), getPriceMax(p))}</span>
                     <span className="badge badge-muted">{p.category}</span>
                   </div>
                 </div>
 
-                {/* Actions */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 8, flexShrink: 0, alignItems: 'flex-end' }}>
-                  {/* Active toggle */}
+                <div className="adm-row-actions">
                   <button
+                    type="button"
                     onClick={() => handleToggleActive(p)}
-                    disabled={isTogglingActive}
-                    className={`badge ${active ? 'badge-green' : 'badge-red'}`}
-                    style={{
-                      cursor: 'pointer', border: 'none', padding: '4px 10px',
-                      fontSize: 12, opacity: isTogglingActive ? 0.5 : 1,
-                      transition: 'opacity 0.15s',
-                    }}
+                    disabled={!!b}
+                    className={`adm-status ${active ? 'on' : 'off'}`}
+                    aria-pressed={active}
+                    title={active ? 'Pasife al' : 'Aktifleştir'}
                   >
-                    {isTogglingActive ? '...' : (active ? 'Aktif' : 'Pasif')}
+                    {active ? 'Aktif' : 'Pasif'}
                   </button>
 
-                  {/* Bottom row: featured + edit + delete */}
-                  <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                  <div className="adm-row-buttons">
                     <button
+                      type="button"
+                      className={`adm-icon-btn ${p.featured ? 'is-on' : ''}`}
                       onClick={() => handleToggleFeatured(p)}
-                      disabled={isTogglingFeatured}
+                      disabled={!!b}
+                      aria-pressed={!!p.featured}
                       title={p.featured ? 'Öne çıkarmayı kaldır' : 'Öne çıkar'}
-                      style={{
-                        background: 'none', border: 'none', cursor: 'pointer',
-                        fontSize: '1.2rem', opacity: isTogglingFeatured ? 0.4 : 1,
-                        filter: p.featured ? 'none' : 'grayscale(1)',
-                        padding: '2px 4px',
-                      }}
+                      aria-label={p.featured ? 'Öne çıkarmayı kaldır' : 'Öne çıkar'}
                     >
-                      ⭐
+                      <IconStar filled={!!p.featured} />
                     </button>
-                    <Link href={`/admin/products/${p.id}`} className="btn btn-secondary btn-sm">
-                      Düzenle
+                    <Link
+                      href={`/urun/${p.slug}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="adm-icon-btn"
+                      title="Sitede gör"
+                      aria-label="Sitede gör"
+                    >
+                      <IconExternal />
                     </Link>
                     <button
-                      className="btn btn-danger btn-sm"
-                      onClick={() => handleDelete(p.id, p.title)}
-                      disabled={isDeleting}
+                      type="button"
+                      className="adm-icon-btn"
+                      onClick={() => handleDuplicate(p)}
+                      disabled={!!b}
+                      title="Kopyala"
+                      aria-label="Kopyala"
                     >
-                      {isDeleting ? '...' : 'Sil'}
+                      {b === 'copy' ? <span className="spinner" style={{ width: 16, height: 16 }} /> : <IconCopy />}
+                    </button>
+                    <Link href={`/admin/products/${p.id}`} className="btn btn-secondary btn-sm adm-btn-icon-label">
+                      <IconEdit size={15} /> Düzenle
+                    </Link>
+                    <button
+                      type="button"
+                      className="btn btn-danger btn-sm adm-btn-icon-label"
+                      onClick={() => handleDelete(p)}
+                      disabled={!!b}
+                    >
+                      <IconTrash size={15} /> {b === 'delete' ? 'Siliniyor...' : 'Sil'}
                     </button>
                   </div>
                 </div>
@@ -212,6 +350,8 @@ export default function AdminProductsPage() {
           })}
         </div>
       )}
+
+      {dialog}
     </div>
   );
 }
