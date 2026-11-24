@@ -4,11 +4,12 @@ import Image from 'next/image';
 import { unstable_cache } from 'next/cache';
 import { getProductsServer } from '@/lib/products-server';
 import { cloudinaryUrl, displayTitle } from '@/lib/format';
-import { getActive, getFeatured, getPriceMin, getPriceMax, getSlug, getTitle } from '@/lib/product-utils';
+import { getActive, getPriceMin, getPriceMax, getSlug, getTitle } from '@/lib/product-utils';
 import { jsonLdString } from '@/lib/site';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
-import HeroSection, { HeroProduct } from '@/components/HeroSection';
+import HeroSection from '@/components/HeroSection';
+import ProductMarquee, { MarqueeItem } from '@/components/ProductMarquee';
 import ProductsClient from './ProductsClient';
 import { WhatsAppIcon, PhoneIcon, MailIcon, InstagramIcon, ArrowRightIcon, ChevronDownIcon } from '@/components/icons';
 import { PHONE, PHONE_DISPLAY, WHATSAPP_BASE, DEFAULT_WA_TEXT } from '@/lib/constants';
@@ -79,18 +80,15 @@ export default async function HomePage() {
   const products = await getProducts();
   const active = products.filter(getActive);
 
-  const featuredProduct =
-    active.find((p) => getFeatured(p) && p.images?.[0]) ?? active.find((p) => p.images?.[0]);
-  const featured: HeroProduct | null = featuredProduct
-    ? {
-        title: displayTitle(getTitle(featuredProduct)),
-        slug: getSlug(featuredProduct),
-        imageId: featuredProduct.images[0],
-        priceMin: getPriceMin(featuredProduct),
-        priceMax: getPriceMax(featuredProduct),
-        colorCount: featuredProduct.colors?.length ?? 0,
-      }
-    : null;
+  const marquee: MarqueeItem[] = active
+    .filter((p) => p.images?.length)
+    .map((p) => ({
+      slug: getSlug(p),
+      title: displayTitle(getTitle(p)),
+      imageId: p.images[1] ?? p.images[0],
+      priceMin: getPriceMin(p),
+      priceMax: getPriceMax(p),
+    }));
 
   const prices = active.map(getPriceMin).filter((n) => n > 0);
   const lowestPrice = prices.length ? Math.min(...prices) : null;
@@ -99,13 +97,14 @@ export default async function HomePage() {
     <>
       <Navbar />
       <main id="icerik">
-        <HeroSection featured={featured} lowestPrice={lowestPrice} />
+        <HeroSection lowestPrice={lowestPrice} />
+        <ProductMarquee items={marquee} />
 
         <section className="steps" aria-label="Sipariş adımları">
           <div className="wrap">
             {STEPS.map((s, i) => (
               <div className="step" key={s.title}>
-                <span className="step-num">{String(i + 1).padStart(2, '0')}</span>
+                <span className="step-num">{i + 1}</span>
                 <h3>{s.title}</h3>
                 <p>{s.text}</p>
               </div>

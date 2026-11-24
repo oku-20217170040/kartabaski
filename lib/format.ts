@@ -71,7 +71,7 @@ const COLOR_HEX: Record<string, string> = {
   'gri': '#9A968E', 'kahverengi': '#7A5235', 'bordo': '#6E1F2A', 'krem': '#EFE6D2',
   'pastel yeşil': '#BFD8C0', 'pastel sarı': '#F3E6A6', 'pastel mavi': '#BBD3EA',
   'pastel pembe': '#F1CAD3', 'pembe pastel': '#F1CAD3', 'pastel mor': '#D3C6E6',
-  'transparan': 'linear-gradient(135deg, #FFFFFF 0%, #E6E1D8 100%)',
+  'transparan': '#EDEAE4',
 };
 
 /** Renk adını örnek renk değerine çevirir; bilinmiyorsa null döner. */

@@ -50,7 +50,7 @@ export default function NasilSiparisVerilirPage() {
           <div className="wrap">
             {STEPS.map((s, i) => (
               <div className="step" key={s.title}>
-                <span className="step-num">{String(i + 1).padStart(2, '0')}</span>
+                <span className="step-num">{i + 1}</span>
                 <h3>{s.title}</h3>
                 <p>{s.text}</p>
               </div>

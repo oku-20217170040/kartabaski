@@ -239,7 +239,7 @@ export default function ImageGallery({ images, setImages, onUploaded, onRemove, 
                   position: 'absolute', bottom: 0, left: 0, right: 0, zIndex: 10, display: 'flex',
                   justifyContent: 'center', alignItems: 'center', paddingTop: 24,
                   paddingBottom: 'max(40px, env(safe-area-inset-bottom, 40px))',
-                  background: 'linear-gradient(to top, rgba(0,0,0,0.55) 0%, transparent 100%)',
+                  background: 'rgba(27,26,23,0.6)',
                 }}
               >
                 {!cameraReady ? (

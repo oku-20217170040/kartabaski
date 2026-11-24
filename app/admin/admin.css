@@ -34,13 +34,12 @@
   --font-body: var(--sans);
 
   font-family: var(--sans);
-  color: var(--ink);
-}
+  color: var(--ink); font-weight: 600; }
 
 /* ── Düzen ── */
 .admin-layout { display: flex; min-height: 100vh; background: var(--paper); }
 .admin-layout h1, .admin-layout h2, .admin-layout h3 { font-family: var(--sans); font-weight: 600; line-height: 1.2; }
-.admin-layout h1 { font-family: var(--serif); font-weight: 400; }
+.admin-layout h1 { font-family: var(--serif); font-weight: 600; }
 .admin-content { margin-left: 240px; flex: 1; min-width: 0; padding: 32px; min-height: 100vh; background: var(--paper); }
 .admin-header { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-bottom: 28px; }
 .admin-header > * { min-width: 0; }
@@ -140,7 +139,7 @@
 .admin-layout .badge-muted, .admin-layout .badge-red { background: var(--paper-2); color: var(--ink-3); border-color: var(--line); }
 .admin-layout .empty-state { text-align: center; padding: 56px 16px; color: var(--ink-2); border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); }
 .admin-layout .empty-state-icon { display: flex; justify-content: center; margin-bottom: 14px; color: var(--ink-3); }
-.admin-layout .empty-state-title { font-family: var(--serif); font-size: 1.4rem; color: var(--ink); margin-bottom: 8px; }
+.admin-layout .empty-state-title { font-family: var(--serif); font-size: 1.4rem; color: var(--ink); margin-bottom: 8px; font-weight: 600; }
 .admin-layout .empty-state-sub { font-size: .9rem; color: var(--ink-3); }
 .adm-empty-cta { margin-top: 12px; }
 .admin-layout .spinner, .adm-fullscreen-center .spinner { width: 32px; height: 32px; border: 3px solid var(--line); border-top-color: var(--brand); border-radius: 50%; animation: adm-spin .8s linear infinite; }
@@ -148,7 +147,7 @@
 .admin-layout .grip { color: var(--ink-3); cursor: grab; display: inline-flex; }
 
 /* ── Sayfa başlığı ── */
-.adm-page-title { font-family: var(--serif); font-size: clamp(1.6rem, 4vw, 2rem); font-weight: 400; letter-spacing: -0.01em; }
+.adm-page-title { font-family: var(--serif); font-size: clamp(1.6rem, 4vw, 2rem); font-weight: 600; letter-spacing: -0.01em; }
 .adm-page-sub { color: var(--ink-2); font-size: 14px; margin-top: 4px; }
 .adm-back-link { color: var(--ink-2); font-size: 14px; display: inline-flex; align-items: center; min-height: 44px; }
 .adm-back-link:hover { color: var(--ink); }
@@ -156,7 +155,7 @@
 /* ── Dashboard ── */
 .adm-stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 16px; margin-bottom: 24px; }
 .adm-stat { padding: 20px; display: flex; flex-direction: column; gap: 4px; }
-.adm-stat-value { font-family: var(--serif); font-size: 2.5rem; font-weight: 400; line-height: 1.05; color: var(--ink); }
+.adm-stat-value { font-family: var(--serif); font-size: 2.5rem; font-weight: 600; line-height: 1.05; color: var(--ink); }
 .adm-stat-label { font-size: 13px; color: var(--ink-3); }
 .adm-section { padding: 20px; margin-bottom: 20px; }
 .adm-section-title { font-size: 1rem; font-weight: 600; margin-bottom: 14px; }
@@ -211,7 +210,7 @@
 .adm-icon-btn:focus-visible, .adm-status:focus-visible { outline: 2px solid var(--brand); outline-offset: 1px; }
 
 .adm-empty { text-align: center; padding: 48px 16px; color: var(--ink-2); }
-.adm-empty-title { font-family: var(--serif); font-size: 1.3rem; color: var(--ink); margin-bottom: 10px; }
+.adm-empty-title { font-family: var(--serif); font-size: 1.3rem; color: var(--ink); margin-bottom: 10px; font-weight: 600; }
 
 @media (max-width: 860px) {
   .adm-two-col { grid-template-columns: minmax(0, 1fr); }
@@ -246,7 +245,7 @@
 /* ── Modal ── */
 .adm-modal-backdrop { position: fixed; inset: 0; z-index: 99990; background: rgba(27, 26, 23, .45); display: flex; align-items: center; justify-content: center; padding: 16px; }
 .adm-modal { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-lg); padding: 24px; width: min(420px, 100%); color: var(--ink); font-family: var(--sans); }
-.adm-modal-title { font-family: var(--serif); font-size: 1.35rem; font-weight: 400; margin-bottom: 8px; }
+.adm-modal-title { font-family: var(--serif); font-size: 1.35rem; font-weight: 600; margin-bottom: 8px; }
 .adm-modal-text { font-size: 14px; color: var(--ink-2); line-height: 1.5; margin-bottom: 20px; }
 .adm-modal-actions { display: flex; justify-content: flex-end; gap: 10px; flex-wrap: wrap; }
 .adm-modal .btn { min-height: 44px; }
@@ -330,11 +329,11 @@
 .adm-login { min-height: 100vh; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); background: var(--paper); }
 .adm-login-brand { background: var(--paper-2); border-right: 1px solid var(--line); display: flex; flex-direction: column; justify-content: space-between; padding: 48px; }
 .adm-login-brand-body { max-width: 28em; }
-.adm-login-title { font-family: var(--serif); font-weight: 400; font-size: clamp(2rem, 3.4vw, 2.75rem); line-height: 1.1; letter-spacing: -0.015em; margin: 28px 0 14px; }
+.adm-login-title { font-family: var(--serif); font-weight: 600; font-size: clamp(2rem, 3.4vw, 2.75rem); line-height: 1.1; letter-spacing: -0.015em; margin: 28px 0 14px; }
 .adm-login-lead { color: var(--ink-2); font-size: 16px; }
 .adm-login-panel { display: flex; align-items: center; justify-content: center; padding: 32px 24px; }
 .adm-login-card { width: 100%; max-width: 400px; }
-.adm-login-card h2 { font-family: var(--serif); font-weight: 400; font-size: 1.75rem; margin-bottom: 6px; }
+.adm-login-card h2 { font-family: var(--serif); font-weight: 600; font-size: 1.75rem; margin-bottom: 6px; }
 .adm-login-card .adm-login-hint { color: var(--ink-2); font-size: 14px; margin-bottom: 24px; }
 .adm-login-pass { position: relative; }
 .adm-login-pass .form-input { padding-right: 56px; }

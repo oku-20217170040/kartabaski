@@ -1,16 +1,15 @@
 import type { Metadata } from 'next';
-import { Newsreader, Instrument_Sans } from 'next/font/google';
+import { Bricolage_Grotesque, Instrument_Sans } from 'next/font/google';
 import './site.css';
 import WhatsAppFloat from '@/components/WhatsAppFloat';
 import ErrorBoundary from '@/components/ErrorBoundary';
 import { PHONE, SITE_NAME } from '@/lib/constants';
 import { SITE_URL, INSTAGRAM_URL, jsonLdString } from '@/lib/site';
 
-const serif = Newsreader({
+const display = Bricolage_Grotesque({
   subsets: ['latin', 'latin-ext'],
-  weight: ['400', '500'],
-  style: ['normal', 'italic'],
-  variable: '--font-serif',
+  weight: ['500', '600', '700', '800'],
+  variable: '--font-display',
   display: 'swap',
 });
 const sans = Instrument_Sans({
@@ -94,7 +93,7 @@ const META_PIXEL_ID = process.env.NEXT_PUBLIC_META_PIXEL_ID || '4415269272076470
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="tr" className={`${serif.variable} ${sans.variable}`} suppressHydrationWarning>
+    <html lang="tr" className={`${display.variable} ${sans.variable}`} suppressHydrationWarning>
       <body suppressHydrationWarning>
         <a href="#icerik" className="skip-link">İçeriğe geç</a>
           <ErrorBoundary>

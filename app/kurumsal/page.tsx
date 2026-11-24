@@ -66,7 +66,7 @@ export default async function KurumsalPage() {
             <div className="cols-3">
               {BENEFITS.map((b, i) => (
                 <div key={b.title}>
-                  <span className="eyebrow">{String(i + 1).padStart(2, '0')}</span>
+                  <span className="step-num">{i + 1}</span>
                   <h3>{b.title}</h3>
                   <p>{b.text}</p>
                 </div>
@@ -83,7 +83,7 @@ export default async function KurumsalPage() {
             <div className="cols-3">
               {QUOTE_STEPS.map((s, i) => (
                 <div key={s.title}>
-                  <span className="eyebrow">{String(i + 1).padStart(2, '0')}</span>
+                  <span className="step-num">{i + 1}</span>
                   <h3>{s.title}</h3>
                   <p>{s.text}</p>
                 </div>
