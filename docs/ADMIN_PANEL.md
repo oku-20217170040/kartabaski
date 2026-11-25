@@ -12,6 +12,7 @@
 | `/admin/sepet-talepleri` | Sepetten WhatsApp'a gelen talepler, "Makineye aktar" | `lib/cart*`, `app/sepet` |
 | `/admin/yorumlar` | Davet bağlantılı müşteri yorumları | `lib/reviews*`, `app/yorum/[token]` |
 | `/admin/sosyal-medya` + 6 platform | Instagram, Facebook, Threads, Telegram, Pinterest, TikTok | `lib/social-run.ts`, `lib/*-auto.ts` |
+| `/admin/sosyal-medya/paylas` | Hızlı Paylaşım & Gönderi Havuzu: fotoğraf yükleyip (müşteri siparişi, ürün, atölye, kampanya) otomatik metinle bağlı tüm platformlarda anında veya sırayla yayınlama (+ isteğe bağlı ücretsiz stüdyo arka planı) | `lib/social-broadcast*`, `lib/actions-social-broadcast.ts` |
 | `/admin/blog` | Blog + otomatik taslak/yayın | `lib/posts.ts`, `lib/blog-*` |
 | `/admin/seo` | Varsayılan meta, anahtar kelimeler, doğrulama kodları | `lib/seo-*` |
 

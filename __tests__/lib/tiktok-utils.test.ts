@@ -48,8 +48,10 @@ describe('buildPhotoDraftBody', () => {
 });
 
 describe('medya kimliği ve ara adres', () => {
-  it('yalnızca karta-baski/urunler kimliklerini kabul eder', () => {
+  it('yalnızca kendi karta-baski klasörlerimizin kimliklerini kabul eder', () => {
     expect(isAllowedMediaId(ID)).toBe(true);
+    expect(isAllowedMediaId('karta-baski/sosyal/abc123_X')).toBe(true);
+    expect(isAllowedMediaId('karta-baski/studio/abc123_X')).toBe(true);
     expect(isAllowedMediaId('umit-spot/urunler/abc123')).toBe(false);
     expect(isAllowedMediaId('karta-baski/urunler/../x')).toBe(false);
     expect(isAllowedMediaId('karta-baski/urunler/a')).toBe(false);

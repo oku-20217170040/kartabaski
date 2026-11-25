@@ -10,7 +10,7 @@ import { windowLabel } from '@/lib/social-settings-utils';
 import { useToast, errorMessage } from '@/components/admin/Toast';
 import { useConfirm } from '@/components/admin/ConfirmDialog';
 import {
-  IconInstagram, IconFacebook, IconThreads, IconTelegram, IconPinterest, IconTikTok, IconRefresh, IconSend, IconAlert,
+  IconInstagram, IconFacebook, IconThreads, IconTelegram, IconPinterest, IconTikTok, IconRefresh, IconSend, IconAlert, IconSparkles,
 } from '@/components/admin/icons';
 import { Pill, Switch, fmtWhen, type Tone } from '@/components/admin/social/shared';
 import '@/components/admin/social/social.css';
@@ -100,14 +100,31 @@ export default function SocialHubPage() {
           <p className="adm-page-sub">Altı platformda ürün, blog ve özel gün paylaşımları tek yerden.</p>
         </div>
         <div className="soc-actions">
+          <Link href="/admin/sosyal-medya/paylas" className="btn btn-primary">
+            <IconSparkles size={16} /> Hızlı Paylaşım
+          </Link>
           <button type="button" className="btn btn-secondary" onClick={load} disabled={loading}>
             <IconRefresh size={16} /> {loading ? 'Yükleniyor…' : 'Yenile'}
           </button>
-          <button type="button" className="btn btn-primary" onClick={runNow} disabled={running || loading}>
+          <button type="button" className="btn btn-secondary" onClick={runNow} disabled={running || loading}>
             <IconSend size={16} /> {running ? 'Çalışıyor…' : 'Şimdi çalıştır'}
           </button>
         </div>
       </div>
+
+      <section className="soc-panel" aria-label="Hızlı gönderi paylaşımı">
+        <div className="soc-card-head" style={{ flexWrap: 'wrap' }}>
+          <div>
+            <h2>Fotoğraf Yükle ve Tüm Platformlarda Yayınla</h2>
+            <p className="soc-muted" style={{ margin: '4px 0 0' }}>
+              Müşterilerin yaptırdığı kupaları, atölye karelerini, kampanyaları veya ürün fotoğraflarını tek yerden yükleyin; metni ve etiketleri otomatik hazırlayıp bağlı tüm platformlarda anında veya sırayla paylaşsın.
+            </p>
+          </div>
+          <Link href="/admin/sosyal-medya/paylas" className="btn btn-primary">
+            <IconSparkles size={16} /> Gönderi Oluştur / Havuzu Aç
+          </Link>
+        </div>
+      </section>
 
       <p className="soc-lead">
         Otomasyon, sunucudaki zamanlayıcı tarafından düzenli aralıklarla çalıştırılır. Bir platformun jetonları tanımlı değilse
