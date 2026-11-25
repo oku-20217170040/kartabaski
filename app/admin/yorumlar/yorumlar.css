@@ -1,0 +1,111 @@
+/* ==========================================================================
+   KAR-TA BASKI — admin · müşteri yorumları. Sınıf öneki: .yor-
+   Yalnızca tasarım değişkenleri; sabit renk yok. Ortak sınıflar admin.css'te.
+   ========================================================================== */
+
+.yor-page { display: block; }
+
+.yor-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+.yor-head .btn { min-height: 44px; }
+
+.yor-muted { color: var(--ink-3); font-size: 12px; }
+
+.yor-tabs {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  margin-bottom: 16px;
+  padding-bottom: 4px;
+  -webkit-overflow-scrolling: touch;
+}
+.yor-tab {
+  flex-shrink: 0;
+  min-height: 44px;
+  padding: 0 14px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--ink-2);
+  font-size: 14px;
+  cursor: pointer;
+}
+.yor-tab.on { background: var(--brand); border-color: var(--brand); color: var(--on-brand); }
+
+.yor-error {
+  margin-bottom: 16px;
+  padding: 10px 14px;
+  border-radius: var(--radius);
+  border: 1px solid var(--danger);
+  color: var(--danger);
+  font-size: 14px;
+}
+
+.yor-grid {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  margin-bottom: 24px;
+}
+
+.yor-card { padding: 16px; margin: 0; display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.yor-card-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.yor-stars { color: var(--brand); letter-spacing: 2px; }
+.yor-text { margin: 0; font-size: 14px; line-height: 1.6; color: var(--ink); white-space: pre-wrap; overflow-wrap: anywhere; }
+.yor-meta { font-size: 13px; color: var(--ink-3); }
+.yor-meta strong { color: var(--ink-2); font-weight: 600; }
+
+.yor-pill {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+  padding: 0 10px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: var(--paper-2);
+  color: var(--ink-2);
+  font-size: 12px;
+  white-space: nowrap;
+}
+.yor-pill.ok { background: var(--brand-soft); border-color: transparent; color: var(--brand); }
+.yor-pill.warn { color: var(--danger); border-color: var(--danger); background: var(--surface); }
+
+.yor-reply { display: grid; gap: 6px; padding-top: 10px; border-top: 1px solid var(--line); }
+.yor-reply .form-textarea { min-height: 80px; font-size: 16px; }
+.yor-reply-actions { display: flex; justify-content: flex-end; }
+
+.yor-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.yor-actions .btn { min-height: 44px; }
+
+.yor-invites { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.yor-invite {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 0;
+  border-top: 1px solid var(--line);
+  font-size: 14px;
+  color: var(--ink);
+}
+.yor-invite:first-child { border-top: none; }
+
+.yor-field { display: grid; gap: 6px; margin-bottom: 14px; }
+.yor-hint { font-size: 12px; color: var(--ink-3); line-height: 1.5; }
+.yor-link { word-break: break-all; margin-top: 10px; }
+.yor-modal { max-height: calc(100vh - 32px); overflow-y: auto; }
+.yor-modal .form-input,
+.yor-modal .form-select { font-size: 16px; min-height: 44px; }
+.yor-modal .adm-modal-actions { margin-top: 16px; }
+.yor-modal .adm-modal-actions .btn { min-height: 44px; }
+
+@media (max-width: 480px) {
+  .yor-grid { grid-template-columns: 1fr; }
+}

@@ -90,6 +90,31 @@
 .adm-btn-icon-label { display: inline-flex; align-items: center; gap: 8px; }
 .adm-fullscreen-center { height: 100vh; display: flex; align-items: center; justify-content: center; background: var(--paper); }
 .adm-spacer-40 { width: 44px; }
+/* ── Gruplu menü, arama, rozet, sosyal alt menü ── */
+.admin-sidebar-link { min-height: 40px; padding: 8px 20px; font-size: 14px; }
+.adm-nav-text { display: flex; flex-direction: column; min-width: 0; flex: 1; }
+.adm-nav-desc { font-size: 12px; font-weight: 400; color: var(--ink-3); white-space: normal; }
+.adm-nav-search { display: flex; align-items: center; gap: 8px; margin: 0 16px 8px; padding: 0 10px; min-height: 40px; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); color: var(--ink-3); }
+.adm-nav-search input { flex: 1; min-width: 0; border: 0; outline: 0; background: none; font-size: 16px; color: var(--ink); min-height: 38px; }
+.adm-nav-scroll { display: flex; flex-direction: column; }
+.adm-nav-group { padding: 6px 0; }
+.adm-nav-group + .adm-nav-group { border-top: 1px solid var(--line); }
+.adm-nav-group-title { padding: 8px 20px 4px; font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--ink-3); font-weight: 600; }
+.adm-nav-empty { padding: 8px 20px; font-size: 13px; color: var(--ink-3); }
+.adm-nav-sub { display: flex; flex-direction: column; padding: 2px 0 6px 34px; }
+.adm-nav-sublink { display: flex; align-items: center; gap: 8px; min-height: 36px; padding: 6px 12px; font-size: 13px; color: var(--ink-2); border-radius: 4px; }
+.adm-nav-sublink:hover { color: var(--ink); background: rgba(27, 26, 23, .04); }
+.adm-nav-sublink.active { color: var(--brand); font-weight: 600; }
+.adm-badge { margin-left: auto; min-width: 20px; height: 20px; padding: 0 6px; border-radius: 10px; background: var(--brand); color: var(--on-brand); font-size: 11px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; }
+.adm-badge-dot { position: absolute; top: 8px; right: 8px; min-width: 9px; width: 9px; height: 9px; padding: 0; }
+.adm-mb-8 { margin-bottom: 8px; }
+.admin-hamburger-btn { position: relative; background: none; border: 0; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; color: var(--ink); border-radius: var(--radius); }
+.adm-mtop-title { flex: 1; text-align: center; font-weight: 600; font-size: 15px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.adm-mtop-logo { display: flex; align-items: center; min-width: 44px; min-height: 44px; justify-content: flex-end; }
+.adm-socialnav { display: flex; gap: 6px; overflow-x: auto; margin-bottom: 20px; padding-bottom: 4px; -webkit-overflow-scrolling: touch; }
+.adm-socialnav a { display: inline-flex; align-items: center; gap: 6px; min-height: 40px; padding: 0 14px; border: 1px solid var(--line); border-radius: 20px; background: var(--surface); color: var(--ink-2); font-size: 14px; white-space: nowrap; }
+.adm-socialnav a.on { background: var(--brand); border-color: var(--brand); color: var(--on-brand); }
+
 
 @media (max-width: 1020px) { .admin-sidebar { width: 208px; } .admin-content { margin-left: 208px; } }
 @media (max-width: 860px) {

@@ -1,0 +1,46 @@
+/* Sepet talepleri paneli (.cart-adm- öneki). */
+.cart-adm-filters { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
+.cart-adm-center { padding: 48px; display: flex; justify-content: center; }
+.cart-adm-list { display: grid; gap: 12px; }
+.cart-adm-card { padding: 18px 20px; border-left: 3px solid transparent; display: grid; gap: 14px; }
+.cart-adm-card.is-new { border-left-color: var(--brand); }
+.cart-adm-head { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
+.cart-adm-no { font-family: var(--serif); font-weight: 600; font-size: 16px; }
+.cart-adm-date { display: inline-flex; align-items: center; gap: 4px; font-size: 13px; color: var(--ink-3); }
+.cart-adm-total { margin-left: auto; font-size: 15px; }
+.cart-adm-badge { display: inline-flex; align-items: center; padding: 3px 10px; border-radius: 999px; font-size: 12px; font-weight: 500; border: 1px solid var(--line); background: var(--paper-2); color: var(--ink-2); }
+.cart-adm-badge-new { background: var(--brand); color: var(--on-brand); border-color: var(--brand); }
+.cart-adm-badge-info { background: var(--surface); color: var(--ink); border-color: var(--line-strong); }
+.cart-adm-badge-order, .cart-adm-badge-ok { background: var(--brand-soft); color: var(--brand); border-color: var(--brand); }
+.cart-adm-badge-off { background: var(--paper-2); color: var(--ink-3); }
+
+.cart-adm-items { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.cart-adm-items li { display: flex; align-items: center; gap: 12px; }
+.cart-adm-thumb { width: 52px; height: 52px; flex-shrink: 0; border-radius: var(--radius); overflow: hidden; background: var(--paper-2); display: block; }
+.cart-adm-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.cart-adm-item-main { flex: 1; min-width: 0; display: grid; gap: 2px; }
+.cart-adm-item-main a { font-weight: 600; font-size: 14px; overflow-wrap: anywhere; }
+.cart-adm-item-main a:hover { color: var(--brand); }
+.cart-adm-item-main small { font-size: 12px; color: var(--ink-3); }
+.cart-adm-pnote { color: var(--ink) !important; font-weight: 500; }
+.cart-adm-items b { font-size: 14px; white-space: nowrap; }
+
+.cart-adm-contact { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 8px 20px; margin: 0; font-size: 14px; }
+.cart-adm-contact dt { font-size: 12px; color: var(--ink-3); }
+.cart-adm-contact dd { margin: 0; overflow-wrap: anywhere; }
+.cart-adm-contact a { color: var(--brand); font-weight: 500; }
+.cart-adm-wide { grid-column: 1 / -1; }
+.cart-adm-cnote { margin: 0; padding: 10px 12px; background: var(--paper-2); border-radius: var(--radius); font-size: 13px; color: var(--ink-2); line-height: 1.5; }
+.cart-adm-notebox { display: grid; gap: 8px; justify-items: start; }
+.cart-adm-notebox .form-textarea { width: 100%; }
+
+.cart-adm-actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.cart-adm-actions .btn { min-height: 44px; }
+.cart-adm-order { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: var(--brand); font-weight: 500; min-height: 44px; }
+.cart-adm-del { margin-left: auto; }
+
+@media (max-width: 480px) {
+  .cart-adm-card { padding: 14px; }
+  .cart-adm-total { margin-left: 0; width: 100%; }
+  .cart-adm-actions .btn { flex: 1 1 auto; }
+}

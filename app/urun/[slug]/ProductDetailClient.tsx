@@ -7,6 +7,7 @@ import type { Product } from '@/types';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import ProductCard from '@/components/ProductCard';
+import AddToCart from '@/components/cart/AddToCart';
 import {
   ChevronLeftIcon, ChevronRightIcon, CheckIcon, CloseIcon, LinkIcon,
   ShareIcon, TruckIcon, WhatsAppIcon, ZoomIcon,
@@ -275,6 +276,8 @@ export default function ProductDetailClient({ slug, product, similar }: Props) {
                   </div>
                 </div>
               )}
+
+              <AddToCart product={product} color={colorName} />
 
               <div className="pdp-actions">
                 <a href={waHref} target="_blank" rel="noopener noreferrer" className="btn btn-primary btn-block">

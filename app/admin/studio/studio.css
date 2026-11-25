@@ -1,0 +1,110 @@
+/* AI Stüdyo — yalnızca .studio- önekli sınıflar, sadece tema değişkenleri */
+.studio-page { max-width: 1200px; margin: 0 auto; padding-bottom: 80px; }
+.studio-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; flex-wrap: wrap; margin-bottom: 18px; }
+.studio-head-tools { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.studio-loading { padding: 60px 0; text-align: center; color: var(--ink-2); }
+.studio-loading .spinner { margin: 0 auto 16px; }
+
+.studio-pill { display: inline-flex; align-items: center; gap: 4px; min-height: 24px; padding: 0 10px; border-radius: 999px; font-size: 12px; font-weight: 500; background: var(--paper-2); color: var(--ink-2); border: 1px solid var(--line); }
+.studio-pill.ok { background: var(--brand-soft); color: var(--brand); border-color: var(--line); }
+.studio-pill.warn { background: var(--paper-2); color: var(--danger); border-color: var(--danger); }
+
+.studio-warn { background: var(--paper-2); border: 1px solid var(--line-strong); border-radius: var(--radius); padding: 10px 14px; font-size: 14px; color: var(--ink); margin-bottom: 12px; display: flex; gap: 10px; align-items: flex-start; }
+.studio-warn svg { flex: none; margin-top: 2px; color: var(--danger); }
+
+.studio-panel { padding: 16px; margin-bottom: 14px; }
+.studio-panel h2 { font-family: var(--serif); font-size: 1.1rem; font-weight: 600; margin: 0 0 10px; display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
+.studio-hint { font-size: 13px; color: var(--ink-2); margin: 0 0 12px; }
+.studio-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
+.studio-field { display: flex; flex-direction: column; gap: 6px; font-size: 13px; color: var(--ink-2); }
+.studio-keys { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 12px; }
+.studio-key { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding: 8px 12px; border: 1px solid var(--line); border-radius: var(--radius); font-size: 13px; }
+.studio-key code { font-size: 12px; color: var(--ink-3); word-break: break-all; }
+
+.studio-tabs { display: flex; gap: 6px; flex-wrap: wrap; }
+.studio-tabs button { min-height: 44px; padding: 0 14px; border: 1px solid var(--line); border-radius: 999px; background: var(--surface); color: var(--ink-2); font-size: 14px; font-weight: 500; cursor: pointer; }
+.studio-tabs button.on { background: var(--brand-soft); color: var(--brand); border-color: var(--brand); }
+.studio-tabs button:focus-visible { outline: 2px solid var(--brand); outline-offset: 1px; }
+.studio-toolbar { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 14px; }
+.studio-filters { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.studio-filters .form-input { max-width: 260px; }
+.studio-check { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; font-size: 14px; color: var(--ink-2); cursor: pointer; }
+.studio-check input { width: 20px; height: 20px; accent-color: var(--brand); }
+
+/* Sahne seçici */
+.studio-scenes { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 8px; }
+.studio-scene { text-align: left; min-height: 64px; padding: 10px 12px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); color: var(--ink); cursor: pointer; display: flex; flex-direction: column; gap: 2px; }
+.studio-scene b { font-size: 14px; font-weight: 600; }
+.studio-scene span { font-size: 12px; color: var(--ink-3); line-height: 1.35; }
+.studio-scene.on { border-color: var(--brand); background: var(--brand-soft); }
+.studio-scene:disabled { opacity: .55; cursor: not-allowed; }
+.studio-scene:focus-visible { outline: 2px solid var(--brand); outline-offset: 1px; }
+
+.studio-bar { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; padding: 12px 16px; margin-bottom: 14px; }
+.studio-bar-end { margin-left: auto; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: 13px; }
+
+/* Ürün kartları (üret sekmesi) */
+.studio-prod { padding: 14px 16px; margin-bottom: 12px; }
+.studio-prod.hl { border-color: var(--brand); }
+.studio-prod-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 10px; }
+.studio-prod-head h3 { font-family: var(--serif); font-size: 1.05rem; font-weight: 600; margin: 0; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.studio-variant { margin-top: 10px; }
+.studio-variant-name { font-size: 12px; font-weight: 600; color: var(--ink-2); text-transform: uppercase; letter-spacing: .04em; margin-bottom: 6px; }
+.studio-photos { display: flex; gap: 10px; flex-wrap: wrap; }
+.studio-photo { width: 120px; font-size: 12px; display: flex; flex-direction: column; gap: 6px; }
+.studio-photo-img { position: relative; width: 120px; height: 120px; }
+.studio-photo-img img { width: 120px; height: 120px; object-fit: cover; border-radius: var(--radius); border: 1px solid var(--line); display: block; }
+.studio-photo-img.sel img { outline: 3px solid var(--brand); outline-offset: -3px; }
+.studio-photo-check { position: absolute; top: 0; left: 0; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+.studio-photo-check input { width: 20px; height: 20px; accent-color: var(--brand); }
+
+/* Onay bekleyenler */
+.studio-groups { display: grid; gap: 14px; }
+.studio-group { padding: 14px 16px; }
+.studio-group-head { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 10px; }
+.studio-group-head label { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; cursor: pointer; }
+.studio-group-head input, .studio-pair-foot input { width: 20px; height: 20px; accent-color: var(--brand); }
+.studio-pairs { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; }
+.studio-pair { border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; background: var(--surface); }
+.studio-pair.sel { border-color: var(--brand); }
+.studio-pair-imgs { position: relative; display: grid; grid-template-columns: 1fr 1fr; gap: 2px; width: 100%; padding: 0; border: 0; background: var(--paper-2); cursor: zoom-in; }
+.studio-pair-imgs img { width: 100%; height: 100%; aspect-ratio: 4 / 3; object-fit: cover; display: block; }
+.studio-tag { position: absolute; top: 6px; left: 6px; z-index: 1; font-size: 11px; padding: 2px 8px; border-radius: 999px; background: var(--ink); color: var(--paper); }
+.studio-tag.right { left: auto; right: 6px; background: var(--brand); color: var(--on-brand); }
+.studio-zoom { position: absolute; bottom: 6px; left: 50%; transform: translateX(-50%); z-index: 1; font-size: 11px; padding: 2px 10px; border-radius: 999px; background: var(--ink); color: var(--paper); }
+.studio-pair-foot { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 4px 10px; flex-wrap: wrap; }
+.studio-pair-foot label { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; font-size: 13px; cursor: pointer; }
+.studio-pair-btns { display: flex; gap: 6px; }
+.studio-group-actions { display: flex; gap: 8px; align-items: center; justify-content: flex-end; flex-wrap: wrap; margin-top: 10px; }
+.studio-group-meta { margin-right: auto; font-size: 12px; color: var(--ink-3); }
+
+/* Büyütme */
+.studio-lb { position: fixed; inset: 0; z-index: 200; background: var(--ink); color: var(--paper); display: flex; flex-direction: column; }
+.studio-lb-head, .studio-lb-foot { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 10px 14px; flex-wrap: wrap; }
+.studio-lb-foot { justify-content: center; }
+.studio-lb-tools { display: flex; gap: 6px; }
+.studio-lb .btn-secondary, .studio-lb .btn-secondary:hover { color: var(--ink); }
+.studio-lb-body { flex: 1; min-height: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 0 14px; overflow: hidden; }
+.studio-lb-body figure { margin: 0; min-height: 0; display: flex; flex-direction: column; align-items: center; gap: 6px; overflow: hidden; }
+.studio-lb-body img { max-width: 100%; max-height: calc(100vh - 190px); object-fit: contain; cursor: zoom-in; }
+.studio-lb-body.zoomed { overflow: auto; }
+.studio-lb-body.zoomed figure { overflow: visible; }
+.studio-lb-body.zoomed img { max-width: none; max-height: none; cursor: zoom-out; }
+.studio-lb-body figcaption { font-size: 12px; color: var(--line-strong); }
+
+/* Geçmiş */
+.studio-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.studio-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+.studio-table th, .studio-table td { text-align: left; padding: 10px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+.studio-table th { font-size: 12px; color: var(--ink-3); font-weight: 600; text-transform: uppercase; letter-spacing: .04em; white-space: nowrap; }
+.studio-table .num { text-align: right; white-space: nowrap; }
+.studio-err { color: var(--danger); font-size: 12px; margin-top: 4px; }
+.studio-empty { text-align: center; color: var(--ink-2); padding: 28px 16px; }
+
+@media (max-width: 640px) {
+  .studio-filters .form-input { max-width: none; flex: 1 1 100%; }
+  .studio-pairs { grid-template-columns: 1fr; }
+  .studio-lb-body { grid-template-columns: 1fr; overflow: auto; }
+  .studio-lb-body img { max-height: 38vh; }
+  .studio-bar-end { margin-left: 0; width: 100%; }
+}

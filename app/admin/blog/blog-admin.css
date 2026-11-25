@@ -1,0 +1,50 @@
+/* Blog yönetimi — sınıf öneki: .blg- (yalnızca panel CSS değişkenleri) */
+
+.blg-auto { display: grid; gap: 10px; }
+.blg-auto-row { display: flex; flex-wrap: wrap; gap: 8px 20px; font-size: 14px; color: var(--ink-2); }
+.blg-auto-row b { color: var(--ink); font-weight: 600; }
+.blg-auto-error { color: var(--danger); font-size: 13px; }
+.blg-hint { font-size: 12px; color: var(--ink-3); margin-top: 4px; }
+
+.blg-queue { display: grid; }
+.blg-queue-row { display: flex; align-items: center; gap: 10px 14px; flex-wrap: wrap; padding: 10px 0; border-top: 1px solid var(--line); }
+.blg-queue-row:first-child { border-top: none; }
+.blg-queue-date { min-width: 150px; font-size: 13px; color: var(--ink-2); }
+.blg-queue-title { flex: 1 1 200px; min-width: 0; font-weight: 500; overflow-wrap: anywhere; }
+.blg-queue-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+
+.blg-row-badges { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px; align-items: center; }
+
+/* Editör */
+.blg-editor { max-width: 860px; padding: 24px; }
+.blg-help { font-size: 12px; color: var(--ink-3); margin-top: 2px; }
+.blg-counter { font-weight: 400; color: var(--ink-3); }
+.blg-counter.is-over { color: var(--danger); }
+.blg-cover { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+.blg-cover-img { width: 160px; height: 90px; object-fit: cover; border-radius: var(--radius); border: 1px solid var(--line); background: var(--paper-2); }
+.blg-content-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 6px; }
+.blg-content-tools { display: flex; gap: 6px; }
+.blg-mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; line-height: 1.6; }
+.blg-preview { border: 1px solid var(--line); border-radius: var(--radius); padding: 20px; min-height: 300px; background: var(--surface); }
+.blg-faq-item { display: grid; gap: 8px; margin-bottom: 12px; padding: 12px; border: 1px solid var(--line); border-radius: var(--radius); }
+.blg-faq-item .btn { justify-self: start; }
+
+.blg-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.blg-chip { display: inline-flex; align-items: center; min-height: 44px; padding: 0 14px; border: 1px solid var(--line); border-radius: 999px; background: var(--surface); color: var(--ink-2); font-size: 14px; cursor: pointer; }
+.blg-chip.is-on { background: var(--brand-soft); border-color: var(--brand); color: var(--brand); font-weight: 500; }
+.blg-chip:focus-visible { outline: 2px solid var(--brand); outline-offset: 1px; }
+
+.blg-prodlist { display: grid; gap: 4px; max-height: 280px; overflow-y: auto; border: 1px solid var(--line); border-radius: var(--radius); padding: 6px; background: var(--surface); }
+.blg-prod { display: flex; align-items: center; gap: 10px; min-height: 44px; padding: 4px 8px; border-radius: 6px; cursor: pointer; font-size: 14px; }
+.blg-prod:hover { background: var(--paper-2); }
+.blg-prod input { width: 20px; height: 20px; flex-shrink: 0; accent-color: var(--brand); }
+.blg-prod small { color: var(--ink-3); margin-left: auto; text-align: right; }
+
+.blg-actions { display: flex; gap: 10px; justify-content: flex-end; flex-wrap: wrap; margin-top: 20px; }
+.blg-error { color: var(--danger); font-size: 14px; margin-top: 12px; }
+
+@media (max-width: 560px) {
+  .blg-editor { padding: 16px; }
+  .blg-actions .btn { flex: 1 1 100%; }
+  .blg-prod small { display: none; }
+}

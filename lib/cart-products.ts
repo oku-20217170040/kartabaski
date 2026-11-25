@@ -1,0 +1,33 @@
+import type { Product } from '@/types';
+import type { CartItem } from './cart-types';
+import { lineKey, clampQty, NOTE_MAX } from './cart';
+import { cloudinaryThumb } from './format';
+import { getCategory, getPriceMin, getSlug, getTitle } from './product-utils';
+
+// Ürün tipine bağımlı sepet yardımcıları (saf mantık lib/cart.ts'te).
+
+export interface AddOptions { qty?: number; color?: string; note?: string }
+
+export function productToCartItem(p: Product, opts: AddOptions = {}): CartItem {
+  const color = opts.color?.trim() || undefined;
+  const colorImg = color ? p.colors?.find((c) => c.name === color)?.images?.[0] : undefined;
+  const note = opts.note?.trim().slice(0, NOTE_MAX) || undefined;
+  return {
+    key: lineKey(p.id, color),
+    productId: p.id,
+    slug: getSlug(p),
+    title: getTitle(p),
+    unitPrice: getPriceMin(p) || 0,
+    image: colorImg ?? p.images?.[0] ?? null,
+    category: getCategory(p),
+    qty: clampQty(opts.qty ?? 1),
+    color,
+    note,
+  };
+}
+
+/** Sepet satırı görseli: Cloudinary public_id ya da tam URL. */
+export function cartImageSrc(image: string | null | undefined): string | null {
+  if (!image) return null;
+  return image.startsWith('http') ? image : cloudinaryThumb(image);
+}

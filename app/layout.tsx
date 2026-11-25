@@ -5,51 +5,19 @@ import '@fontsource-variable/instrument-sans';
 import './site.css';
 import WhatsAppFloat from '@/components/WhatsAppFloat';
 import ErrorBoundary from '@/components/ErrorBoundary';
+import { CartProvider } from '@/lib/cart-context';
+import SiteTracker from '@/components/SiteTracker';
+import { buildRootMetadata } from '@/lib/seo-root';
 import { PHONE, SITE_NAME } from '@/lib/constants';
 import { SITE_URL, INSTAGRAM_URL, jsonLdString } from '@/lib/site';
 
 
-const OG_IMAGE = '/logo.png'; // public/logo.png
 const DESCRIPTION = 'Kişiye özel kupa baskı. Türkiye geneli hızlı kargo. Bireysel ve kurumsal siparişler. Ücretsiz tasarım desteği.';
 
-export const metadata: Metadata = {
-  metadataBase: new URL(SITE_URL),
-  icons: {
-    icon: [
-      { url: '/favicon.png', type: 'image/png' },
-    ],
-    apple: { url: '/apple-touch-icon.png' },
-    shortcut: '/favicon.png',
-  },
-  title: {
-    default: `${SITE_NAME} – Kişiye Özel Kupa Baskı`,
-    template: `%s | ${SITE_NAME}`,
-  },
-  description: DESCRIPTION,
-  keywords: [
-    'kupa baskı', 'kişiye özel kupa', 'sihirli kupa', 'hediye kupa',
-    'kurumsal kupa baskı', 'özel tasarım kupa', 'kupa baskı sipariş',
-    'sihirli mat kupa', 'sihirli konik kupa', 'seramik kupa baskı',
-    'Türkiye kupa baskı', 'online kupa baskı', 'kupa baskı kargo',
-  ],
-  authors: [{ name: SITE_NAME, url: SITE_URL }],
-  robots: { index: true, follow: true },
-  openGraph: {
-    type: 'website',
-    locale: 'tr_TR',
-    url: SITE_URL,
-    siteName: SITE_NAME,
-    title: `${SITE_NAME} – Kişiye Özel Kupa Baskı`,
-    description: DESCRIPTION,
-    images: [{ url: OG_IMAGE, alt: SITE_NAME }],
-  },
-  twitter: {
-    card: 'summary_large_image',
-    title: `${SITE_NAME} – Kişiye Özel Kupa Baskı`,
-    description: DESCRIPTION,
-    images: [OG_IMAGE],
-  },
-};
+// Varsayılan meta Firestore settings/seo belgesinden gelir (panel: /admin/seo); okunamazsa sabit varsayılanlar.
+export async function generateMetadata(): Promise<Metadata> {
+  return buildRootMetadata();
+}
 
 const localBusinessSchema = {
   '@context': 'https://schema.org',
@@ -86,10 +54,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="tr" suppressHydrationWarning>
       <body suppressHydrationWarning>
         <a href="#icerik" className="skip-link">İçeriğe geç</a>
-          <ErrorBoundary>
-            {children}
-          </ErrorBoundary>
+          <CartProvider>
+            <ErrorBoundary>
+              {children}
+            </ErrorBoundary>
+          </CartProvider>
           <WhatsAppFloat />
+          <SiteTracker />
         {/* ── ANALYTICS (GA + Meta Pixel): ileride çerez onayına bağlanacak — tek blok ── */}
         {GA_ID && (
           <>

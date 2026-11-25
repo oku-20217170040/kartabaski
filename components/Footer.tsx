@@ -50,6 +50,7 @@ export default function Footer() {
             <ul>
               <li><Link href="/nasil-siparis-verilir">Nasıl sipariş verilir</Link></li>
               <li><Link href="/kurumsal">Kurumsal siparişler</Link></li>
+              <li><Link href="/blog">Blog</Link></li>
               <li><Link href="/konfigurator">Kendin tasarla</Link></li>
               <li><Link href="/hakkimizda">Hakkımızda</Link></li>
             </ul>

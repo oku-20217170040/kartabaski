@@ -1,0 +1,53 @@
+/* Sepet — vitrin ortak stilleri (.cart- öneki). Yalnızca site.css değişkenleri kullanılır. */
+
+/* ── Navbar sepet ikonu ── */
+.cart-nav { position: relative; flex-shrink: 0; }
+.cart-nav-badge {
+  position: absolute; top: -6px; right: -6px;
+  min-width: 20px; height: 20px; padding: 0 5px; border-radius: 999px;
+  background: var(--brand); color: var(--on-brand);
+  font-size: 11px; font-weight: 600; line-height: 20px; text-align: center;
+  border: 2px solid var(--paper);
+}
+
+/* ── Adet seçici ── */
+.cart-qty { display: inline-flex; align-items: center; border: 1px solid var(--line-strong); border-radius: 999px; background: var(--surface); }
+.cart-qty button {
+  width: 44px; height: 44px; border-radius: 999px; font-size: 20px; line-height: 1; color: var(--ink);
+  display: inline-flex; align-items: center; justify-content: center;
+}
+.cart-qty button:hover:not(:disabled) { background: var(--paper-2); }
+.cart-qty button:disabled { color: var(--ink-3); opacity: .5; }
+.cart-qty input {
+  width: 52px; height: 44px; border: 0; background: transparent; text-align: center;
+  font-size: 16px; font-weight: 500; color: var(--ink); padding: 0; min-width: 0;
+}
+.cart-qty input:focus { outline: none; }
+.cart-qty:focus-within { border-color: var(--ink); }
+
+/* ── Ürün sayfası: sepete ekle ── */
+.cart-add { margin-top: 24px; padding-top: 24px; border-top: 1px solid var(--line); display: grid; gap: 12px; }
+.cart-add-row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+.cart-add-btn { flex: 1 1 180px; }
+.cart-note { display: grid; gap: 6px; }
+.cart-note textarea { width: 100%; }
+.cart-link-btn {
+  justify-self: start; min-height: 44px; padding: 0; font-size: 14px; color: var(--ink-2);
+  text-decoration: underline; text-underline-offset: 4px;
+}
+.cart-link-btn:hover { color: var(--brand); }
+.cart-added { min-height: 22px; font-size: 14px; color: var(--brand); font-weight: 500; }
+.cart-added a { text-decoration: underline; text-underline-offset: 3px; }
+
+/* ── Ortak form / metin ── */
+.cart-label { display: block; font-size: 14px; font-weight: 500; color: var(--ink); margin: 14px 0 6px; }
+.cart-label span { color: var(--ink-3); font-weight: 400; }
+.cart-input, .cart-note textarea {
+  display: block; width: 100%; min-height: 48px; padding: 12px 14px; font-size: 16px;
+  border: 1px solid var(--line-strong); border-radius: var(--radius); background: var(--surface); color: var(--ink);
+}
+textarea.cart-input, .cart-note textarea { min-height: 0; resize: vertical; }
+.cart-input:focus, .cart-note textarea:focus { outline: none; border-color: var(--ink); box-shadow: 0 0 0 3px var(--brand-soft); }
+.cart-hint { font-size: 13px; color: var(--ink-3); line-height: 1.5; }
+.cart-err { font-size: 13px; color: var(--danger); margin-top: 6px; }
+.cart-err-box { padding: 10px 12px; border: 1px solid var(--danger); border-radius: var(--radius); margin: 14px 0 0; }

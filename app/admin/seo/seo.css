@@ -1,0 +1,37 @@
+/* SEO ayarları — sınıf öneki: .seo- */
+
+.seo-wrap { display: grid; gap: 20px; max-width: 760px; }
+.seo-wrap .adm-section { margin-bottom: 0; }
+.seo-lead { font-size: 13px; color: var(--ink-2); margin: -8px 0 14px; }
+.seo-count { font-weight: 400; color: var(--ink-3); }
+.seo-count.is-over { color: var(--danger); }
+.seo-help { font-size: 12px; color: var(--ink-3); margin-top: 2px; }
+
+.seo-serp { border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); padding: 14px 16px; margin-top: 4px; overflow: hidden; }
+.seo-serp-url { font-size: 12px; color: var(--ink-3); overflow-wrap: anywhere; }
+.seo-serp-title { font-size: 18px; color: var(--brand); line-height: 1.3; margin-top: 2px; overflow-wrap: anywhere; }
+.seo-serp-desc { font-size: 14px; color: var(--ink-2); margin-top: 4px; overflow-wrap: anywhere; }
+
+.seo-tags { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+.seo-tag { display: inline-flex; align-items: center; gap: 4px; padding: 0 4px 0 12px; min-height: 36px; border-radius: 999px; background: var(--brand-soft); color: var(--brand); font-size: 14px; border: 1px solid rgba(31, 74, 54, .2); }
+.seo-tag button { display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; border: 0; background: none; color: inherit; cursor: pointer; border-radius: 50%; }
+.seo-tag button:hover { background: rgba(31, 74, 54, .12); }
+.seo-tag-add { display: flex; gap: 8px; }
+.seo-tag-add .form-input { flex: 1; min-width: 0; }
+
+.seo-og { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+.seo-og-img { width: 190px; height: 100px; object-fit: cover; border-radius: var(--radius); border: 1px solid var(--line); background: var(--paper-2); }
+
+.seo-cat { border-top: 1px solid var(--line); }
+.seo-cat:first-of-type { border-top: none; }
+.seo-cat summary { cursor: pointer; display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 48px; font-weight: 500; list-style: none; }
+.seo-cat summary::-webkit-details-marker { display: none; }
+.seo-cat-state { font-size: 12px; color: var(--ink-3); font-weight: 400; }
+.seo-cat-body { padding: 4px 0 16px; }
+
+.seo-bar { display: flex; gap: 10px; align-items: center; justify-content: flex-end; flex-wrap: wrap; }
+
+@media (max-width: 560px) {
+  .seo-og-img { width: 100%; height: auto; aspect-ratio: 1200 / 630; }
+  .seo-bar .btn { flex: 1 1 100%; }
+}
