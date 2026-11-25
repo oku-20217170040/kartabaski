@@ -24,12 +24,6 @@ const WA_HREF = `${WHATSAPP_BASE}?text=${encodeURIComponent(DEFAULT_WA_TEXT)}`;
 const CORPORATE_IMAGE = 'karta-baski/urunler/zmh4gnc6fpg1f85d9jbo';
 const CONFIGURATOR_IMAGE = 'karta-baski/urunler/vnhktkf0rx0x52x3skdt';
 
-const STEPS = [
-  { title: 'Ürünü ve rengi seçin', text: 'Kupa, fincan ya da sihirli kupa. Kulp ve iç rengini siz belirleyin.' },
-  { title: 'Tasarımınızı gönderin', text: 'Fotoğraf, logo ya da yazı. Hazır bir tasarımınız yoksa ücretsiz hazırlıyoruz.' },
-  { title: 'Onaylayın, kargoya verelim', text: 'Önizlemeyi onayladığınızda baskıya alınır, 3 iş günü içinde kargoya verilir.' },
-];
-
 const FAQ = [
   {
     q: 'Tek adet sipariş verebilir miyim?',
@@ -100,24 +94,8 @@ export default async function HomePage() {
         <HeroSection lowestPrice={lowestPrice} />
         <ProductMarquee items={marquee} />
 
-        <section className="steps" aria-label="Sipariş adımları">
+        <section className="catalog-section" id="urunler" aria-labelledby="urunler-baslik" style={{ scrollMarginTop: 'var(--header-h)' }}>
           <div className="wrap">
-            {STEPS.map((s, i) => (
-              <div className="step" key={s.title}>
-                <span className="step-num">{i + 1}</span>
-                <h3>{s.title}</h3>
-                <p>{s.text}</p>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        <section className="section" id="urunler" aria-labelledby="urunler-baslik" style={{ scrollMarginTop: 'var(--header-h)' }}>
-          <div className="wrap">
-            <div className="section-head">
-              <h2 id="urunler-baslik" className="h2">Ürünler</h2>
-              <Link href="/kategoriler" className="text-link">Kategorilere göre gezin</Link>
-            </div>
             <Suspense fallback={<GridFallback />}>
               <ProductsClient initialProducts={products} />
             </Suspense>

@@ -1,11 +1,15 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { Fragment, useEffect, useMemo, useRef, useState } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { Product, CATEGORIES, Category } from '@/types';
 import ProductCard from '@/components/ProductCard';
+import CuratedMoods from '@/components/CuratedMoods';
+import StudioPromoCard from '@/components/StudioPromoCard';
 import { SearchIcon, ChevronLeftIcon, ChevronRightIcon } from '@/components/icons';
 import { getTitle, getCategory, getActive, getPriceMin, getFeatured } from '@/lib/product-utils';
+import { buildMoodsWithCounts, isValidMoodId, matchesMood } from '@/lib/catalog-moods';
+import type { MoodId } from '@/lib/catalog-moods-types';
 
 const PAGE_SIZE = 12;
 
@@ -43,12 +47,15 @@ export default function ProductsClient({ initialProducts }: { initialProducts: P
   const category: Category | '' = (CATEGORIES as string[]).includes(paramCategory)
     ? (paramCategory as Category)
     : '';
+  const paramMood = params.get('koleksiyon') ?? '';
+  const activeMood: MoodId | null = isValidMoodId(paramMood) ? paramMood : null;
 
   const [search, setSearch] = useState('');
   const [sort, setSort] = useState<SortOption>('featured');
   const [page, setPage] = useState(1);
 
   const activeProducts = useMemo(() => initialProducts.filter(getActive), [initialProducts]);
+  const moods = useMemo(() => buildMoodsWithCounts(initialProducts), [initialProducts]);
 
   const categories = useMemo(() => {
     const used = new Set(activeProducts.map(getCategory));
@@ -58,6 +65,7 @@ export default function ProductsClient({ initialProducts }: { initialProducts: P
   const filtered = useMemo(() => {
     const q = normalize(search);
     const list = activeProducts.filter((p) => {
+      if (activeMood && !matchesMood(p, activeMood)) return false;
       if (category && getCategory(p) !== category) return false;
       if (q && !normalize(`${getTitle(p)} ${getCategory(p)}`).includes(q)) return false;
       return true;
@@ -72,14 +80,34 @@ export default function ProductsClient({ initialProducts }: { initialProducts: P
           return (b.createdAt ?? 0) - (a.createdAt ?? 0);
       }
     });
-  }, [activeProducts, category, search, sort]);
+  }, [activeProducts, activeMood, category, search, sort]);
 
-  useEffect(() => { setPage(1); }, [category, search, sort]);
+  useEffect(() => { setPage(1); }, [activeMood, category, search, sort]);
 
   const setCategory = (next: Category | '') => {
     const qs = new URLSearchParams(params.toString());
     qs.delete('category');
+    qs.delete('koleksiyon');
     if (next) qs.set('kategori', next); else qs.delete('kategori');
+    const query = qs.toString();
+    router.replace(`${pathname}${query ? `?${query}` : ''}#urunler`, { scroll: false });
+  };
+
+  const setMood = (next: MoodId | null) => {
+    const qs = new URLSearchParams(params.toString());
+    qs.delete('category');
+    qs.delete('kategori');
+    if (next) qs.set('koleksiyon', next); else qs.delete('koleksiyon');
+    const query = qs.toString();
+    router.replace(`${pathname}${query ? `?${query}` : ''}#urunler`, { scroll: false });
+  };
+
+  const clearAllFilters = () => {
+    setSearch('');
+    const qs = new URLSearchParams(params.toString());
+    qs.delete('category');
+    qs.delete('kategori');
+    qs.delete('koleksiyon');
     const query = qs.toString();
     router.replace(`${pathname}${query ? `?${query}` : ''}#urunler`, { scroll: false });
   };
@@ -91,13 +119,33 @@ export default function ProductsClient({ initialProducts }: { initialProducts: P
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const visible = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
-  const hasFilters = Boolean(category || search);
+  const hasFilters = Boolean(activeMood || category || search);
+  const selectedMoodMeta = activeMood ? moods.find((m) => m.id === activeMood) : null;
+  const showStudioPromo = page === 1 && !hasFilters && visible.length >= 4;
 
   return (
     <div ref={topRef} style={{ scrollMarginTop: 'calc(var(--header-h) + 16px)' }}>
+      <CuratedMoods
+        moods={moods}
+        activeMood={activeMood}
+        totalActiveCount={activeProducts.length}
+        onSelectMood={setMood}
+      />
+
+      {selectedMoodMeta && (
+        <div className="mood-active-bar" role="status">
+          <span>
+            <strong>{selectedMoodMeta.title}</strong> koleksiyonu gösteriliyor · {filtered.length} ürün
+          </span>
+          <button type="button" className="mood-clear-btn" onClick={() => setMood(null)}>
+            Tüm modellere dön
+          </button>
+        </div>
+      )}
+
       <div className="catalog-toolbar">
         <div className="chips" role="group" aria-label="Kategoriye göre filtrele">
-          <button type="button" className="chip" aria-pressed={!category} onClick={() => setCategory('')}>
+          <button type="button" className="chip" aria-pressed={!category && !activeMood} onClick={() => clearAllFilters()}>
             Tümü
           </button>
           {categories.map((c) => (
@@ -142,7 +190,7 @@ export default function ProductsClient({ initialProducts }: { initialProducts: P
           <h3>Bu aramaya uyan ürün yok</h3>
           <p>Farklı bir kelime deneyin ya da tüm ürünlere dönün. Aradığınızı bulamazsanız bize yazın, özel olarak hazırlayalım.</p>
           {hasFilters && (
-            <button type="button" className="btn btn-outline btn-sm" onClick={() => { setSearch(''); setCategory(''); }}>
+            <button type="button" className="btn btn-outline btn-sm" onClick={clearAllFilters}>
               Filtreleri temizle
             </button>
           )}
@@ -150,7 +198,10 @@ export default function ProductsClient({ initialProducts }: { initialProducts: P
       ) : (
         <div className="product-grid">
           {visible.map((p, i) => (
-            <ProductCard key={p.id} product={p} priority={page === 1 && i < 4} />
+            <Fragment key={p.id}>
+              <ProductCard product={p} priority={page === 1 && i < 4} />
+              {showStudioPromo && i === 3 && <StudioPromoCard />}
+            </Fragment>
           ))}
         </div>
       )}
