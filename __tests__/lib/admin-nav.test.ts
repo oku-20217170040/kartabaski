@@ -12,18 +12,22 @@ describe('admin-nav', () => {
     for (const h of ['/admin/sanal-depo', '/admin/satis-talepleri', '/admin/etiketler', '/admin/yonlendirme']) {
       expect(hrefs).not.toContain(h);
     }
-    expect(SOCIAL_LINKS).toHaveLength(7);
+    expect(SOCIAL_LINKS).toHaveLength(8);
+    expect(SOCIAL_LINKS.map((l) => l.href)).toContain('/admin/sosyal-medya/paylas');
   });
 
   it('aktiflik: exact ve önek', () => {
     expect(isLinkActive('/admin/products/abc', { href: '/admin/products' })).toBe(true);
     expect(isLinkActive('/admin/products', { href: '/admin', exact: true })).toBe(false);
+    expect(isLinkActive('/admin/sosyal-medya/paylas', { href: '/admin/sosyal-medya', exact: true })).toBe(false);
+    expect(inSocial('/admin/sosyal-medya/paylas')).toBe(true);
     expect(inSocial('/admin/tiktok')).toBe(true);
     expect(inSocial('/admin/blog')).toBe(false);
   });
 
   it('başlık en uzun eşleşmeden gelir; arama Türkçe duyarlı', () => {
     expect(adminPageTitle('/admin/instagram')).toBe('Instagram');
+    expect(adminPageTitle('/admin/sosyal-medya/paylas')).toBe('Hızlı Paylaşım');
     expect(adminPageTitle('/admin/bilinmeyen')).toBe('Yönetim');
     expect(filterAdminLinks('İSTATİSTİK').map((l) => l.href)).toContain('/admin/istatistik');
     expect(filterAdminLinks('  ')).toEqual([]);

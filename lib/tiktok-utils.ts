@@ -60,8 +60,8 @@ export function buildPhotoDraftBody(opts: { title: string; description: string; 
   };
 }
 
-/** Fotoğraf ara adresi: yalnızca Cloudinary ürün klasöründeki görsel kimlikleri kabul edilir (başka kaynaktan çekme yok). */
-const MEDIA_ID_RE = /^karta-baski\/urunler\/[A-Za-z0-9_-]{3,120}$/;
+/** Fotoğraf ara adresi: yalnızca kendi Cloudinary klasörlerimizdeki (urunler/studio/sosyal) görsel kimlikleri kabul edilir. */
+const MEDIA_ID_RE = /^karta-baski\/(?:urunler|studio|sosyal)\/[A-Za-z0-9_-]{3,120}$/;
 export function isAllowedMediaId(id: string): boolean {
   return MEDIA_ID_RE.test(id);
 }

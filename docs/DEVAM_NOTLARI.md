@@ -48,6 +48,7 @@ Doğrulama durumu:
 - `npx jest` → 44 suite / 504 test geçti.
 - `npx next lint` → 0 hata.
 - Canlı deneme: `HF_FREE_ANON=1` ile `black-forest-labs/FLUX.1-Kontext-Dev` üzerinde gerçek Firestore ürünüyle 0 TL/anahtarsız stüdyo fotoğrafı üretildi ve ürün formunun/yüzeyinin korunduğu doğrulandı.
+- **Sosyal Medya Hızlı Paylaşım & Gönderi Havuzu (`/admin/sosyal-medya/paylas`)**: Fotoğraf yüklendiği anda veya kuyrukla müşteri siparişi, ürün, atölye ve kampanya fotoğraflarını otomatik Türkçe metin/hashtag üreterek (+ isteğe bağlı ücretsiz stüdyo arka planı ekleyerek) 6 platforma (Instagram + Hikâye, Facebook, Threads, Telegram, Pinterest, TikTok taslağı) tek merkezden dağıtan sistem eklendi (`lib/social-broadcast*`, `lib/actions-social-broadcast.ts`, `/api/cron/main` `broadcast` adımı).
 
 ## 4. İSTEĞE BAĞLI SONRAKİ ADIMLAR
 1. Ücretsiz yüksek kota için sunucu `.env` dosyasına `HF_TOKEN` (ücretsiz Hugging Face hesabı) veya `CLOUDFLARE_ACCOUNT_ID` + `CLOUDFLARE_API_TOKEN` (ücretsiz Cloudflare Workers AI, günlük 10.000 neuron) ya da anahtarsız deneme için `HF_FREE_ANON=1` eklenip `sudo docker compose up -d --force-recreate` çalıştırılabilir.

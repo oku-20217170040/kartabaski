@@ -57,7 +57,8 @@ export const ADMIN_GROUPS: AdminGroup[] = [
 ];
 
 export const SOCIAL_LINKS: AdminLink[] = [
-  { href: '/admin/sosyal-medya', label: 'Merkez', icon: 'megaphone', desc: 'Otomasyon akışı ve toplu çalıştırma' },
+  { href: '/admin/sosyal-medya', label: 'Merkez', icon: 'megaphone', desc: 'Otomasyon akışı ve toplu çalıştırma', exact: true },
+  { href: '/admin/sosyal-medya/paylas', label: 'Hızlı Paylaşım', icon: 'sparkles', desc: 'Fotoğraf yükle ve tüm platformlarda yayınla' },
   { href: '/admin/instagram', label: 'Instagram', icon: 'instagram', desc: 'Gönderi ve hikâye planı' },
   { href: '/admin/facebook', label: 'Facebook', icon: 'facebook', desc: 'Sayfa paylaşımları' },
   { href: '/admin/threads', label: 'Threads', icon: 'threads', desc: 'Gönderiler' },

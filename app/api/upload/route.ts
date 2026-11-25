@@ -56,9 +56,10 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Sadece görsel dosyaları yüklenebilir.' }, { status: 400 });
   }
 
-  // İmzalı upload parametreleri
+  // İmzalı upload parametreleri (yalnızca beyaz listedeki klasörler kabul edilir)
+  const targetFolder = formData.get('folder') === 'sosyal' ? 'karta-baski/sosyal' : FOLDER;
   const timestamp = Math.round(Date.now() / 1000);
-  const paramsToSign = `folder=${FOLDER}&timestamp=${timestamp}`;
+  const paramsToSign = `folder=${targetFolder}&timestamp=${timestamp}`;
   const signature = crypto
     .createHash('sha256')
     .update(paramsToSign + API_SECRET)
@@ -70,7 +71,7 @@ export async function POST(req: NextRequest) {
   cloudForm.append('api_key', API_KEY);
   cloudForm.append('timestamp', String(timestamp));
   cloudForm.append('signature', signature);
-  cloudForm.append('folder', FOLDER);
+  cloudForm.append('folder', targetFolder);
 
   const res = await fetch(
     `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`,
