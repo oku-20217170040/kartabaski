@@ -14,6 +14,12 @@ npm run test:watch    # Jest in watch mode
 npm run test:coverage # Jest with coverage report
 ```
 
+## Güncel durum ve devir (ÖNCE OKU)
+
+- Yarım kalan iş ve sıradaki adımlar: `docs/DEVAM_NOTLARI.md`
+- Admin paneli modülleri, otomasyon (`/api/cron/main`) ve env listesi: `docs/ADMIN_PANEL.md`
+- Canlıya alma (Oracle Docker): `docs/YAYIN.md` ve `docs/DEVAM_NOTLARI.md` bölüm 5
+
 ## Kurallar
 
 - **Commit mesajları her zaman Türkçe yazılmalıdır.** Örnek: `git commit -m "Ürün detay sayfasına zoom özelliği eklendi"`
@@ -147,6 +153,9 @@ Copy `.env.local.example` to `.env.local` and fill in:
 | `/kategoriler` | Category index page |
 | `/nasil-siparis-verilir` | 3-step order guide page |
 | `/hakkimizda` | About page |
+| `/sepet` | Cart → WhatsApp order request |
+| `/blog`, `/blog/[slug]` | Blog |
+| `/yorum/[token]` | Customer review form (invite link) |
 
 `app/sitemap.ts` and `app/robots.ts` auto-generate SEO sitemap and robots.txt.
 
@@ -159,6 +168,8 @@ Copy `.env.local.example` to `.env.local` and fill in:
 | `/admin/products/new` | Add new product |
 | `/admin/products/[id]` | Edit existing product |
 | `/admin/login` | Admin login |
+
+Full module list (İstatistikler, Muhasebe, Makine, Ürün Fotoğrafları, Sepet Talepleri, Yorumlar, Sosyal Medya + 6 platform, Blog, SEO): see `docs/ADMIN_PANEL.md`. Menu config: `lib/admin-nav.ts`.
 
 ### Image Optimization
 

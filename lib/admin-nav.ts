@@ -34,7 +34,7 @@ export const ADMIN_GROUPS: AdminGroup[] = [
       { href: '/admin/products', label: 'Ürünler', icon: 'box', desc: 'Kupa kataloğu, fiyatlar ve görseller' },
       { href: '/admin/konfigurator', label: 'Konfiguratör', icon: 'palette', desc: 'Kupa ve tasarım seçenekleri' },
       { href: '/admin/makine', label: 'Makine', icon: 'cog', desc: 'Sipariş → baskı → kargo hattı ve haftalık rapor' },
-      { href: '/admin/studio', label: 'AI Stüdyo', icon: 'sparkles', desc: 'Yapay zeka destekli ürün fotoğraf stüdyosu' },
+      { href: '/admin/studio', label: 'Ürün Fotoğrafları', icon: 'sparkles', desc: 'Ürün eklenince stüdyo çekimi fotoğraflar üreten otomasyon' },
     ],
   },
   {
