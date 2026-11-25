@@ -1,0 +1,24 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { isCronAuthorized, runSteps } from '@/lib/cron-utils';
+import { runBlogStep } from '@/lib/blog-auto';
+import { runMachineStep } from '@/lib/machine-store';
+import { runAllSocialCycles } from '@/lib/social-run';
+
+// Tek otomasyon kapısı. Çağıran: GitHub Actions (.github/workflows/otomasyon-cron.yml, 30 dakikada bir).
+// Sunucu Oracle'da (Docker) olduğu için Vercel cron yok. CRON_SECRET zorunlu: Authorization: Bearer <secret>.
+// Sıra: blog yayını (müşteriye görünen iş) → makine özeti/haftalık rapor → 6 sosyal platform.
+// Bir adımın hatası diğerlerini engellemez.
+export const dynamic = 'force-dynamic';
+export const maxDuration = 300;
+
+export async function GET(req: NextRequest) {
+  if (!isCronAuthorized(process.env.CRON_SECRET, req.headers.get('authorization'))) {
+    return NextResponse.json({ ok: false }, { status: 401 });
+  }
+  const steps = await runSteps([
+    ['blog', () => runBlogStep()],
+    ['machine', () => runMachineStep()],
+    ['social', () => runAllSocialCycles()],
+  ]);
+  return NextResponse.json({ ok: steps.every((s) => s.ok), steps });
+}

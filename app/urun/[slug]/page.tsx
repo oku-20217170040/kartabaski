@@ -4,6 +4,9 @@ import { unstable_cache } from 'next/cache';
 import { getProductBySlugServer, getSimilarProductsServer, getProductsServer } from '@/lib/products-server';
 import { cloudinaryUrl, formatPriceRange } from '@/lib/format';
 import ProductDetailClient from './ProductDetailClient';
+import ProductReviews from '@/components/ProductReviews';
+import RelatedPosts from '@/components/RelatedPosts';
+import { getReviewAggregate } from '@/lib/reviews';
 import { PHONE, SITE_NAME } from '@/lib/constants';
 import { SITE_URL, jsonLdString } from '@/lib/site';
 import { getTitle, getPriceMin, getPriceMax, getCategory, getActive, getFirstImageId, getShortDesc, getDescription } from '@/lib/product-utils';
@@ -91,6 +94,7 @@ export default async function ProductDetailPage({ params }: Props) {
     similar = [...similar, ...all.filter((p) => getActive(p) && !taken.has(p.id))].slice(0, 4);
   }
 
+  const rating = await getReviewAggregate(product.id).catch(() => ({ count: 0, average: 0 }));
   const pTitle = getTitle(product);
   const priceMin = getPriceMin(product);
   const priceMax = getPriceMax(product);
@@ -124,6 +128,9 @@ export default async function ProductDetailPage({ params }: Props) {
     ...(imageUrl && { image: imageUrl }),
     brand: { '@type': 'Brand', name: SITE_NAME },
     offers,
+    ...(rating.count > 0 && {
+      aggregateRating: { '@type': 'AggregateRating', ratingValue: rating.average.toFixed(1), reviewCount: rating.count },
+    }),
   };
 
   const breadcrumbSchema = {
@@ -143,6 +150,8 @@ export default async function ProductDetailPage({ params }: Props) {
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdString(productSchema) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdString(breadcrumbSchema) }} />
       <ProductDetailClient slug={slug} product={product} similar={similar} />
+      <ProductReviews productId={product.id} />
+      <RelatedPosts productId={product.id} category={category} />
     </>
   );
 }

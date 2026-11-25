@@ -5,6 +5,7 @@ import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 import { WHATSAPP_BASE, DEFAULT_WA_TEXT, PHONE, PHONE_DISPLAY } from '@/lib/constants';
+import CartLink from '@/components/cart/CartLink';
 import { WhatsAppIcon, MenuIcon, CloseIcon, PhoneIcon, ArrowRightIcon } from '@/components/icons';
 
 const NAV_LINKS = [
@@ -13,6 +14,7 @@ const NAV_LINKS = [
   { href: '/kurumsal', label: 'Kurumsal' },
   { href: '/konfigurator', label: 'Kendin Tasarla' },
   { href: '/nasil-siparis-verilir', label: 'Nasıl Çalışır' },
+  { href: '/blog', label: 'Blog' },
 ];
 
 const WA_HREF = `${WHATSAPP_BASE}?text=${encodeURIComponent(DEFAULT_WA_TEXT)}`;
@@ -82,6 +84,7 @@ export default function Navbar() {
 
           <div className="header-actions">
             <Link href="/kurumsal" className="btn btn-outline btn-sm hide-md">Teklif isteyin</Link>
+            <CartLink />
             <a
               href={WA_HREF}
               target="_blank"

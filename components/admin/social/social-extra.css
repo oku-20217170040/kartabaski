@@ -1,0 +1,35 @@
+/* Telegram / Pinterest / TikTok panel sayfalarına özel ek stiller (.socx- öneki). Yalnızca tema değişkenleri. */
+.socx-intro { color: var(--ink-2); font-size: 14px; line-height: 1.6; margin: 0 0 16px; max-width: 760px; }
+.socx-intro a { color: var(--brand); }
+
+.socx-bar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 16px; }
+.socx-bar .btn { text-decoration: none; }
+
+.socx-notice { display: flex; gap: 8px; align-items: flex-start; font-size: 14px; line-height: 1.5; padding: 10px 14px; border-radius: var(--radius); border: 1px solid var(--line); background: var(--paper-2); color: var(--ink-2); margin-bottom: 16px; }
+.socx-notice svg { flex-shrink: 0; margin-top: 2px; }
+.socx-notice.is-warn { border-color: var(--line-strong); color: var(--ink); }
+.socx-notice.is-ok { background: var(--brand-soft); color: var(--brand); border-color: var(--brand); }
+.socx-notice.is-error { color: var(--danger); border-color: var(--danger); background: var(--surface); }
+
+.socx-toggle { display: inline-flex; align-items: center; gap: 10px; min-height: 44px; padding: 0 4px; font-size: 14px; color: var(--ink); cursor: pointer; }
+.socx-toggle input { width: 20px; height: 20px; accent-color: var(--brand); cursor: pointer; }
+
+.socx-list { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.socx-table { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 560px; }
+.socx-table th { text-align: left; color: var(--ink-3); font-weight: 500; padding: 8px 10px; white-space: nowrap; }
+.socx-table td { padding: 10px; border-top: 1px solid var(--line); vertical-align: middle; }
+.socx-table td.is-nowrap { white-space: nowrap; }
+.socx-table a { color: var(--brand); display: inline-flex; align-items: center; gap: 4px; min-height: 44px; }
+
+.socx-kind { display: inline-block; font-size: 11px; padding: 2px 8px; border-radius: 999px; background: var(--paper-2); color: var(--ink-3); border: 1px solid var(--line); margin-right: 6px; }
+
+.socx-err { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; color: var(--danger); }
+.socx-muted { color: var(--ink-3); }
+
+.socx-recent { margin: 0 0 16px; padding: 0; list-style: none; display: grid; gap: 6px; }
+.socx-recent li { font-size: 13px; padding: 8px 12px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); }
+.socx-recent li.is-bad { color: var(--danger); border-color: var(--danger); }
+
+@media (max-width: 640px) {
+  .socx-bar .btn { flex: 1 1 100%; }
+}

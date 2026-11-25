@@ -1,0 +1,29 @@
+name: Otomasyon (blog, makine, sosyal medya)
+
+# Yarım saatte bir /api/cron/main adresini çağırır: planlı blog yayını, makine özeti/haftalık rapor,
+# 6 sosyal medya platformunun otomasyon turu. Sunucu tarafı telafili ve kotalıdır; seyrek çağrı sorun değildir.
+# Gerekli GitHub secret: CRON_SECRET (sunucudaki .env içindeki CRON_SECRET ile aynı değer).
+# Secret tanımlı değilse iş KIRMIZI hata verir (sessizce atlanmaz).
+on:
+  schedule:
+    # UTC 04:00-21:30 = TSİ 07:00-00:30
+    - cron: '*/30 4-21 * * *'
+  workflow_dispatch: {}
+
+concurrency:
+  group: otomasyon-cron
+  cancel-in-progress: false
+
+jobs:
+  tick:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Cron adresini çağır
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+        run: |
+          if [ -z "$CRON_SECRET" ]; then echo "HATA: GitHub secret CRON_SECRET tanımlı değil."; exit 1; fi
+          code=$(curl -s -o out.json -w "%{http_code}" -m 290 -H "Authorization: Bearer ${CRON_SECRET}" "https://www.kartabaski.com/api/cron/main")
+          echo "HTTP $code"; cat out.json; echo
+          [ "$code" = "200" ] || exit 1
