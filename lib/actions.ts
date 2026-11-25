@@ -2,6 +2,7 @@
 
 import { revalidateTag, revalidatePath } from 'next/cache';
 import { requireAdmin } from './require-admin';
+import { maybeEnqueueOnCreate } from './photo-auto';
 import {
   createProduct as _createProduct,
   updateProduct as _updateProduct,
@@ -24,6 +25,8 @@ export async function createProductAction(data: Omit<import('@/types').Product, 
   await requireAdmin();
   const id = await _createProduct(data);
   revalidateTag('products');
+  // Ürün Fotoğrafları otomasyonu açıksa stüdyo çekimi işi kuyruğa girer (üretim cron'da); hata ürün kaydını engellemez
+  await maybeEnqueueOnCreate(id).catch(() => {});
   return id;
 }
 
