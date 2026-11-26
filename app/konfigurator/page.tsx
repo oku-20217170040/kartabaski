@@ -1,18 +1,22 @@
 import type { Metadata } from 'next';
+import Navbar from '@/components/Navbar';
+import Footer from '@/components/Footer';
 import ConfiguratorClient from './ConfiguratorClient';
 
-// Konfigüratörün kendi yerleşimi var; renk ve yazı tipi siteyle ortaktır.
-
 export const metadata: Metadata = {
-  title: 'Kendi Kombinasyonunu Oluştur',
-  description: 'Bardağını seç, tasarımını seç — biz basalım. Kişiye özel kupa baskı konfiguratörü.',
+  title: 'Kendin Tasarla',
+  description: 'Kupayı ve hazır deseni seçin ya da kendi fotoğrafınızı ekleyin; sepetten siparişinizi oluşturun.',
   alternates: { canonical: '/konfigurator' },
 };
 
 export default function ConfiguratorPage() {
   return (
-    <div className="cf-legacy">
-      <ConfiguratorClient />
-    </div>
+    <>
+      <Navbar />
+      <main id="icerik" className="kf">
+        <ConfiguratorClient />
+      </main>
+      <Footer />
+    </>
   );
 }

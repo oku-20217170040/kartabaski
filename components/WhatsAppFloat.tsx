@@ -19,7 +19,7 @@ export default function WhatsAppFloat() {
   }, []);
 
   // Ürün, tasarım ve sipariş sayfalarının kendi düğmesi var; yönetimde gerekmiyor.
-  if (pathname.startsWith('/urun/') || pathname.startsWith('/admin') || pathname.startsWith('/tasarla') || pathname.startsWith('/siparis') || !visible) return null;
+  if (pathname.startsWith('/urun/') || pathname.startsWith('/admin') || pathname.startsWith('/tasarla') || pathname.startsWith('/konfigurator') || pathname.startsWith('/siparis') || !visible) return null;
 
   return (
     <a className="wa-float" href={WA_HREF} target="_blank" rel="noopener noreferrer" aria-label="WhatsApp üzerinden yazın">
