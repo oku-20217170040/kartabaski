@@ -162,7 +162,7 @@ export default function AdminProductsPage() {
       for (let n = 2; taken.has(slug); n++) slug = `${base}-${n}`;
 
       const now = Date.now();
-      const newId = await createProductAction({
+      const { id: newId, error } = await createProductAction({
         ...rest,
         title: `${source.title} (Kopya)`,
         slug,
@@ -172,6 +172,7 @@ export default function AdminProductsPage() {
         createdAt: now,
         updatedAt: now,
       });
+      if (!newId) throw new Error(error);
       toast.success('Ürün kopyalandı (pasif olarak eklendi).');
       const created = await getProductById(newId);
       if (created) setProducts((prev) => [created, ...prev]);

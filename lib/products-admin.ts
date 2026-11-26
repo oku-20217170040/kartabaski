@@ -83,11 +83,14 @@ async function withoutSharedIds(ids: string[], selfId: string): Promise<string[]
   }
 }
 
+/** Mesajı yöneticiye gösterilecek hata. */
+export class ProductError extends Error {}
+
 async function assertSlugUnique(slug: string | undefined, selfId?: string): Promise<void> {
   if (!slug) return;
   const snap = await adminDb.collection(COL).where('slug', '==', slug).limit(5).get();
   if (snap.docs.some((d) => d.id !== selfId)) {
-    throw new Error('Bu slug başka bir üründe kullanılıyor');
+    throw new ProductError('Bu slug başka bir üründe kullanılıyor. Slug alanını değiştirip tekrar kaydedin.');
   }
 }
 
@@ -110,11 +113,13 @@ export async function createProduct(data: Omit<Product, 'id'>): Promise<string> 
 }
 
 export async function updateProduct(id: string, data: Partial<Product>): Promise<void> {
-  await assertSlugUnique(data.slug, id);
-
   const docRef = adminDb.collection(COL).doc(id);
+  const current = (await docRef.get()).data();
+  // Slug değişmiyorsa denetlenmez: eskiden kalmış çift kayıt ürünü düzenlenemez yapmasın.
+  if (data.slug !== current?.slug) await assertSlugUnique(data.slug, id);
+
   const touchesImages = 'images' in data || 'colors' in data;
-  const oldIds = touchesImages ? collectImageIds((await docRef.get()).data()) : [];
+  const oldIds = touchesImages ? collectImageIds(current) : [];
 
   // Form, boş alanları `undefined` gönderir → Firestore'da alanı sil
   const payload: Record<string, unknown> = {};

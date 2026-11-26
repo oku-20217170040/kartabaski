@@ -23,7 +23,8 @@ export default function EditProductPage() {
   }, [id]);
 
   const handleSubmit = async (data: Omit<Product, 'id' | 'createdAt' | 'updatedAt'>) => {
-    await updateProductAction(id, data);
+    const { error } = await updateProductAction(id, data);
+    if (error) throw new Error(error);
     toast.success('Değişiklikler kaydedildi.');
     router.push('/admin/products');
   };

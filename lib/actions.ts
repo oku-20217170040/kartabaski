@@ -8,6 +8,7 @@ import {
   updateProduct as _updateProduct,
   deleteProduct as _deleteProduct,
   toggleFeatured as _toggleFeatured,
+  ProductError,
 } from './products-admin';
 import {
   createCup as _createCup,
@@ -21,19 +22,35 @@ import type { ConfiguratorCup, ConfiguratorDesign } from '@/types';
 
 // ── Ürün Aksiyonları ─────────────────────────────────────────────────────────
 
-export async function createProductAction(data: Omit<import('@/types').Product, 'id'>): Promise<string> {
+/* Canlıda sunucu hatalarının metni gizlendiği için yöneticiye gösterilecek mesaj sonuçla döner. */
+const explain = (e: unknown) => {
+  if (e instanceof ProductError) return { error: e.message };
+  throw e;
+};
+
+export async function createProductAction(data: Omit<import('@/types').Product, 'id'>): Promise<{ id?: string; error?: string }> {
   await requireAdmin();
-  const id = await _createProduct(data);
+  let id: string;
+  try {
+    id = await _createProduct(data);
+  } catch (e) {
+    return explain(e);
+  }
   revalidateTag('products');
   // Ürün Fotoğrafları otomasyonu açıksa stüdyo çekimi işi kuyruğa girer (üretim cron'da); hata ürün kaydını engellemez
   await maybeEnqueueOnCreate(id).catch(() => {});
-  return id;
+  return { id };
 }
 
-export async function updateProductAction(id: string, data: Partial<import('@/types').Product>): Promise<void> {
+export async function updateProductAction(id: string, data: Partial<import('@/types').Product>): Promise<{ error?: string }> {
   await requireAdmin();
-  await _updateProduct(id, data);
+  try {
+    await _updateProduct(id, data);
+  } catch (e) {
+    return explain(e);
+  }
   revalidateTag('products');
+  return {};
 }
 
 export async function deleteProductAction(id: string): Promise<void> {

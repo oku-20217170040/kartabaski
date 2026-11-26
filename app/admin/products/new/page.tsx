@@ -12,7 +12,8 @@ export default function NewProductPage() {
   const toast = useToast();
 
   const handleSubmit = async (data: Omit<Product, 'id' | 'createdAt' | 'updatedAt'>) => {
-    await createProductAction({ ...data, createdAt: Date.now(), updatedAt: Date.now() });
+    const { error } = await createProductAction({ ...data, createdAt: Date.now(), updatedAt: Date.now() });
+    if (error) throw new Error(error);
     toast.success('Ürün oluşturuldu.');
     router.push('/admin/products');
   };
