@@ -78,9 +78,11 @@ export default async function HomePage() {
   const mug = active.find((p) => getSlug(p) === VITRIN_PRODUCT_SLUG);
   const mugProduct = mug
     ? {
-        href: `/urun/${getSlug(mug)}`,
+        slug: getSlug(mug),
         title: displayTitle(getTitle(mug)),
         price: formatPriceRange(getPriceMin(mug), getPriceMax(mug)),
+        // Firestore tarih nesneleri istemciye düz veri olarak geçsin.
+        product: JSON.parse(JSON.stringify(mug)),
       }
     : null;
 

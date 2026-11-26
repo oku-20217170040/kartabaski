@@ -2,33 +2,69 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { WhatsAppIcon, CloseIcon } from '@/components/icons';
-import { WHATSAPP_BASE } from '@/lib/constants';
 import { useCart } from '@/lib/cart-context';
+import { loadFile } from '@/lib/cart-files';
 import { cartImageSrc } from '@/lib/cart-products';
-import { buildCartWhatsAppMessage, cartTotal, clampQty, MAX_QTY, NOTE_MAX, reconcileCart } from '@/lib/cart';
+import { cartTotal, clampQty, MAX_QTY, reconcileCart } from '@/lib/cart';
+import { PHONE_RE } from '@/lib/cart-schemas';
 import type { CartItem, CartProductInfo } from '@/lib/cart-types';
-import { getCartProductInfoAction, submitCartRequestAction } from '@/lib/actions-cart';
+import { getCartProductInfoAction } from '@/lib/actions-siparis';
+import { submitOrder } from '@/lib/siparis-client';
 import { trackEvent } from '@/lib/analytics-client';
 import { formatPriceRange } from '@/lib/format';
 import '@/components/cart/cart.css';
 import './sepet.css';
 
 const fmt = (n: number) => new Intl.NumberFormat('tr-TR').format(n);
-const PHONE_RE = /^\+?[0-9\s()-]{10,18}$/;
 
-interface Done { url: string; id: string }
+/** Satır görseli: cihazdaki kupa önizlemesi ya da ilk fotoğraf; yoksa ürün görseli. */
+function Thumb({ item }: { item: CartItem }) {
+  const fileId = item.design?.preview ?? item.design?.photos[0];
+  const [url, setUrl] = useState<string | null>(null);
+  useEffect(() => {
+    if (!fileId) { setUrl(null); return; }
+    let alive = true;
+    let made: string | null = null;
+    loadFile(fileId).then((blob) => {
+      if (!alive || !blob) return;
+      made = URL.createObjectURL(blob);
+      setUrl(made);
+    }).catch(() => {});
+    return () => { alive = false; if (made) URL.revokeObjectURL(made); };
+  }, [fileId]);
+  const src = url ?? cartImageSrc(item.image);
+  // eslint-disable-next-line @next/next/no-img-element
+  return src ? <img src={src} alt="" /> : null;
+}
+
+function designSummary(item: CartItem): string[] {
+  const d = item.design;
+  if (!d) return ['Tasarım eklenmedi'];
+  const parts = [
+    d.text ? `Yazı: ${d.text}` : '',
+    d.photos.length ? `${d.photos.length} fotoğraf` : '',
+    d.removeBg ? 'Arka plan silinecek' : '',
+    d.needsDesign ? 'Tasarımı biz hazırlayacağız' : '',
+  ].filter(Boolean);
+  return parts.length ? parts : ['Tasarım eklenmedi'];
+}
+
+const EMPTY = { name: '', phone: '', city: '', district: '', address: '', note: '', website: '' /* honeypot */ };
 
 export default function SepetClient() {
-  const { items, ready, remove, setQty, setNote, clear } = useCart();
+  const router = useRouter();
+  const { items, ready, remove, setQty, clear } = useCart();
   const [info, setInfo] = useState<CartProductInfo[]>([]);
-  const [form, setForm] = useState({ name: '', phone: '', city: '', district: '', address: '', note: '', website: '' /* honeypot */ });
+  const [form, setForm] = useState(EMPTY);
+  const [kvkk, setKvkk] = useState(false);
   const [touched, setTouched] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
+  const [progress, setProgress] = useState<string | null>(null);
   const [error, setError] = useState('');
-  const [done, setDone] = useState<Done | null>(null);
+  const [leaving, setLeaving] = useState(false);
 
   const set = (k: keyof typeof form, v: string) => setForm((f) => ({ ...f, [k]: v }));
 
@@ -49,50 +85,39 @@ export default function SepetClient() {
   const errs = {
     name: form.name.trim().length < 2 ? 'Ad soyad girin' : '',
     phone: !PHONE_RE.test(form.phone.trim()) ? 'Geçerli bir telefon numarası girin' : '',
-    city: form.city.trim().length < 2 ? 'İl girin' : '',
-    district: form.district.trim().length < 2 ? 'İlçe girin' : '',
+    kvkk: !kvkk ? 'Devam etmek için onaylayın' : '',
   };
-  const valid = !errs.name && !errs.phone && !errs.city && !errs.district;
+  const valid = !errs.name && !errs.phone && !errs.kvkk;
   const show = (k: keyof typeof errs) => (touched && errs[k] ? <div className="cart-err">{errs[k]}</div> : null);
+  const busy = progress !== null;
 
   const handleSubmit = async () => {
     setTouched(true);
     setError('');
-    if (!valid || available.length === 0 || submitting) return;
-    setSubmitting(true);
-
-    // Mobil tarayıcılar await sonrası açılan popup'ı engeller: pencereyi tıklama anında aç
-    const popup = window.open('', '_blank');
-    const contact = {
-      name: form.name.trim(),
-      phone: form.phone.trim(),
-      city: form.city.trim(),
-      district: form.district.trim(),
-      address: form.address.trim() || undefined,
-      note: form.note.trim() || undefined,
-    };
-
+    if (!valid || available.length === 0 || busy) return;
+    setProgress('Sipariş hazırlanıyor…');
     try {
-      const res = await submitCartRequestAction({
-        items: available.map((i) => ({ productId: i.productId, qty: i.qty, color: i.color, note: i.note })),
-        ...contact,
-        website: form.website,
-      });
-      trackEvent('cart_send', { items: res.items.length, qty: res.items.reduce((s, i) => s + i.qty, 0) });
-      const text = buildCartWhatsAppMessage({ ref: res.id, items: res.items, total: res.total, ...contact });
-      const url = `${WHATSAPP_BASE}?text=${encodeURIComponent(text)}`;
-      trackEvent('whatsapp', { src: 'sepet' });
-      if (popup) popup.location.href = url;
-      else window.location.href = url;
+      const token = await submitOrder(
+        available,
+        {
+          name: form.name.trim(),
+          phone: form.phone.trim(),
+          city: form.city.trim() || undefined,
+          district: form.district.trim() || undefined,
+          address: form.address.trim() || undefined,
+          note: form.note.trim() || undefined,
+          kvkk,
+          website: form.website,
+        },
+        (done, count) => setProgress(count ? `Fotoğraflar yükleniyor ${done}/${count}` : 'Sipariş hazırlanıyor…'),
+      );
+      trackEvent('cart_send', { items: available.length, qty: qtyTotal });
+      setLeaving(true);
       clear();
-      setDone({ url, id: res.id });
+      router.push(`/siparis/${token}?musteri=1`);
     } catch (e) {
-      popup?.close();
-      setError(e instanceof Error && e.message && !e.message.includes('omitted in production')
-        ? e.message
-        : 'Talep gönderilemedi. Lütfen tekrar deneyin.');
-    } finally {
-      setSubmitting(false);
+      setError(e instanceof Error ? e.message : 'Sipariş gönderilemedi. Lütfen tekrar deneyin.');
+      setProgress(null);
     }
   };
 
@@ -117,91 +142,66 @@ export default function SepetClient() {
     </>
   );
 
-  if (done) {
-    return shell(
-      <div className="cart-empty">
-        <h2 className="h2">Talebiniz alındı</h2>
-        <p className="muted">
-          Sepetiniz WhatsApp mesajı olarak hazırlandı. Mesajı göndermeniz süreci hızlandırır; fiyatı ve tasarım detaylarını orada netleştireceğiz.
-          Kişiselleştirme fotoğrafınızı da aynı sohbetten iletebilirsiniz.
-        </p>
-        <div className="cart-empty-actions">
-          <a href={done.url} target="_blank" rel="noopener noreferrer" className="btn btn-primary" onClick={() => trackEvent('whatsapp', { src: 'sepet' })}>
-            <WhatsAppIcon /> WhatsApp&apos;ı tekrar aç
-          </a>
-          <Link href="/" className="btn btn-outline">Alışverişe devam et</Link>
-        </div>
-      </div>
-    );
-  }
-
-  if (!ready) return shell(<div className="cart-empty"><p className="muted">Sepet yükleniyor…</p></div>);
+  if (!ready || leaving) return shell(<div className="cart-empty"><p className="muted">{leaving ? 'Sipariş sayfanız açılıyor…' : 'Sepet yükleniyor…'}</p></div>);
 
   if (items.length === 0) {
     return shell(
       <div className="cart-empty">
         <h2 className="h2">Sepetiniz boş</h2>
-        <p className="muted">Beğendiğiniz kupayı ürün sayfasından sepete ekleyebilirsiniz.</p>
+        <p className="muted">Bir kupa seçip tasarladığınızda burada görünür.</p>
         <div className="cart-empty-actions">
-          <Link href="/" className="btn btn-primary">Ürünlere göz atın</Link>
+          <Link href="/#urunler" className="btn btn-primary">Kupa seçin</Link>
           <Link href="/kategoriler" className="btn btn-outline">Kategoriler</Link>
         </div>
       </div>
     );
   }
 
-  const row = (item: CartItem, off: boolean) => {
-    const src = cartImageSrc(item.image);
-    return (
-      <li key={item.key} className={`cart-row${off ? ' is-off' : ''}`}>
-        <Link href={`/urun/${item.slug}`} className="cart-thumb" aria-label={item.title}>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          {src ? <img src={src} alt="" /> : null}
-        </Link>
-        <div className="cart-row-main">
-          <Link href={`/urun/${item.slug}`} className="cart-row-title">{item.title}</Link>
-          <div className="cart-row-meta">
-            {item.category}{item.color ? ` · Renk: ${item.color}` : ''}
-          </div>
-          {off ? (
-            <div className="cart-row-off">Bu ürün artık satışta değil</div>
-          ) : (
-            <>
-              <div className="cart-row-price">
-                {item.unitPrice > 0 ? <>{formatPriceRange(item.unitPrice, 0)}<small> &apos;den başlayan / adet</small></> : 'Fiyat için yazın'}
-              </div>
-              <div className="cart-row-controls">
-                <div className="cart-qty" role="group" aria-label={`${item.title} adedi`}>
-                  <button type="button" onClick={() => setQty(item.key, item.qty - 1)} disabled={item.qty <= 1} aria-label="Adedi azalt">−</button>
-                  <input
-                    type="text"
-                    inputMode="numeric"
-                    aria-label="Adet"
-                    value={item.qty}
-                    onChange={(e) => setQty(item.key, clampQty(Number(e.target.value.replace(/\D/g, '').slice(0, 3)) || 1))}
-                  />
-                  <button type="button" onClick={() => setQty(item.key, item.qty + 1)} disabled={item.qty >= MAX_QTY} aria-label="Adedi artır">+</button>
-                </div>
-                {item.unitPrice > 0 && <span className="cart-row-line">≈ {fmt(item.unitPrice * item.qty)}₺</span>}
-              </div>
-              <label className="cart-label" htmlFor={`note-${item.key}`}>Kişiselleştirme notu <span>(isim / yazı)</span></label>
-              <input
-                id={`note-${item.key}`}
-                className="cart-input"
-                maxLength={NOTE_MAX}
-                placeholder="Örn. Ayşe & Mehmet 2026"
-                value={item.note ?? ''}
-                onChange={(e) => setNote(item.key, e.target.value)}
-              />
-            </>
-          )}
+  const row = (item: CartItem, off: boolean) => (
+    <li key={item.key} className={`cart-row${off ? ' is-off' : ''}`}>
+      <Link href={`/urun/${item.slug}`} className="cart-thumb" aria-label={item.title}>
+        <Thumb item={item} />
+      </Link>
+      <div className="cart-row-main">
+        <Link href={`/urun/${item.slug}`} className="cart-row-title">{item.title}</Link>
+        <div className="cart-row-meta">
+          {item.category}{item.color ? ` · Renk: ${item.color}` : ''}
         </div>
-        <button type="button" className="cart-remove" onClick={() => remove(item.key)} aria-label={`${item.title} sepetten çıkar`}>
-          <CloseIcon size={18} />
-        </button>
-      </li>
-    );
-  };
+        {off ? (
+          <div className="cart-row-off">Bu ürün artık satışta değil</div>
+        ) : (
+          <>
+            <ul className="cart-design">
+              {designSummary(item).map((t) => <li key={t}>{t}</li>)}
+              {item.note && <li>Not: {item.note}</li>}
+            </ul>
+            <Link href={`/tasarla/${item.slug}?satir=${encodeURIComponent(item.key)}`} className="cart-edit">Tasarımı düzenle</Link>
+            <div className="cart-row-price">
+              {item.unitPrice > 0 ? <>{formatPriceRange(item.unitPrice, 0)}<small> &apos;den başlayan / adet</small></> : 'Fiyat için yazın'}
+            </div>
+            <div className="cart-row-controls">
+              <div className="cart-qty" role="group" aria-label={`${item.title} adedi`}>
+                <button type="button" onClick={() => setQty(item.key, item.qty - 1)} disabled={item.qty <= 1 || busy} aria-label="Adedi azalt">−</button>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  aria-label="Adet"
+                  value={item.qty}
+                  disabled={busy}
+                  onChange={(e) => setQty(item.key, clampQty(Number(e.target.value.replace(/\D/g, '').slice(0, 3)) || 1))}
+                />
+                <button type="button" onClick={() => setQty(item.key, item.qty + 1)} disabled={item.qty >= MAX_QTY || busy} aria-label="Adedi artır">+</button>
+              </div>
+              {item.unitPrice > 0 && <span className="cart-row-line">≈ {fmt(item.unitPrice * item.qty)}₺</span>}
+            </div>
+          </>
+        )}
+      </div>
+      <button type="button" className="cart-remove" onClick={() => remove(item.key)} disabled={busy} aria-label={`${item.title} sepetten çıkar`}>
+        <CloseIcon size={18} />
+      </button>
+    </li>
+  );
 
   return shell(
     <div className="cart-layout">
@@ -210,12 +210,13 @@ export default function SepetClient() {
           {available.map((i) => row(i, false))}
           {unavailable.map((i) => row(i, true))}
         </ul>
+        <Link href="/#urunler" className="cart-more">Başka kupa ekleyin</Link>
       </section>
 
-      <aside className="cart-side" aria-label="Talep özeti">
+      <aside className="cart-side" aria-label="Sipariş özeti">
         <div className="cart-summary">
           <div className="cart-summary-line">
-            <span>{available.length} ürün · {qtyTotal} adet</span>
+            <span>{available.length} tasarım · {qtyTotal} adet</span>
             <strong>{total > 0 ? `≈ ${fmt(total)}₺` : 'Fiyat için yazın'}</strong>
           </div>
           <p className="cart-hint">
@@ -225,7 +226,7 @@ export default function SepetClient() {
         </div>
 
         <form className="cart-form" onSubmit={(e) => { e.preventDefault(); handleSubmit(); }} noValidate>
-          <h2 className="h3">İletişim bilgileriniz</h2>
+          <h2 className="h3">Size nasıl ulaşalım?</h2>
 
           {/* Honeypot: botlar doldurur, insanlar görmez */}
           <input
@@ -242,32 +243,40 @@ export default function SepetClient() {
           <input id="c-phone" className="cart-input" type="tel" autoComplete="tel" placeholder="05xx xxx xx xx" maxLength={18} value={form.phone} onChange={(e) => set('phone', e.target.value)} />
           {show('phone')}
 
-          <div className="cart-two">
-            <div>
-              <label className="cart-label" htmlFor="c-city">İl</label>
-              <input id="c-city" className="cart-input" autoComplete="address-level1" maxLength={60} value={form.city} onChange={(e) => set('city', e.target.value)} />
-              {show('city')}
+          <details className="cart-more-info">
+            <summary>Teslimat adresi ekleyin (isteğe bağlı)</summary>
+            <div className="cart-two">
+              <div>
+                <label className="cart-label" htmlFor="c-city">İl</label>
+                <input id="c-city" className="cart-input" autoComplete="address-level1" maxLength={60} value={form.city} onChange={(e) => set('city', e.target.value)} />
+              </div>
+              <div>
+                <label className="cart-label" htmlFor="c-district">İlçe</label>
+                <input id="c-district" className="cart-input" autoComplete="address-level2" maxLength={60} value={form.district} onChange={(e) => set('district', e.target.value)} />
+              </div>
             </div>
-            <div>
-              <label className="cart-label" htmlFor="c-district">İlçe</label>
-              <input id="c-district" className="cart-input" autoComplete="address-level2" maxLength={60} value={form.district} onChange={(e) => set('district', e.target.value)} />
-              {show('district')}
-            </div>
-          </div>
+            <label className="cart-label" htmlFor="c-address">Adres</label>
+            <input id="c-address" className="cart-input" autoComplete="street-address" maxLength={300} value={form.address} onChange={(e) => set('address', e.target.value)} />
+          </details>
 
-          <label className="cart-label" htmlFor="c-address">Adres <span>(opsiyonel)</span></label>
-          <input id="c-address" className="cart-input" autoComplete="street-address" maxLength={300} value={form.address} onChange={(e) => set('address', e.target.value)} />
+          <label className="cart-label" htmlFor="c-note">Sipariş notu <span>(isteğe bağlı)</span></label>
+          <textarea id="c-note" className="cart-input" rows={3} maxLength={500} placeholder="Teslim tarihi, fatura vb." value={form.note} onChange={(e) => set('note', e.target.value)} />
 
-          <label className="cart-label" htmlFor="c-note">Not <span>(opsiyonel)</span></label>
-          <textarea id="c-note" className="cart-input" rows={3} maxLength={500} placeholder="Teslim tarihi, tasarım isteği vb." value={form.note} onChange={(e) => set('note', e.target.value)} />
+          <label className="cart-consent">
+            <input type="checkbox" checked={kvkk} onChange={(e) => setKvkk(e.target.checked)} />
+            <span>
+              <Link href="/gizlilik" target="_blank">Aydınlatma metnini</Link> okudum; bilgilerimin ve fotoğraflarımın siparişim için işlenmesini onaylıyorum.
+            </span>
+          </label>
+          {show('kvkk')}
 
           {error && <div className="cart-err cart-err-box" role="alert">{error}</div>}
 
-          <button type="submit" className="btn btn-primary btn-block" disabled={available.length === 0 || submitting}>
-            <WhatsAppIcon /> {submitting ? 'Gönderiliyor…' : 'Talebi gönder ve WhatsApp’a geç'}
+          <button type="submit" className="btn btn-primary btn-block" disabled={available.length === 0 || busy}>
+            <WhatsAppIcon /> {progress ?? 'Siparişi oluşturun'}
           </button>
           {available.length === 0 && <p className="cart-hint">Sepetinizdeki ürünlerin hiçbiri artık satışta değil.</p>}
-          <p className="cart-hint">Talebiniz kaydedilir ve WhatsApp&apos;ta hazır mesaj açılır. Fotoğrafınızı o sohbetten gönderebilirsiniz.</p>
+          <p className="cart-hint">Fotoğraflarınız bu düğmeye bastığınızda yüklenir. Sonraki sayfada WhatsApp&apos;a yalnızca sipariş bağlantınız gider.</p>
         </form>
       </aside>
     </div>

@@ -2,7 +2,6 @@ import {
   MAX_CART_ITEMS,
   MAX_QTY,
   addToCart,
-  buildCartWhatsAppMessage,
   cartCount,
   cartTotal,
   clampQty,
@@ -13,9 +12,10 @@ import {
   removeFromCart,
   setNote,
   setQty,
+  upsertLine,
+  designFileIds,
   waNumber,
 } from '@/lib/cart';
-import { CartRequestInputSchema } from '@/lib/cart-schemas';
 import { isTalepStatus } from '@/lib/talep-status';
 import type { CartItem, CartProductInfo } from '@/lib/cart-types';
 
@@ -121,24 +121,6 @@ describe('parseStoredCart', () => {
   });
 });
 
-describe('buildCartWhatsAppMessage', () => {
-  it('talep no, adet, renk, kişiselleştirme ve tahmini toplamı içerir', () => {
-    const msg = buildCartWhatsAppMessage({
-      ref: 'abc123xyz',
-      items: [{ productId: 'a', slug: 'kupa-a', title: 'Kupa A', unitPrice: 150, qty: 4, color: 'Beyaz', note: 'Ayşe' }],
-      total: 600,
-      name: 'Ali', phone: '0555 111 22 33', city: 'İzmir', district: 'Karşıyaka',
-    });
-    expect(msg).toContain('No: ABC123');
-    expect(msg).toContain('4 adet');
-    expect(msg).toContain('Renk: Beyaz');
-    expect(msg).toContain('Kişiselleştirme: Ayşe');
-    expect(msg).toContain('600₺');
-    expect(msg).toContain('Karşıyaka / İzmir');
-    expect(msg).toContain('/urun/kupa-a');
-  });
-});
-
 describe('waNumber / customerWhatsappLink', () => {
   it('Türkiye numarasını wa.me biçimine çevirir', () => {
     expect(waNumber('0555 111 22 33')).toBe('905551112233');
@@ -152,26 +134,32 @@ describe('waNumber / customerWhatsappLink', () => {
   });
 });
 
-describe('CartRequestInputSchema', () => {
-  const valid = {
-    items: [{ productId: 'abc_1', qty: 2, color: 'Beyaz', note: 'Ayşe' }],
-    name: 'Ali Veli', phone: '0555 111 22 33', city: 'İzmir', district: 'Karşıyaka',
-  };
-  it('geçerli talebi kabul eder', () => {
-    expect(CartRequestInputSchema.safeParse(valid).success).toBe(true);
+describe('tasarımlı satırlar', () => {
+  const designed = item('a', { key: 'd:1', design: { photos: ['f1', 'f2'], preview: 'p1', text: 'Elif' } });
+
+  it('düzenlenen satır yerinde değişir, yeni tasarım ayrı satır olur', () => {
+    let items = upsertLine([designed], { ...designed, qty: 3 });
+    expect(items).toHaveLength(1);
+    expect(items[0].qty).toBe(3);
+    items = upsertLine(items, item('a', { key: 'd:2', design: { photos: [] } }));
+    expect(items).toHaveLength(2);
   });
-  it('boş sepeti, 500 üstü adedi, kötü telefonu ve honeypot dolu talebi reddeder', () => {
-    expect(CartRequestInputSchema.safeParse({ ...valid, items: [] }).success).toBe(false);
-    expect(CartRequestInputSchema.safeParse({ ...valid, items: [{ productId: 'a', qty: 501 }] }).success).toBe(false);
-    expect(CartRequestInputSchema.safeParse({ ...valid, phone: '123' }).success).toBe(false);
-    expect(CartRequestInputSchema.safeParse({ ...valid, website: 'bot' }).success).toBe(false);
+
+  it('cihazdaki dosya kimliklerini listeler', () => {
+    expect(designFileIds([designed, item('b')])).toEqual(['f1', 'f2', 'p1']);
   });
-  it('il/ilçe/ad zorunlu, adres opsiyoneldir', () => {
-    expect(CartRequestInputSchema.safeParse({ ...valid, city: '' }).success).toBe(false);
-    expect(CartRequestInputSchema.safeParse({ ...valid, address: undefined }).success).toBe(true);
+
+  it('kayıttan okurken anahtar ve tasarım korunur, geçersiz dosya kimliği atılır', () => {
+    const raw = JSON.stringify([designed, { ...designed, key: 'd:2', design: { photos: ['../x', 'ok'] } }]);
+    const out = parseStoredCart(raw);
+    expect(out.map((i) => i.key)).toEqual(['d:1', 'd:2']);
+    expect(out[0].design).toMatchObject({ photos: ['f1', 'f2'], preview: 'p1', text: 'Elif' });
+    expect(out[1].design?.photos).toEqual(['ok']);
   });
-  it('yol benzeri ürün id reddedilir', () => {
-    expect(CartRequestInputSchema.safeParse({ ...valid, items: [{ productId: 'a/b', qty: 1 }] }).success).toBe(false);
+
+  it('tasarımlı satırda katalogda olmayan renk korunur', () => {
+    const { available } = reconcileCart([{ ...designed, color: 'Mavi' }], [info('a', { colors: ['Sarı'] })]);
+    expect(available[0].color).toBe('Mavi');
   });
 });
 

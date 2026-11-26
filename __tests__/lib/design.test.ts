@@ -1,5 +1,5 @@
 import { DEFAULT_PLACEMENT, MAX_SCALE, MIN_SCALE, clampPlacement, photoRect } from '@/lib/photo-layout';
-import { DesignInputSchema, canCustomerEdit, designMessage } from '@/lib/design-types';
+import { OrderInputSchema, canCustomerDelete, customerView, maskPhone, orderMessage, shortName, OrderRequest } from '@/lib/siparis-types';
 import { toAlpha, toModelInput } from '@/lib/remove-background';
 import { classifyPath } from '@/lib/analytics-utils';
 
@@ -21,27 +21,48 @@ describe('fotoğraf yerleşimi', () => {
   });
 });
 
-describe('tasarım siparişi', () => {
+describe('sipariş', () => {
+  const token = 'a'.repeat(32);
+  const input = {
+    items: [{ productId: 'abc_1', qty: 2, photoCount: 1, hasPreview: false, text: 'Elif' }],
+    name: 'Ayşe Yılmaz', phone: '0555 111 22 33', kvkk: true,
+  };
+
   it('WhatsApp mesajında yalnızca bağlantı vardır', () => {
-    expect(designMessage('a'.repeat(32), 'https://www.kartabaski.com'))
-      .toBe(`Sipariş tasarımım: https://www.kartabaski.com/tasarim/${'a'.repeat(32)}`);
+    expect(orderMessage(token, 'https://www.kartabaski.com')).toBe(`Siparişim: https://www.kartabaski.com/siparis/${token}`);
   });
 
-  it('işleme alınan siparişi müşteri değiştiremez', () => {
-    expect(canCustomerEdit('taslak')).toBe(true);
-    expect(canCustomerEdit('yeni')).toBe(true);
-    expect(canCustomerEdit('siparis')).toBe(false);
-    expect(canCustomerEdit('iptal')).toBe(false);
+  it('ad ve telefon yeterli; onaysız, boş ya da bozuk sipariş reddedilir', () => {
+    expect(OrderInputSchema.safeParse(input).success).toBe(true);
+    expect(OrderInputSchema.safeParse({ ...input, kvkk: false }).success).toBe(false);
+    expect(OrderInputSchema.safeParse({ ...input, items: [] }).success).toBe(false);
+    expect(OrderInputSchema.safeParse({ ...input, phone: '123' }).success).toBe(false);
+    expect(OrderInputSchema.safeParse({ ...input, website: 'bot' }).success).toBe(false);
+    expect(OrderInputSchema.safeParse({ ...input, items: [{ productId: 'a/b', qty: 1, photoCount: 0, hasPreview: false }] }).success).toBe(false);
+    expect(OrderInputSchema.safeParse({ ...input, items: [{ productId: 'a', qty: 1, photoCount: 9, hasPreview: false }] }).success).toBe(false);
   });
 
-  it('geçersiz girdiyi reddeder', () => {
-    expect(DesignInputSchema.safeParse({ productSlug: 'luks-kupa', color: 'Mavi' }).success).toBe(true);
-    expect(DesignInputSchema.safeParse({ productSlug: '../x' }).success).toBe(false);
-    expect(DesignInputSchema.safeParse({ productSlug: 'a', text: 'x'.repeat(41) }).success).toBe(false);
+  it('üretime alınan sipariş müşterice silinemez', () => {
+    expect(canCustomerDelete('yeni')).toBe(true);
+    expect(canCustomerDelete('siparis')).toBe(false);
+    expect(canCustomerDelete('tamamlandi')).toBe(false);
+  });
+
+  it('müşteri görünümünde iletişim bilgisi maskelenir, adres ve iç not gitmez', () => {
+    const view = customerView({
+      token, createdAt: 1, updatedAt: 1, status: 'yeni', items: [], total: 0,
+      name: 'Ayşe Yılmaz', phone: '0545 826 65 08', address: 'Gizli sokak', adminNote: 'iç',
+    } as OrderRequest);
+    expect(view.phone).toBe('0545 *** ** 08');
+    expect(view.name).toBe('Ayşe Y.');
+    expect(JSON.stringify(view)).not.toContain('Gizli');
+    expect(view).not.toHaveProperty('adminNote');
+    expect(maskPhone('123')).toBe('***');
+    expect(shortName('Ali')).toBe('Ali');
   });
 
   it('sipariş bağlantısı istatistiğe yazılmaz', () => {
-    expect(classifyPath(`/tasarim/${'a'.repeat(32)}`).kind).toBe('skip');
+    expect(classifyPath(`/siparis/${token}`).kind).toBe('skip');
   });
 });
 
