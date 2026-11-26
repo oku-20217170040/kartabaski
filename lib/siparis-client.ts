@@ -2,6 +2,7 @@
 import type { CartItem } from './cart-types';
 import type { Proof } from './siparis-types';
 import { loadFile } from './cart-files';
+import { looksLikeImage } from './image-sniff';
 
 const KEEP_BYTES = 4 * 1024 * 1024;
 const MAX_SIDE = 3000;
@@ -25,6 +26,22 @@ export async function prepareUpload(file: Blob): Promise<Blob> {
     return blob ?? file;
   } catch {
     return file;
+  }
+}
+
+/**
+ * Seçilen dosya gerçekten açılabilen bir fotoğraf mı?
+ * `allowHeic`: tarayıcının gösteremediği iPhone biçimi, önizleme gerekmiyorsa kabul edilir.
+ */
+export async function isUsableImage(file: Blob, allowHeic = false): Promise<boolean> {
+  const head = new Uint8Array(await file.slice(0, 16).arrayBuffer());
+  if (!looksLikeImage(head)) return false;
+  try {
+    (await createImageBitmap(file)).close();
+    return true;
+  } catch {
+    const heic = String.fromCharCode(...Array.from(head.slice(4, 8))) === 'ftyp';
+    return allowHeic && heic;
   }
 }
 
@@ -64,7 +81,7 @@ export async function submitOrder(
     return { item, photos, preview };
   }));
 
-  const { token, accepted } = await request('/api/siparis', {
+  const { token } = await request('/api/siparis', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
@@ -78,25 +95,28 @@ export async function submitOrder(
         };
       }),
     }),
-  }) as { token: string; accepted: number[] };
+  }) as { token: string };
 
-  // Satışta olmayan ürünler sunucuda atlanır; sıra numaraları ona göre kayar.
-  const uploads = accepted.flatMap((source, line) => {
-    const { photos, preview } = lines[source];
+  // Sunucu satır sırasını korur.
+  const uploads = lines.flatMap(({ item, photos, preview }, line) => {
     return [
-      ...photos.map((blob) => ({ line, kind: 'photo', blob })),
-      ...(preview ? [{ line, kind: 'preview', blob: preview }] : []),
+      ...photos.map((blob, n) => ({ line, kind: 'photo', blob, where: `“${item.title}”, ${n + 1}. fotoğraf` })),
+      ...(preview ? [{ line, kind: 'preview', blob: preview, where: `“${item.title}” önizlemesi` }] : []),
     ];
   });
 
   onProgress(0, uploads.length);
   for (let i = 0; i < uploads.length; i += 1) {
-    const { line, kind, blob } = uploads[i];
+    const { line, kind, blob, where } = uploads[i];
     const form = new FormData();
     form.append('line', String(line));
     form.append('kind', kind);
     form.append('file', blob, `foto-${i}`);
-    await request(`/api/siparis/${token}/dosya`, { method: 'POST', body: form });
+    try {
+      await request(`/api/siparis/${token}/dosya`, { method: 'POST', body: form });
+    } catch (error) {
+      throw new Error(`${where}: ${error instanceof Error ? error.message : 'yüklenemedi.'}`);
+    }
     onProgress(i + 1, uploads.length);
   }
   await request(`/api/siparis/${token}/tamamla`, { method: 'POST' });

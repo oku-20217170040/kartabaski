@@ -1,7 +1,7 @@
-import { WHATSAPP_BASE } from '@/lib/constants';
-import { PRINT_SAMPLES } from '@/lib/vitrin';
+import Link from 'next/link';
+import { PRINT_SAMPLES, sampleHref } from '@/lib/vitrin';
 
-/** Basılı kupa örnekleri; her parça aynı türde baskı için WhatsApp mesajı açar. */
+/** Basılı kupa örnekleri; her parça o fotoğrafın ürün sayfasını açar. */
 export default function PrintWall() {
   return (
     <section className="ornekler" aria-labelledby="ornekler-baslik">
@@ -13,20 +13,14 @@ export default function PrintWall() {
       </div>
       <div className="mozaik">
         {PRINT_SAMPLES.map((s) => (
-          <a
-            key={s.file}
-            className={`parca t-${s.tone}${s.size ? ` is-${s.size}` : ''}`}
-            href={`${WHATSAPP_BASE}?text=${encodeURIComponent(`Merhaba, sitedeki "${s.label}" örneğine benzer bir baskı istiyorum.`)}`}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
+          <Link key={s.file} className={`parca t-${s.tone}${s.size ? ` is-${s.size}` : ''}`} href={sampleHref(s)}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={`/vitrin/${s.file}.webp`} alt={`${s.label} baskılı kupa`} loading="lazy" />
             <span>
               {s.label}
-              <em>Benzerini isteyin</em>
+              <em>Ürüne bakın</em>
             </span>
-          </a>
+          </Link>
         ))}
       </div>
     </section>

@@ -13,7 +13,7 @@ import { useCart } from '@/lib/cart-context';
 import { loadFile, newId, saveFile } from '@/lib/cart-files';
 import { cartImageSrc, productToCartItem } from '@/lib/cart-products';
 import { MAX_QTY, NOTE_MAX, clampQty } from '@/lib/cart';
-import { prepareUpload } from '@/lib/siparis-client';
+import { isUsableImage, prepareUpload } from '@/lib/siparis-client';
 import { MAX_LINE_PHOTOS, MAX_TEXT } from '@/lib/siparis-types';
 import { usePrintPhoto } from '@/lib/use-print-photo';
 import { VITRIN_MUGS, VITRIN_PRODUCT_SLUG } from '@/lib/vitrin';
@@ -96,10 +96,14 @@ export default function DesignEditor({ product, initialColor, lineKey }: Props) 
 
   useEffect(() => () => photosRef.current.forEach((p) => URL.revokeObjectURL(p.url)), []);
 
-  const addPhotos = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files ?? []).filter((f) => f.type.startsWith('image/'));
+  const addPhotos = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const picked = Array.from(e.target.files ?? []);
     e.target.value = '';
     setError('');
+    const usable = await Promise.all(picked.map((f) => isUsableImage(f, true).catch(() => false)));
+    const files = picked.filter((_, i) => usable[i]);
+    const rejected = picked.filter((_, i) => !usable[i]).map((f) => f.name);
+    if (rejected.length) setError(`Açılamayan dosya eklenmedi: ${rejected.join(', ')}. JPG veya PNG deneyin.`);
     setPhotos((prev) => [
       ...prev,
       ...files.slice(0, MAX_LINE_PHOTOS - prev.length).map((blob) => ({ uid: newId(), blob, url: URL.createObjectURL(blob) })),

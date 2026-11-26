@@ -12,7 +12,7 @@ import { VITRIN_MUGS } from '@/lib/vitrin';
 import { useCart } from '@/lib/cart-context';
 import { saveFile } from '@/lib/cart-files';
 import { productToCartItem } from '@/lib/cart-products';
-import { prepareUpload } from '@/lib/siparis-client';
+import { isUsableImage, prepareUpload } from '@/lib/siparis-client';
 import { usePrintPhoto } from '@/lib/use-print-photo';
 import { trackEvent } from '@/lib/analytics-client';
 
@@ -45,10 +45,14 @@ export default function HeroSection({ lowestPrice, mugProduct }: Props) {
     return () => clearTimeout(timer);
   }, []);
 
-  const pickPhoto = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const pickPhoto = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const picked = e.target.files?.[0];
     e.target.value = '';
-    if (picked) { setError(''); setFile(picked); }
+    if (!picked) return;
+    setError('');
+    // Bozuk dosya sepete girmesin diye seçilirken denenir.
+    if (await isUsableImage(picked).catch(() => false)) setFile(picked);
+    else setError('Bu dosya açılamadı. JPG veya PNG bir fotoğraf deneyin.');
   };
 
   const mug = VITRIN_MUGS[colorIndex];

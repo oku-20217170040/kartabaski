@@ -127,10 +127,16 @@ function Viewer({ ids, title, start, onClose }: { ids: string[]; title: string; 
   );
 }
 
-export default function ProductGallery({ ids, title }: { ids: string[]; title: string }) {
+export default function ProductGallery({ ids, title, initial = 0 }: { ids: string[]; title: string; initial?: number }) {
   const count = ids.length;
-  const { ref, index, goTo, onScroll } = useSlider(count);
+  const { ref, index, goTo, onScroll } = useSlider(count, initial);
   const [viewer, setViewer] = useState<number | null>(null);
+
+  // İstenen fotoğraf ilk açılışta kaydırmasız gösterilir.
+  useEffect(() => {
+    if (initial > 0) goTo(initial, 'instant');
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const close = useCallback((i: number) => {
     setViewer(null);

@@ -1,7 +1,7 @@
 import type { Product } from '@/types';
 import type { CartDesign, CartItem } from './cart-types';
 import { lineKey, clampQty, NOTE_MAX } from './cart';
-import { cloudinaryThumb } from './format';
+import { cloudinaryThumb, displayTitle } from './format';
 import { getCategory, getPriceMin, getSlug, getTitle } from './product-utils';
 import { newId } from './cart-files';
 
@@ -17,7 +17,7 @@ export function productToCartItem(p: Product, opts: AddOptions = {}): CartItem {
     key: opts.key ?? (opts.design ? `d:${newId()}` : lineKey(p.id, color)),
     productId: p.id,
     slug: getSlug(p),
-    title: getTitle(p),
+    title: displayTitle(getTitle(p)),
     unitPrice: getPriceMin(p) || 0,
     image: colorImg ?? p.images?.[0] ?? null,
     category: getCategory(p),

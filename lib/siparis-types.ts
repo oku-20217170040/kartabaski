@@ -59,9 +59,13 @@ export const OrderInputSchema = z.object({
   address: trimmed(300).optional(),
   note: trimmed(500).optional(),
   kvkk: z.literal(true, { message: 'Aydınlatma metnini onaylamanız gerekiyor' }),
-  website: z.string().max(0).optional(), // honeypot
+  website: z.string().max(0, 'Sipariş gönderilemedi. Sayfayı yenileyip tekrar deneyin.').optional(), // honeypot
 });
 export type OrderInput = z.infer<typeof OrderInputSchema>;
+
+/** Özel mesajı olmayan alanlarda İngilizce metin yerine bu döner. */
+export const parseOrderInput = (data: unknown) =>
+  OrderInputSchema.safeParse(data, { error: () => 'Sipariş bilgileri geçersiz. Sayfayı yenileyip tekrar deneyin.' });
 
 export const OrderLineSchema = z.object({
   productId: z.string(),

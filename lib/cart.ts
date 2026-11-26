@@ -65,6 +65,11 @@ export function cartCount(items: { qty: number }[]): number {
   return items.reduce((s, i) => s + i.qty, 0);
 }
 
+/** Katalogdan silinmiş ürün için sunucunun döndürdüğü kayıt. */
+export function missingProductInfo(id: string): CartProductInfo {
+  return { id, slug: '', title: '', unitPrice: 0, image: null, category: '', active: false, colors: [] };
+}
+
 /**
  * Sepeti güncel ürün bilgisiyle eşler. Yalnızca açıkça pasif (active=false) ürünler `unavailable` olur.
  * Bilgisi gelmeyen ürün sepetteki kayıtla available kalır (sunucu talep anında zaten doğrular).
