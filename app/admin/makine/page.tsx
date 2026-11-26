@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import './makine.css';
 import BarList from '@/components/admin/finance/BarList';
+import '../muhasebe/muhasebe.css';
 import OrderModal from '@/components/admin/finance/OrderModal';
 import ConfirmDialog from '@/components/admin/ConfirmDialog';
 import { IconEdit, IconPlus, IconTrash, IconWhatsApp } from '@/components/admin/icons';

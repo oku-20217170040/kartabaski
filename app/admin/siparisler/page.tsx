@@ -7,7 +7,8 @@ import { lineFiles, OrderRequest, PROOF_LABELS, orderImageUrl, orderNo } from '@
 import { TALEP_LABELS, TALEP_STATUSES, type TalepStatus } from '@/lib/talep-status';
 import { useToast, errorMessage } from '@/components/admin/Toast';
 import { cartImageSrc } from '@/lib/cart-products';
-import { IconCart, IconRefresh } from '@/components/admin/icons';
+import { IconCart, IconRefresh, IconWhatsApp } from '@/components/admin/icons';
+import { customerWhatsappLink } from '@/lib/cart';
 import './siparisler.css';
 
 const fmt = (n: number) => new Intl.NumberFormat('tr-TR').format(n);
@@ -61,6 +62,7 @@ export default function SiparislerPage() {
             onClick={() => setFilter(s)}
           >
             {s === 'tumu' ? 'Tümü' : TALEP_LABELS[s].label}
+            {` (${s === 'tumu' ? rows.length : rows.filter((o) => o.status === s).length})`}
           </button>
         ))}
       </div>
@@ -96,13 +98,21 @@ export default function SiparislerPage() {
                       {photos ? ` · ${photos} fotoğraf` : ''}{o.total ? ` · ≈ ${fmt(o.total)}₺` : ''}
                     </small>
                   </span>
-                  {o.proof && o.status !== 'tamamlandi' && o.status !== 'iptal' && (
-                    <span className={`sip-badge${o.attention ? ' is-new' : ''}`}>{PROOF_LABELS[o.proof.state]}</span>
-                  )}
-                  <span className={`sip-badge${o.status === 'yeni' ? ' is-new' : ''}`}>
-                    {o.status === 'yukleniyor' ? 'Yükleniyor' : TALEP_LABELS[o.status].label}
+                  <span className="sip-badges">
+                    {o.proof && o.status !== 'tamamlandi' && o.status !== 'iptal' && (
+                      <span className={`sip-badge${o.attention ? ' is-new' : ''}`}>{PROOF_LABELS[o.proof.state]}</span>
+                    )}
+                    <span className={`sip-badge${o.status === 'yeni' ? ' is-new' : ''}`}>
+                      {o.status === 'yukleniyor' ? 'Yükleniyor' : TALEP_LABELS[o.status].label}
+                    </span>
                   </span>
                 </Link>
+                <div className="sip-quick">
+                  <a className="btn btn-secondary btn-sm" href={`tel:${o.phone}`}>Ara</a>
+                  <a className="btn btn-secondary btn-sm" href={customerWhatsappLink({ name: o.name, phone: o.phone, id: o.token })} target="_blank" rel="noopener noreferrer">
+                    <IconWhatsApp size={16} /> WhatsApp
+                  </a>
+                </div>
               </li>
             );
           })}

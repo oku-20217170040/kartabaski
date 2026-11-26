@@ -333,8 +333,8 @@ export default function AdminProductsPage() {
                     >
                       {b === 'copy' ? <span className="spinner" style={{ width: 16, height: 16 }} /> : <IconCopy />}
                     </button>
-                    <Link href={`/admin/products/${p.id}`} className="btn btn-secondary btn-sm adm-btn-icon-label">
-                      <IconEdit size={15} /> Düzenle
+                    <Link href={`/admin/products/${p.id}`} className="btn btn-secondary btn-sm adm-btn-icon-label" title="Düzenle">
+                      <IconEdit size={15} /> <span className="adm-lbl">Düzenle</span>
                     </Link>
                     <button
                       type="button"
@@ -342,7 +342,7 @@ export default function AdminProductsPage() {
                       onClick={() => handleDelete(p)}
                       disabled={!!b}
                     >
-                      <IconTrash size={15} /> {b === 'delete' ? 'Siliniyor...' : 'Sil'}
+                      <IconTrash size={15} /> <span className="adm-lbl">{b === 'delete' ? 'Siliniyor...' : 'Sil'}</span>
                     </button>
                   </div>
                 </div>

@@ -65,6 +65,15 @@ export default function ColorVariants({ colors, setColors, onUploaded, onRemoveI
     setColors((prev) => prev.map((c, i) => (i === ci ? { ...c, images: c.images.filter((_, j) => j !== ii) } : c)));
   };
 
+  const swap = <T,>(list: T[], a: number, b: number) => {
+    const next = [...list];
+    [next[a], next[b]] = [next[b], next[a]];
+    return next;
+  };
+  const moveColor = (from: number, to: number) => setColors((prev) => swap(prev, from, to));
+  const makeCover = (ci: number, ii: number) =>
+    setColors((prev) => prev.map((c, i) => (i === ci ? { ...c, images: [c.images[ii], ...c.images.filter((_, j) => j !== ii)] } : c)));
+
   const dropColor = (e: React.DragEvent, to: number) => {
     e.preventDefault();
     if (dragColor !== null && dragColor !== to) {
@@ -140,7 +149,15 @@ export default function ColorVariants({ colors, setColors, onUploaded, onRemoveI
               <span className="grip"><IconGrip size={16} /></span>
               <span>{color.name}</span>
             </div>
-            <button type="button" className="adm-link-danger" onClick={() => removeColor(ci)}>Sil</button>
+            <div className="adm-color-tools">
+              {colors.length > 1 && (
+                <>
+                  <button type="button" className="adm-icon-btn" disabled={ci === 0} onClick={() => moveColor(ci, ci - 1)} aria-label={`${color.name} rengini yukarı taşı`}>↑</button>
+                  <button type="button" className="adm-icon-btn" disabled={ci === colors.length - 1} onClick={() => moveColor(ci, ci + 1)} aria-label={`${color.name} rengini aşağı taşı`}>↓</button>
+                </>
+              )}
+              <button type="button" className="adm-link-danger" onClick={() => removeColor(ci)}>Sil</button>
+            </div>
           </div>
 
           {color.images.length > 1 && (
@@ -163,7 +180,9 @@ export default function ColorVariants({ colors, setColors, onUploaded, onRemoveI
                   onDragEnd={(e) => { e.stopPropagation(); imgDrag.current = null; setImgOver(null); }}
                 >
                   <img src={cloudinaryUrl(id, THUMB)} alt="" draggable={false} />
-                  {ii === 0 && <span className="adm-thumb-label">Kapak</span>}
+                  {ii === 0
+                    ? <span className="adm-thumb-label">Kapak</span>
+                    : <button type="button" className="adm-thumb-cover" onClick={() => makeCover(ci, ii)}>Kapak yap</button>}
                   <button
                     type="button"
                     className="adm-thumb-remove"

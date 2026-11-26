@@ -255,7 +255,7 @@ export default function ProductForm({ initial, onSubmit, submitLabel }: Props) {
     errors[k] ? <div id={`${FIELD_IDS[k]}-err`} className="adm-field-error" role="alert">{errors[k]}</div> : null;
 
   return (
-    <form onSubmit={handleSubmit} noValidate className="adm-form-grid">
+    <form onSubmit={handleSubmit} noValidate className="adm-form-grid has-savebar">
       {/* Sol sütun */}
       <div className="adm-form-col">
         <div className="card adm-card-pad">
@@ -433,7 +433,7 @@ export default function ProductForm({ initial, onSubmit, submitLabel }: Props) {
           <div className="adm-field-hint" style={{ marginTop: 8 }}>Örn: kişiye özel kupa, sihirli kupa baskı, hediye kupa</div>
         </div>
 
-        <div className="card adm-card-pad adm-sticky">
+        <div className="card adm-card-pad adm-sticky adm-savebar">
           {error && <div className="adm-alert" role="alert">{error}</div>}
           <button type="submit" className="btn btn-primary btn-full btn-lg" disabled={busy}>
             {saving ? 'Kaydediliyor...' : galleryBusy || colorBusy ? 'Görseller yükleniyor...' : submitLabel}

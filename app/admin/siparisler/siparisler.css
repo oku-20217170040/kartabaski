@@ -9,6 +9,10 @@
 .sip-thumb img.is-wide { object-fit: contain; }
 .sip-main { flex: 1; min-width: 0; display: grid; gap: 2px; overflow-wrap: anywhere; }
 .sip-main small { font-size: 13px; color: var(--ink-3); }
+.sip-badges { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 6px; }
+/* Hızlı arama düğmeleri yalnız telefonda (mobile.css açar). */
+.sip-quick { display: none; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 6px; }
+.admin-layout .sip-quick .btn { justify-content: center; }
 .sip-badge { flex-shrink: 0; padding: 3px 10px; border: 1px solid var(--line); border-radius: var(--radius); font-size: 12px; font-weight: 600; background: var(--paper-2); }
 .sip-badge.is-new { background: var(--brand); border-color: var(--brand); color: var(--on-brand); }
 

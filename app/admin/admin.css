@@ -328,6 +328,8 @@
 .adm-color-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; gap: 8px; }
 .adm-color-name { display: flex; align-items: center; gap: 6px; font-weight: 600; font-size: 14px; min-width: 0; }
 .adm-color-name .grip { color: var(--ink-3); cursor: grab; display: flex; }
+.adm-color-tools { display: flex; align-items: center; gap: 2px; }
+.adm-thumb-cover { position: absolute; left: 0; right: 0; bottom: 0; min-height: 32px; border: 0; background: rgba(27, 26, 23, .72); color: #fff; font: inherit; font-size: 12px; cursor: pointer; }
 .adm-color-add { display: flex; gap: 8px; margin-bottom: 16px; }
 .adm-color-add .form-input { flex: 1; min-width: 0; }
 .adm-link-danger { background: none; border: 0; color: var(--danger); font-size: 13px; min-height: 44px; padding: 4px 8px; border-radius: var(--radius); cursor: pointer; }
