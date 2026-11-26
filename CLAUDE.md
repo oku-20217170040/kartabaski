@@ -88,8 +88,10 @@ These rules must be deployed via Firebase Console (Firestore → Rules tab).
 
 ### Styling
 
-- Storefront design system lives in `app/site.css` (plain CSS, loaded from `app/layout.tsx`): warm paper background (`--paper #F5F2EC`), ink text (`--ink #1B1A17`), single accent `--brand #1F4A36` (forest green). Reuse its classes (`.btn`, `.section`, `.page-head`, `.product-grid`, `.pdp-*`, …) instead of inline styles; never add hardcoded hex colours in components
-- Fonts via `next/font`: Newsreader (`--font-serif`, headings) + Instrument Sans (`--font-sans`, body)
+- Storefront design system ("Tabela") lives in `app/site.css` (plain CSS, loaded from `app/layout.tsx`): white background, near-black ink, flat colours taken from mug handles (`--brand` cobalt, `--sun`, `--red`, `--navy`, …). No gradients, paper textures, cream backgrounds, pill badges, mono "eyebrow" labels, 01/02/03 index numbers or italic accent words. Reuse its classes (`.btn`, `.section`, `.page-head`, `.product-grid`, `.pdp-*`, …) instead of inline styles; never add hardcoded hex colours in components (the hero palette lives in `lib/vitrin.ts`)
+- One font family via fontsource: Archivo variable (`--sans`; `--serif` is a legacy alias). Hierarchy comes from the width axis: headings expanded (`font-stretch` 112–125%), prices and the phone number condensed (62–72%). Shantell Sans (`--hand`) only for the handwriting option in the hero
+- Copy is plain, concrete Turkish addressing the visitor as "siz"; no invented workshop jargon ("kalıp", "atölye seçkisi", "prova")
+- Homepage hero: real cut-out mug photos in `public/vitrin/` + canvas print preview (`components/MugPreview.tsx`); handle colour changes the whole hero colour. The user's trial photo never leaves the browser. The print-sample mosaic (`components/PrintWall.tsx`) uses the `b-*` images there
 - Admin styles live in `app/admin/admin.css`, scoped under `.admin-layout` / `.adm-login`
 - Icons: inline SVG components in `components/icons.tsx` (storefront) and `components/admin/icons.tsx` — no emoji in UI
 - Product names are shown through `displayTitle()` (`lib/format.ts`), which strips the "— Kişiye Özel Baskı" suffix and fixes ALL-CAPS titles

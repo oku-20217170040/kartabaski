@@ -1,5 +1,4 @@
 import Link from 'next/link';
-import Image from 'next/image';
 import { WHATSAPP_BASE, DEFAULT_WA_TEXT, PHONE, PHONE_DISPLAY } from '@/lib/constants';
 import { INSTAGRAM_URL } from '@/lib/site';
 import { WhatsAppIcon, InstagramIcon, PhoneIcon, MailIcon } from '@/components/icons';
@@ -23,13 +22,8 @@ export default function Footer() {
       <div className="wrap">
         <div className="footer-cols">
           <div>
-            <Link href="/" className="brand" aria-label="KAR-TA BASKI ana sayfa">
-              <Image src="/logo.png" alt="" width={40} height={40} />
-              <span className="brand-name">Kar-Ta<small>Baskı</small></span>
-            </Link>
             <p className="footer-about">
-              Kişiye özel kupa ve fincan baskısı. Tek adetten toplu kurumsal siparişe kadar,
-              siparişlerinizi WhatsApp üzerinden alıyoruz.
+              Kupaya ve fincana istediğinizi basıyoruz. Bir tane de olur, yüz tane de. Siparişi WhatsApp’tan alıyoruz.
             </p>
           </div>
 
@@ -66,6 +60,8 @@ export default function Footer() {
             </ul>
           </div>
         </div>
+
+        <span className="footer-mark" aria-hidden="true">Kar-Ta Baskı</span>
 
         <div className="footer-legal">
           <span>© {year} KAR-TA BASKI</span>

@@ -1,17 +1,17 @@
 import { Suspense } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
 import { unstable_cache } from 'next/cache';
 import { getProductsServer } from '@/lib/products-server';
-import { cloudinaryUrl, displayTitle } from '@/lib/format';
+import { displayTitle, formatPriceRange } from '@/lib/format';
 import { getActive, getPriceMin, getPriceMax, getSlug, getTitle } from '@/lib/product-utils';
 import { jsonLdString } from '@/lib/site';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import HeroSection from '@/components/HeroSection';
-import ProductMarquee, { MarqueeItem } from '@/components/ProductMarquee';
+import PrintWall from '@/components/PrintWall';
+import { VITRIN_PRODUCT_SLUG } from '@/lib/vitrin';
 import ProductsClient from './ProductsClient';
-import { WhatsAppIcon, PhoneIcon, MailIcon, InstagramIcon, ArrowRightIcon, ChevronDownIcon } from '@/components/icons';
+import { WhatsAppIcon, MailIcon, InstagramIcon, ChevronDownIcon } from '@/components/icons';
 import { PHONE, PHONE_DISPLAY, WHATSAPP_BASE, DEFAULT_WA_TEXT } from '@/lib/constants';
 import { INSTAGRAM_URL } from '@/lib/site';
 
@@ -21,8 +21,6 @@ const getProducts = unstable_cache(() => getProductsServer(), ['products'], {
 });
 
 const WA_HREF = `${WHATSAPP_BASE}?text=${encodeURIComponent(DEFAULT_WA_TEXT)}`;
-const CORPORATE_IMAGE = 'karta-baski/urunler/zmh4gnc6fpg1f85d9jbo';
-const CONFIGURATOR_IMAGE = 'karta-baski/urunler/vnhktkf0rx0x52x3skdt';
 
 const FAQ = [
   {
@@ -62,7 +60,7 @@ function GridFallback() {
     <div className="product-grid" aria-hidden="true">
       {Array.from({ length: 8 }, (_, i) => (
         <div key={i}>
-          <div className="skeleton" style={{ aspectRatio: '4 / 5' }} />
+          <div className="skeleton" style={{ aspectRatio: '1' }} />
           <div className="skeleton" style={{ height: 16, width: '70%', marginTop: 14 }} />
         </div>
       ))}
@@ -74,25 +72,24 @@ export default async function HomePage() {
   const products = await getProducts();
   const active = products.filter(getActive);
 
-  const marquee: MarqueeItem[] = active
-    .filter((p) => p.images?.length)
-    .map((p) => ({
-      slug: getSlug(p),
-      title: displayTitle(getTitle(p)),
-      imageId: p.images[1] ?? p.images[0],
-      priceMin: getPriceMin(p),
-      priceMax: getPriceMax(p),
-    }));
-
-  const prices = active.map(getPriceMin).filter((n) => n > 0);
+  const prices = active.map((p) => getPriceMin(p) || getPriceMax(p)).filter((n) => n > 0);
   const lowestPrice = prices.length ? Math.min(...prices) : null;
+
+  const mug = active.find((p) => getSlug(p) === VITRIN_PRODUCT_SLUG);
+  const mugProduct = mug
+    ? {
+        href: `/urun/${getSlug(mug)}`,
+        title: displayTitle(getTitle(mug)),
+        price: formatPriceRange(getPriceMin(mug), getPriceMax(mug)),
+      }
+    : null;
 
   return (
     <>
       <Navbar />
       <main id="icerik">
-        <HeroSection lowestPrice={lowestPrice} />
-        <ProductMarquee items={marquee} />
+        <HeroSection lowestPrice={lowestPrice} mugProduct={mugProduct} />
+        <PrintWall />
 
         <section className="catalog-section" id="urunler" aria-labelledby="urunler-baslik" style={{ scrollMarginTop: 'var(--header-h)' }}>
           <div className="wrap">
@@ -102,90 +99,45 @@ export default async function HomePage() {
           </div>
         </section>
 
-        <section className="section-tight" aria-labelledby="konfigurator-baslik">
+        <div className="ikili">
+          <section className="ikili-blok" aria-labelledby="kurumsal-baslik">
+            <h2 id="kurumsal-baslik" className="h2">Şirket logonuzla,<br />toplu sipariş.</h2>
+            <p>45 adet ve üzerinde adet fiyatı düşer. Logonuzu gönderin; önce kupanın üstünde gösterelim, onaylarsanız basıp Türkiye’nin her yerine gönderelim.</p>
+            <Link href="/kurumsal" className="btn btn-light">Teklif isteyin</Link>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/vitrin/b-logo.webp" alt="Logo baskılı beyaz kupa" loading="lazy" />
+          </section>
+          <section className="ikili-blok is-red" aria-labelledby="konfigurator-baslik">
+            <h2 id="konfigurator-baslik" className="h2">Tasarımınız yoksa hazırlardan seçin.</h2>
+            <p>Kupa modelini ve hazır bir deseni yan yana koyun, beğendiğiniz eşleşmeyi bize gönderin.</p>
+            <Link href="/konfigurator" className="btn btn-light">Eşleştirmeyi deneyin</Link>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/vitrin/b-sehir.webp" alt="Renkli şehir silueti baskılı kupa" loading="lazy" />
+          </section>
+        </div>
+
+        <section className="sorular" aria-labelledby="sss-baslik">
           <div className="wrap">
-            <div className="feature">
-              <div className="feature-media">
-                <Image
-                  src={cloudinaryUrl(CONFIGURATOR_IMAGE, 'f_auto,q_auto,w_1000,h_800,c_fill')}
-                  alt="Çalışma masasında baskılı kupa"
-                  width={1000}
-                  height={800}
-                  sizes="(max-width: 960px) 100vw, 50vw"
-                />
-              </div>
-              <div className="feature-body">
-                <p className="eyebrow">Kendin tasarla</p>
-                <h2 id="konfigurator-baslik" className="h2" style={{ marginTop: 14 }}>Bardağı ve tasarımı siz eşleştirin.</h2>
-                <p>Kupa modelini ve hazır tasarımlardan birini seçin, kombinasyonu görün. Beğendiğiniz eşleşmeyi tek tıkla WhatsApp üzerinden bize iletin.</p>
-                <div>
-                  <Link href="/konfigurator" className="btn btn-outline">
-                    Kombinasyon oluşturun <ArrowRightIcon size={18} />
-                  </Link>
-                </div>
-              </div>
+            <h2 id="sss-baslik" className="h2">Sipariş vermeden önce sorulanlar</h2>
+            <div className="faq">
+              {FAQ.map((f) => (
+                <details key={f.q}>
+                  <summary>{f.q}<ChevronDownIcon size={20} /></summary>
+                  <div>{f.a}</div>
+                </details>
+              ))}
             </div>
           </div>
         </section>
 
-        <section className="band" aria-labelledby="kurumsal-baslik">
-              <div className="wrap">
-                <div>
-                  <p className="eyebrow">Kurumsal</p>
-                  <h2 id="kurumsal-baslik" className="h2">Ekibiniz, müşterileriniz ve etkinlikleriniz için logolu kupa.</h2>
-                  <p>Adede göre fiyat ve toplu kargo. Logonuzu gönderin, size özel teklif hazırlayalım.</p>
-                  <ul className="dash-list">
-                    <li>45 adet ve üzerinde adet başı indirimli fiyat</li>
-                    <li>Baskı öncesi dijital önizleme ve onay</li>
-                    <li>Türkiye geneline toplu gönderim</li>
-                  </ul>
-                  <Link href="/kurumsal" className="btn btn-light">Kurumsal teklif isteyin</Link>
-                </div>
-                <div className="band-media">
-                  <Image
-                    src={cloudinaryUrl(CORPORATE_IMAGE, 'f_auto,q_auto,w_1000,h_800,c_fill')}
-                    alt="Ofis masasında logolu kupa"
-                    width={1000}
-                    height={800}
-                    sizes="(max-width: 960px) 100vw, 50vw"
-                  />
-                </div>
-              </div>
-        </section>
-
-        <section className="section" id="iletisim" aria-labelledby="sss-baslik" style={{ scrollMarginTop: 'var(--header-h)' }}>
-          <div className="wrap contact-grid">
-            <div>
-              <h2 id="sss-baslik" className="h2" style={{ marginBottom: 24 }}>Sık sorulanlar</h2>
-              <div className="faq">
-                {FAQ.map((f) => (
-                  <details key={f.q}>
-                    <summary>{f.q}<ChevronDownIcon size={18} /></summary>
-                    <div>{f.a}</div>
-                  </details>
-                ))}
-              </div>
-            </div>
-            <div>
-              <h2 className="h2" style={{ marginBottom: 24 }}>Bize ulaşın</h2>
-              <div className="contact-list">
-                <a className="contact-row" href={WA_HREF} target="_blank" rel="noopener noreferrer">
-                  <span><span className="k">WhatsApp · sipariş ve teklif</span><span className="v">Mesaj gönderin</span></span>
-                  <WhatsAppIcon className="arrow" size={20} />
-                </a>
-                <a className="contact-row" href={`tel:+${PHONE}`}>
-                  <span><span className="k">Telefon</span><span className="v">{PHONE_DISPLAY}</span></span>
-                  <PhoneIcon className="arrow" />
-                </a>
-                <a className="contact-row" href="mailto:info@kartabaski.com">
-                  <span><span className="k">E-posta</span><span className="v">info@kartabaski.com</span></span>
-                  <MailIcon className="arrow" />
-                </a>
-                <a className="contact-row" href={INSTAGRAM_URL} target="_blank" rel="noopener noreferrer">
-                  <span><span className="k">Instagram</span><span className="v">@kartabaskii</span></span>
-                  <InstagramIcon className="arrow" />
-                </a>
-              </div>
+        <section className="tabela" id="iletisim" aria-label="İletişim" style={{ scrollMarginTop: 'var(--header-h)' }}>
+          <div className="wrap">
+            <p className="tabela-ust">Aklınızdakini anlatmak için arayın</p>
+            <a className="tabela-no" href={`tel:+${PHONE}`}>{PHONE_DISPLAY}</a>
+            <div className="tabela-yollar">
+              <a href={WA_HREF} target="_blank" rel="noopener noreferrer"><WhatsAppIcon size={20} /> WhatsApp’tan yazın</a>
+              <a href="mailto:info@kartabaski.com"><MailIcon size={20} /> info@kartabaski.com</a>
+              <a href={INSTAGRAM_URL} target="_blank" rel="noopener noreferrer"><InstagramIcon size={20} /> @kartabaskii</a>
             </div>
           </div>
         </section>

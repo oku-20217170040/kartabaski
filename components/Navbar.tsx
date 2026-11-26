@@ -60,18 +60,11 @@ export default function Navbar() {
 
   return (
     <>
-      <div className="announce">
-        <div className="wrap">
-          <span>Siparişler onaydan sonra 3 iş günü içinde kargoda</span>
-          <a className="hide-sm" href={`tel:+${PHONE}`}>{PHONE_DISPLAY}</a>
-        </div>
-      </div>
-
       <header className="site-header">
         <div className="wrap">
           <Link href="/" className="brand" aria-label="KAR-TA BASKI ana sayfa">
             <Image src="/logo.png" alt="" width={40} height={40} priority />
-            <span className="brand-name">Kar-Ta<small>Baskı</small></span>
+            <span className="brand-name">Kar-Ta Baskı</span>
           </Link>
 
           <nav className="main-nav" aria-label="Ana menü">
@@ -122,7 +115,7 @@ export default function Navbar() {
             aria-label="Menü"
           >
             <div className="drawer-head">
-              <span className="brand-name">Kar-Ta<small>Baskı</small></span>
+              <span className="brand-name">Kar-Ta Baskı</span>
               <button type="button" className="icon-btn" aria-label="Menüyü kapat" onClick={() => setOpen(false)}>
                 <CloseIcon />
               </button>
