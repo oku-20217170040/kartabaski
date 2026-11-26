@@ -3,11 +3,11 @@
 import { headers, cookies } from 'next/headers';
 import { rateLimit } from './rate-limit';
 import { requireAdmin } from './require-admin';
-import { notifyAdmin } from './notify';
+import { notifyNewReview } from './bot';
 import { SITE_URL } from './site';
 import { getProductsServer } from './products-server';
 import {
-  ReviewInputSchema, ReviewReplySchema, REVIEW_STATUSES, hasLink, stars, inviteCookieName, inviteMessage, INVITE_TTL_MS,
+  ReviewInputSchema, ReviewReplySchema, REVIEW_STATUSES, hasLink, inviteCookieName, inviteMessage, INVITE_TTL_MS,
   type InviteAccess, type Review, type ReviewStatus,
 } from './reviews-utils';
 import {
@@ -38,12 +38,7 @@ export async function submitReviewAction(input: ReviewActionInput): Promise<{ ok
   if (!res.ok) return { ok: false, error: res.error };
 
   // Yönetici bildirimi; başarısız olsa da yorum kayıtlı kalır
-  const r = res.review;
-  const photos = r.images.length ? `\nFotoğraf: ${r.images.length} adet (yayınlamadan önce panelden bakın)` : '';
-  await notifyAdmin(
-    'Yeni yorum onay bekliyor',
-    `${stars(r.rating)} (${r.rating}/5)\nÜrün: ${r.productTitle || 'Genel yorum'}\nAd: ${r.name}\n\n${r.text}${photos}\n\nPanel: ${SITE_URL}/admin/yorumlar`
-  );
+  await notifyNewReview(res.review);
 
   return { ok: true };
 }

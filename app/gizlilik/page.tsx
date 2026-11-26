@@ -39,7 +39,8 @@ export default function GizlilikPage() {
             <h2>Nerede saklanıyor, kimlerle paylaşılıyor?</h2>
             <p>
               Sipariş kayıtları Google Firebase, görseller Cloudinary altyapısında tutulur; bu hizmetlerin sunucuları yurt
-              dışında olabilir. Kargo için ad, telefon ve adresiniz kargo firmasıyla paylaşılır. WhatsApp’tan yazdığınızda
+              dışında olabilir. Kargo için ad, telefon ve adresiniz kargo firmasıyla paylaşılır. Siparişinizi takip edebilmemiz için ad, telefon,
+              il/ilçe ve ürün bilginiz yöneticilerimizin kapalı Telegram grubuna bildirim olarak gider; açık adres ve fotoğraf gönderilmez. WhatsApp’tan yazdığınızda
               mesajınız WhatsApp’ın koşullarına tabidir; hazır mesajımıza yalnızca sipariş bağlantınız eklenir.
             </p>
             <p>

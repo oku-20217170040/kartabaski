@@ -128,7 +128,7 @@ export default function MachinePage() {
     try {
       const ok = await sendMachineReportAction();
       if (ok) toast.success('Rapor Telegram’a gönderildi.');
-      else toast.error('Telegram bağlı değil (TELEGRAM_BOT_TOKEN ve TELEGRAM_CHAT_ID tanımlı olmalı).');
+      else toast.error('Telegram bağlı değil: bot anahtarını tanımlayıp gruba /kur kodunu yazın.');
     } catch (e) {
       toast.error(errorMessage(e));
     }

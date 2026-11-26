@@ -3,7 +3,7 @@
 import { requireAdmin } from './require-admin';
 import { getProductsServer } from './products-server';
 import { displayTitle } from './format';
-import { sendTelegramText, telegramConfigured } from './notify';
+import { sendTelegramText, telegramReady } from './notify';
 import { deleteOrder, getOrdersOverview, listOrders, saveOrder, setOrderStatus, settleOrder, type OrdersOverview } from './orders';
 import { machineReportText, getMachineSnapshot, runMachineStep } from './machine-store';
 import { OrderInputSchema, OrderStatusSchema } from './finance-schemas';
@@ -28,12 +28,12 @@ export interface MachineData {
 /** Makine sayfası verisi: işler, ürün seçici ve günlük özet. */
 export async function getMachineDataAction(): Promise<MachineData> {
   await requireAdmin();
-  const [orders, products, snapshot] = await Promise.all([listOrders(), getProductsServer(), getMachineSnapshot()]);
+  const [orders, products, snapshot, telegram] = await Promise.all([listOrders(), getProductsServer(), getMachineSnapshot(), telegramReady()]);
   return {
     orders,
     products: products.map((p) => ({ id: p.id, title: displayTitle(p.title), category: p.category, priceMin: p.priceMin })),
     snapshot,
-    telegram: telegramConfigured(),
+    telegram,
     now: Date.now(),
   };
 }
@@ -76,6 +76,6 @@ export async function refreshMachineAction(): Promise<MachineSnapshot | null> {
 /** Haftalık raporu şimdi Telegram'a yollar. Telegram bağlı değilse false. */
 export async function sendMachineReportAction(): Promise<boolean> {
   await requireAdmin();
-  if (!telegramConfigured()) return false;
+  if (!(await telegramReady())) return false;
   return sendTelegramText(await machineReportText(Date.now(), 7));
 }

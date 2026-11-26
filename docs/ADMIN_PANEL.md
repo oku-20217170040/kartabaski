@@ -18,12 +18,13 @@
 
 ## Otomasyon
 - Tek kapı: `GET /api/cron/main` (blog → makine → ürün fotoğrafları → 6 sosyal platform). `CRON_SECRET` zorunlu (`Authorization: Bearer …`), yoksa 401.
-- Tetikleyici: `.github/workflows/otomasyon-cron.yml` (30 dakikada bir, TSİ 07:00–00:30). GitHub'a `CRON_SECRET` secret'ı eklenmeli.
+- Tetikleyici: sunucu crontab'ı (`tools/sunucu/zamanlayici.sh`, 30 dakikada bir, TSİ 07:00–00:30). GitHub iş akışı yalnız elle çalıştırma içindir.
+- Yönetim botu: `docs/TELEGRAM_BOTU.md`.
 - Sosyal platformlar varsayılan **kapalı**; token girildikten sonra Merkez'den açılır.
 
 ## Ortam değişkenleri (sunucu `.env`)
 Hepsi isteğe bağlı; eksik olan modül "bağlı değil" gösterip atlanır.
-- Genel: `CRON_SECRET`, `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID` (yönetici bildirimleri)
+- Genel: `CRON_SECRET`, `TELEGRAM_BOT_TOKEN` (yönetim botu; hedef grup `/kur` ile bağlanır, `TELEGRAM_CHAT_ID` yalnız yedek hedef)
 - Blog: `GEMINI_API_KEY` (yoksa şablonla üretir), `GEMINI_MODEL`, `BLOG_AUTO_GENERATE=0`, `BLOG_AUTO_PUBLISH=0`
 - Ürün Fotoğrafları (biri yeter; panelden seçilir):
   - **Ücretsiz / kredi kartsız:** `CLOUDFLARE_ACCOUNT_ID` + `CLOUDFLARE_API_TOKEN` (Cloudflare Workers AI günlük 10.000 ücretsiz neuron, varsayılan `@cf/black-forest-labs/flux-2-klein-4b`, isteğe bağlı `CLOUDFLARE_IMAGE_MODEL`), `HF_TOKEN` veya anahtarsız `HF_FREE_ANON=1` (Hugging Face ZeroGPU Space, varsayılan `black-forest-labs/FLUX.1-Kontext-Dev`, isteğe bağlı `HF_IMAGE_SPACE`).

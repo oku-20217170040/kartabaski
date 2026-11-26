@@ -272,6 +272,8 @@ export const OrderRequestSchema = z.object({
   note: z.string().optional(),
   adminNote: z.string().optional(),
   orderId: z.string().optional(),
+  /** Telegram'da "Ben ilgileniyorum" diyen yönetici. */
+  claimedBy: z.string().optional(),
   kvkkAt: z.number().optional(),
   photosDeletedAt: z.number().optional(),
   proof: ProofSchema.optional(),
@@ -335,9 +337,9 @@ export function shortName(name: string): string {
 export function customerView(o: OrderRequest) {
   const {
     address: _a, neighborhood: _h, street: _s, buildingNo: _b, doorNo: _d, postalCode: _p, directions: _y, recipient: _r, invoice: _i,
-    adminNote: _n, orderId: _o, attention: _t, ...rest
+    adminNote: _n, orderId: _o, attention: _t, claimedBy: _c, ...rest
   } = o;
-  void _a; void _h; void _s; void _b; void _d; void _p; void _y; void _r; void _i; void _n; void _o; void _t;
+  void _a; void _h; void _s; void _b; void _d; void _p; void _y; void _r; void _i; void _n; void _o; void _t; void _c;
   return { ...rest, name: shortName(o.name), phone: maskPhone(o.phone) };
 }
 export type CustomerOrder = ReturnType<typeof customerView>;
