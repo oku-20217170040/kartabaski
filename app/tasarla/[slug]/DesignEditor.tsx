@@ -61,12 +61,12 @@ export default function DesignEditor({ product, initialColor, lineKey }: Props) 
 
   const options = Array.from(new Set([...colors, ...(color && !colors.some((c) => same(c, color)) ? [color] : [])]));
   const [flat, setFlat] = useState(false);
-  const model = flat ? null : mugModelFor(slug, getTitle(product));
+  const model = flat ? null : mugModelFor(getTitle(product));
   const view3d = useRef<Mug3DHandle>(null);
   // Üç boyut yoksa (eski cihaz) fotoğraflı düz önizlemeye dönülür.
   const mug = !model && slug === VITRIN_PRODUCT_SLUG ? VITRIN_MUGS.find((m) => same(m.color, color)) : undefined;
   const live = Boolean(model || mug);
-  const colors3d = useMemo(() => mugPalette(color), [color]);
+  const colors3d = useMemo(() => (model ? mugPalette(model, color) : null), [model, color]);
   const sides: Record<SideId, DesignSideState> = { front: useDesignSide(live, Boolean(model)), back: useDesignSide(live, Boolean(model)) };
   const { front, back } = sides;
   const editing: SideId = twoSided ? side : 'front';
@@ -200,7 +200,7 @@ export default function DesignEditor({ product, initialColor, lineKey }: Props) 
         >
           {live ? (
             <>
-              {model ? (
+              {model && colors3d ? (
                 <>
                   <Mug3D
                     handle={view3d}

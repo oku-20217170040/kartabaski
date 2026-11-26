@@ -86,7 +86,7 @@ export default function ConfiguratorClient() {
   const categories = [ALL, ...Array.from(new Set(designs.map((d) => d.category?.trim()).filter((x): x is string => Boolean(x))))];
   const shown = category === ALL ? designs : designs.filter((d) => d.category?.trim() === category);
   const complete = Boolean(cup && used.every((id) => picked[id]));
-  const model = cup && !no3d ? mugModelFor(cupToProduct(cup).slug ?? '', cup.name) : null;
+  const model = cup && !no3d ? mugModelFor(cup.name) : null;
   const cupLabel = cup ? `${cup.name}${chosenColor ? `, ${chosenColor.name}` : ''}` : '';
   const designLabel = twoSided
     ? SIDES.map((id) => `${SIDE_LABELS[id]}: ${nameOf(picked[id]) ?? 'seçilmedi'}`).join(' · ')

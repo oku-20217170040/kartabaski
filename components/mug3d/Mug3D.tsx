@@ -32,6 +32,7 @@ const Mug3D = forwardRef<Mug3DHandle, Mug3DProps>(function Mug3D(
   const host = useRef<HTMLDivElement>(null);
   const [scene, setScene] = useState<MugScene | null>(null);
   const [spinning, setSpinning] = useState(false);
+  const [cold, setCold] = useState(false);
   const pointers = useRef(new Map<number, { x: number; y: number }>());
   const unsupported = useRef(onUnsupported);
   unsupported.current = onUnsupported;
@@ -52,6 +53,8 @@ const Mug3D = forwardRef<Mug3DHandle, Mug3DProps>(function Mug3D(
   useImperativeHandle(ref, () => ({ snapshot: (bg, two) => scene?.snapshot(bg, two) ?? Promise.resolve(null) }), [scene]);
 
   useEffect(() => { scene?.setColors(colors); }, [scene, colors]);
+  useEffect(() => { scene?.setCold(cold); }, [scene, cold]);
+  useEffect(() => { setCold(false); }, [model]);
 
   useEffect(() => {
     if (!scene) return;
@@ -146,7 +149,9 @@ const Mug3D = forwardRef<Mug3DHandle, Mug3DProps>(function Mug3D(
         onPointerCancel={onPointerEnd}
         onKeyDown={onKeyDown}
       />
-      <p className="m3d-hint">Çevirmek için kupayı sürükleyin.</p>
+      <p className="m3d-hint">
+        {model.finish === 'magic' ? 'Soğukken siyah görünür; sıcak içecek koyunca baskı ortaya çıkar.' : 'Çevirmek için kupayı sürükleyin.'}
+      </p>
       <div className="m3d-buttons" role="group" aria-label="Kupa görünümü">
         <button type="button" onClick={() => view('front')}>Ön</button>
         <button type="button" onClick={() => view('back')}>Arka</button>
@@ -154,6 +159,9 @@ const Mug3D = forwardRef<Mug3DHandle, Mug3DProps>(function Mug3D(
         <button type="button" aria-pressed={spinning} onClick={() => { scene?.setSpinning(!spinning); setSpinning(!spinning); }}>Döndür</button>
         <button type="button" aria-label="Uzaklaştır" onClick={() => scene?.zoomBy(1 / 1.2)}>−</button>
         <button type="button" aria-label="Yakınlaştır" onClick={() => scene?.zoomBy(1.2)}>+</button>
+        {model.finish === 'magic' && (
+          <button type="button" className="m3d-magic" aria-pressed={cold} onClick={() => setCold(!cold)}>Soğuk hali</button>
+        )}
       </div>
     </div>
   );

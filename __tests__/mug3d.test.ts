@@ -2,28 +2,78 @@ import { MUG_MODELS, mugModelFor, mugPalette, printSize } from '@/lib/mug3d';
 import { contentBounds } from '@/lib/trim';
 
 describe('mugModelFor', () => {
-  it('Lüks Kupa ürününü ve konfigüratör bardağını tanır', () => {
-    expect(mugModelFor('luks-kupa', 'Lüks Kupa')?.id).toBe('luks');
-    expect(mugModelFor('konfig-abc', 'Luks Kupa')?.id).toBe('luks');
-    expect(mugModelFor('konfig-abc', 'LÜKS KUPA')?.id).toBe('luks');
+  it.each([
+    ['Lüks Kupa — Kişiye Özel Baskı', 'luks'],
+    ['Luks Kupa', 'luks'],
+    ['Pro Kupa — Kişiye Özel Baskı', 'pro'],
+    ['Seramik Kahve Fincanı - Kişiye Özel Baskı', 'seramik'],
+    ['Sihirli Kupa', 'sihirli'],
+    ['TABAKLI KAHVE FİNCANI ', 'tabakli'],
+    ['PORSELEN KAHVE FİNCANI ', 'porselen'],
+    ['PORSELEN MOTTO FİNCAN', 'motto'],
+    ['AFİLLİ PORSELEN KUPA', 'afilli'],
+    ['Büyük Beyaz Kupa — Kişiye Özel Baskı', 'buyuk'],
+    ['Latte Fincanı — Kişiye Özel Baskı', 'latte'],
+    ['Kahve Fincanı — Kişiye Özel Baskı', 'kahve'],
+  ])('%s → %s', (title, id) => {
+    expect(mugModelFor(title)?.id).toBe(id);
   });
 
   it('modeli olmayan kupada null döner', () => {
-    expect(mugModelFor('sihirli-kupa', 'Sihirli Kupa')).toBeNull();
+    expect(mugModelFor('Termos Bardak')).toBeNull();
+  });
+});
+
+describe('modeller', () => {
+  it.each(Object.values(MUG_MODELS))('$id: baskı alanı gövdenin içinde, kulp ağzın altında', (m) => {
+    const { centerY, height } = m.print;
+    expect(centerY - height / 2).toBeGreaterThanOrEqual((m.band ?? m.base.rise));
+    expect(centerY + height / 2).toBeLessThan(m.height - 0.05);
+    for (const tube of m.tubes) {
+      for (const [x, y] of tube.path) {
+        expect(x).toBeGreaterThan(0.4);
+        expect(y).toBeGreaterThan(0);
+        expect(y).toBeLessThan(m.height);
+      }
+    }
   });
 });
 
 describe('mugPalette', () => {
-  it('renkli kupada gövde krem, kulp seçilen renktedir', () => {
-    const red = mugPalette('Kırmızı');
+  const { luks, pro, afilli, tabakli, kahve, sihirli } = MUG_MODELS;
+
+  it('kulplu modelde gövde krem, kulp seçilen renktedir', () => {
+    const red = mugPalette(luks, 'Kırmızı');
     expect(red.handle).not.toBe(red.body);
-    expect(mugPalette('KIRMIZI')).toEqual(red);
+    expect(mugPalette(luks, 'KIRMIZI')).toEqual(red);
   });
 
-  it('Beyaz ve bilinmeyen renkte kulp gövdeyle aynıdır', () => {
-    const white = mugPalette('Beyaz');
-    expect(white.handle).toBe(white.body);
-    expect(mugPalette(undefined)).toEqual(white);
+  it('Beyaz ve bilinmeyen renkte her yer aynıdır', () => {
+    const white = mugPalette(luks, 'Beyaz');
+    expect(new Set([white.body, white.handle, white.band, white.saucer]).size).toBe(1);
+    expect(mugPalette(luks, undefined)).toEqual(white);
+  });
+
+  it('renk modele göre doğru yere gider', () => {
+    const band = mugPalette(pro, 'Mavi');
+    expect(band.band).not.toBe(band.body);
+    expect(band.handle).toBe(band.body);
+    const accent = mugPalette(afilli, 'Mor');
+    expect(accent.inner).toBe(accent.handle);
+    expect(accent.handle).not.toBe(accent.body);
+    const saucer = mugPalette(tabakli, 'Lacivert');
+    expect(saucer.saucer).not.toBe(saucer.body);
+    expect(saucer.handle).toBe(saucer.body);
+  });
+
+  it('pastel renkte kupanın tamamı boyalıdır', () => {
+    const pastel = mugPalette(kahve, 'Pastel Mavi');
+    expect(pastel.body).toBe(pastel.handle);
+    expect(pastel.body).not.toBe(mugPalette(kahve, 'Beyaz').body);
+  });
+
+  it('Sihirli Kupa sıcakken beyazdır', () => {
+    expect(mugPalette(sihirli, 'Siyah').body).toBe(mugPalette(luks, 'Beyaz').body);
   });
 });
 

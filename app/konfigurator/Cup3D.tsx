@@ -22,7 +22,7 @@ interface Props {
 
 /** Konfigüratörde seçilen kupa ve desen, döndürülebilir olarak. */
 export default function Cup3D({ model, color, label, design, twoSided, backDesign, view, onView, onUnsupported }: Props) {
-  const colors = useMemo(() => mugPalette(color), [color]);
+  const colors = useMemo(() => mugPalette(model, color), [model, color]);
   const photo = useReadyPrint(design);
   const backPhoto = useReadyPrint(twoSided ? backDesign : null);
   return (
