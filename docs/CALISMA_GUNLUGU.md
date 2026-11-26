@@ -19,12 +19,18 @@ Her iş bitiminde (kod, sunucu, dış hizmet ya da yalnız araştırma) bu dosya
 
 ---
 
+## 27.11.2026 — Bing Webmaster Tools kuruldu
+- Neden: Bing dizini bazı yapay zekâ aramalarını da besliyor (kullanıcı isteği).
+- Ne: yalnız `https://www.kartabaski.com/` ve site haritası eklendi; Bing durumu “Success”, 19 adres.
+- Nasıl: sitenin sahibinin Google hesabıyla giriş (kullanıcı onayladı) ve **Google Search Console'dan içe aktarma** (Bing'in yalnız okuma izni var). Bu yüzden Search Console mülkü ya da izni kaldırılırsa Bing doğrulaması da etkilenir.
+- Not: panelde **AI Performance (beta)** raporu var; sitenin yapay zekâ yanıtlarında alıntılanmasını izlemek için kullanılabilir. **IndexNow** menüsü teknik maddeler uygulanırken kullanılacak.
+
 ## 27.11.2026 — Google Search Console kuruldu, site haritası gönderildi
 - Neden: arama motorları ve onlardan beslenen yapay zekâ aramaları siteyi daha hızlı ve eksiksiz tanısın (kullanıcı isteği).
 - Ne: `https://www.kartabaski.com/` URL ön eki mülkü eklendi, sahiplik doğrulandı, `sitemap.xml` gönderildi.
 - Nasıl: HTML etiketi yöntemi; kod admin panelinde **SEO Ayarları → Doğrulama kodları → Google** alanına kaydedildi (kod ya da dağıtım gerekmedi). **Bu alan silinirse doğrulama düşer.** Mülk, sitenin sahibinin Google hesabındadır.
 - Doğrulama: etiket canlı ana sayfada görüldü; Google sahipliği ve site haritasını kabul etti. Dizine ekleme sonuçları birkaç gün sonra görülür.
-- Açık: Bing Webmaster Tools henüz yok (tek oturum açma izni için kullanıcı onayı bekleniyor). Google İşletme Profili açılmadı: Google yalnız online hizmet veren markalara profil vermiyor. Pazaryeri ve sosyal profiller, firma rehberleri ve haber siteleri sırada; her yerde aynı ad, telefon ve web adresi kullanılacak, uydurma adres yazılmayacak.
+- Açık: Google İşletme Profili açılmadı: Google yalnız online hizmet veren markalara profil vermiyor. Pazaryeri ve sosyal profiller, firma rehberleri ve haber siteleri sırada; her yerde aynı ad, telefon ve web adresi kullanılacak, uydurma adres yazılmayacak.
 
 ## 27.11.2026 — Çalışma günlüğü kuruldu
 - Neden: kullanıcı, yapılan her işin diğer asistan ve modellerin anlayacağı biçimde not edilmesini istedi.
