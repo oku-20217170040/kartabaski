@@ -1,762 +1,251 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { useCallback, useEffect, useState } from 'react';
 import { collection, getDocs, orderBy, query } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
-import { ConfiguratorCup, ConfiguratorDesign } from '@/types';
+import type { ConfiguratorCup, ConfiguratorDesign } from '@/types';
 import { useCart } from '@/lib/cart-context';
 import { productToCartItem } from '@/lib/cart-products';
 import { cupToProduct } from '@/lib/configurator-lines';
 import { MAX_QTY, clampQty } from '@/lib/cart';
+import { cloudinaryUrl } from '@/lib/format';
 import { trackEvent } from '@/lib/analytics-client';
 import { CartIcon } from '@/components/cart/CartLink';
+import { WhatsAppIcon } from '@/components/icons';
 import { WHATSAPP_BASE } from '@/lib/constants';
 import '@/components/cart/cart.css';
+import './konfigurator.css';
 
-type Cup    = ConfiguratorCup;
-type Design = ConfiguratorDesign;
+const CUSTOM = '__custom__';
+const ALL = 'Tümü';
+const ASK_HREF = `${WHATSAPP_BASE}?text=${encodeURIComponent('Merhaba, özel tasarım bastırmak istiyorum.')}`;
 
-const CF_CLOUD  = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || 'dwulzfmlu';
+/* Kupa fotoğrafı kırpılmaz: kare alana kenar rengiyle tamamlanır. */
+const cupImage = (id: string, width: number) => cloudinaryUrl(id, `f_auto,q_auto,w_${width},ar_1:1,c_pad,b_auto:border`);
+const designImage = (id: string) => cloudinaryUrl(id, 'f_auto,q_auto,w_400,c_limit');
 
-function cfImg(publicId: string, w = 400) {
-  return `https://res.cloudinary.com/${CF_CLOUD}/image/upload/f_auto,q_auto,w_${w},c_fill/${publicId}`;
-}
+const fmt = (n: number) => new Intl.NumberFormat('tr-TR').format(n);
+const variants = (cup: ConfiguratorCup) => (cup.colors ?? []).filter((c) => c.images?.[0]);
 
-const CUSTOM_DESIGN: Design = {
-  id: '__custom__',
-  code: 'ÖZEL',
-  name: 'Kendi Tasarımım',
-  gradient: 'linear-gradient(135deg,#1A1A2E,#16213E)',
-  textColor: 'var(--sun)',
-  active: true,
-  order: 0,
-  createdAt: 0,
-  updatedAt: 0,
-};
-
-/* ─── CAROUSEL ───────────────────────────────────────────────── */
-const CARD_W   = 148; // px — kart genişliği
-const CARD_GAP = 12;  // px — kartlar arası boşluk
-const SCROLL_STEP = (CARD_W + CARD_GAP) * 3; // 3 kart kadar kaydır
-
-function Carousel({ children, id }: { children: React.ReactNode; id: string }) {
-  const trackRef = useRef<HTMLDivElement>(null);
-  const [canLeft,  setCanLeft]  = useState(false);
-  const [canRight, setCanRight] = useState(true);
-
-  function updateArrows() {
-    const el = trackRef.current;
-    if (!el) return;
-    setCanLeft(el.scrollLeft > 4);
-    setCanRight(el.scrollLeft + el.clientWidth < el.scrollWidth - 4);
-  }
-
-  useEffect(() => {
-    const el = trackRef.current;
-    if (!el) return;
-    updateArrows();
-    el.addEventListener('scroll', updateArrows, { passive: true });
-    const ro = new ResizeObserver(updateArrows);
-    ro.observe(el);
-    return () => { el.removeEventListener('scroll', updateArrows); ro.disconnect(); };
-  }, []);
-
-  // children değişince (veriler yüklendi) okları güncelle
-  useEffect(() => { setTimeout(updateArrows, 80); }, [children]);
-
-  function scroll(dir: 'left' | 'right') {
-    trackRef.current?.scrollBy({ left: dir === 'left' ? -SCROLL_STEP : SCROLL_STEP, behavior: 'smooth' });
-  }
-
-  return (
-    <div style={{ position: 'relative' }}>
-      {/* Sol ok */}
-      {canLeft && (
-        <button
-          aria-label="Geri"
-          onClick={() => scroll('left')}
-          style={arrowStyle('left')}
-        >‹</button>
-      )}
-
-      {/* Kaydırılabilir track */}
-      <div
-        ref={trackRef}
-        id={id}
-        style={{
-          display: 'flex',
-          gap: CARD_GAP,
-          overflowX: 'auto',
-          scrollSnapType: 'x mandatory',
-          WebkitOverflowScrolling: 'touch',
-          scrollbarWidth: 'none',
-          msOverflowStyle: 'none',
-          padding: '6px 4px 12px',
-        }}
-        // hide scrollbar on webkit
-        className="hide-scrollbar"
-      >
-        {children}
-      </div>
-
-      {/* Sağ ok */}
-      {canRight && (
-        <button
-          aria-label="İleri"
-          onClick={() => scroll('right')}
-          style={arrowStyle('right')}
-        >›</button>
-      )}
-    </div>
-  );
-}
-
-function arrowStyle(side: 'left' | 'right'): React.CSSProperties {
-  return {
-    position: 'absolute',
-    top: '50%',
-    [side]: -16,
-    transform: 'translateY(-60%)',
-    zIndex: 10,
-    width: 34,
-    height: 34,
-    borderRadius: '50%',
-    background: '#fff',
-    border: '1.5px solid #E5E7EB',
-    boxShadow: '0 2px 8px rgba(0,0,0,0.12)',
-    cursor: 'pointer',
-    fontSize: 20,
-    fontWeight: 700,
-    color: '#374151',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    lineHeight: 1,
-    padding: 0,
-  };
-}
-
-/* ─── MAIN COMPONENT ─────────────────────────────────────────── */
 export default function ConfiguratorClient() {
   const router = useRouter();
   const cart = useCart();
+  const [cups, setCups] = useState<ConfiguratorCup[]>([]);
+  const [designs, setDesigns] = useState<ConfiguratorDesign[]>([]);
+  const [state, setState] = useState<'loading' | 'ready' | 'failed'>('loading');
+  const [cupId, setCupId] = useState<string | null>(null);
+  const [color, setColor] = useState<string | null>(null);
+  const [designId, setDesignId] = useState<string | null>(null);
+  const [category, setCategory] = useState(ALL);
   const [qty, setQty] = useState(1);
-  const [cups,           setCups]           = useState<Cup[]>([]);
-  const [designs,        setDesigns]        = useState<Design[]>([]);
-  const [dataLoading,    setDataLoading]    = useState(true);
-  const [expandedCupId,    setExpandedCupId]    = useState<string | null>(null);
-  const [selectedCup,      setSelectedCup]      = useState<Cup | null>(null);
-  const [selectedColorIdx, setSelectedColorIdx] = useState<number | null>(null);
-  const [selectedDesign,   setSelectedDesign]   = useState<Design | null>(null);
-  const [designTab,        setDesignTab]        = useState<string>('Tümü');
-  const [isMobile,         setIsMobile]         = useState(false);
+  const [warning, setWarning] = useState('');
 
-  useEffect(() => {
-    const check = () => setIsMobile(window.matchMedia('(pointer: coarse)').matches);
-    check();
-    window.matchMedia('(pointer: coarse)').addEventListener('change', check);
-    return () => window.matchMedia('(pointer: coarse)').removeEventListener('change', check);
+  const load = useCallback(async () => {
+    setState('loading');
+    try {
+      const [c, d] = await Promise.all([
+        getDocs(query(collection(db, 'configurator_cups'), orderBy('order'))),
+        getDocs(query(collection(db, 'configurator_designs'), orderBy('order'))),
+      ]);
+      setCups(c.docs.map((x) => ({ ...x.data(), id: x.id }) as ConfiguratorCup).filter((x) => x.active));
+      setDesigns(d.docs.map((x) => ({ ...x.data(), id: x.id }) as ConfiguratorDesign).filter((x) => x.active));
+      setState('ready');
+    } catch {
+      setState('failed');
+    }
   }, []);
-  const variantPanelRef = useRef<HTMLDivElement>(null);
-  const [toast,          setToast]          = useState('');
-  const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => { load(); }, [load]);
 
-  useEffect(() => {
-    Promise.all([
-      getDocs(query(collection(db, 'configurator_cups'),    orderBy('order'))),
-      getDocs(query(collection(db, 'configurator_designs'), orderBy('order'))),
-    ]).then(([cupsSnap, designsSnap]) => {
-      setCups(cupsSnap.docs.map(d => ({ id: d.id, ...d.data() } as Cup)).filter(c => c.active));
-      setDesigns(designsSnap.docs.map(d => ({ id: d.id, ...d.data() } as Design)).filter(d => d.active));
-      setDataLoading(false);
-    }).catch(() => setDataLoading(false));
-  }, []);
+  const cup = cups.find((c) => c.id === cupId) ?? null;
+  const design = designs.find((d) => d.id === designId) ?? null;
+  const isCustom = designId === CUSTOM;
+  const chosenColor = cup ? variants(cup).find((c) => c.name === color) : undefined;
+  const chosenCupImage = chosenColor?.images[0] ?? cup?.imagePublicId;
+  const categories = [ALL, ...Array.from(new Set(designs.map((d) => d.category?.trim()).filter((x): x is string => Boolean(x))))];
+  const shown = category === ALL ? designs : designs.filter((d) => d.category?.trim() === category);
+  const complete = Boolean(cup && (design || isCustom));
 
-  const designsRef = useRef<HTMLElement>(null);
-  const previewRef = useRef<HTMLElement>(null);
-
-  function showToast(msg: string) {
-    setToast(msg);
-    if (toastTimer.current) clearTimeout(toastTimer.current);
-    toastTimer.current = setTimeout(() => setToast(''), 2800);
-  }
-
-  function handleCupClick(cup: Cup) {
-    const colors = cup.colors?.filter(c => c.images[0]) ?? [];
-    if (colors.length === 0) {
-      // Varyant yok — direkt seç/kaldır
-      if (selectedCup?.id === cup.id) { setSelectedCup(null); setSelectedColorIdx(null); setExpandedCupId(null); return; }
-      setSelectedCup(cup); setSelectedColorIdx(null); setExpandedCupId(null);
-      if (!selectedDesign) setTimeout(() => designsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 150);
-    } else {
-      // Varyant var — paneli aç/kapat
-      setExpandedCupId(prev => prev === cup.id ? null : cup.id);
-      setTimeout(() => variantPanelRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 100);
-    }
-  }
-
-  function handleSelectVariant(cup: Cup, colorIdx: number | null) {
-    if (selectedCup?.id === cup.id && selectedColorIdx === colorIdx) {
-      setSelectedCup(null); setSelectedColorIdx(null); setExpandedCupId(null); return;
-    }
-    setSelectedCup(cup);
-    setSelectedColorIdx(colorIdx);
-    setExpandedCupId(null);
-    if (!selectedDesign) setTimeout(() => designsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 150);
-  }
-
-  function handleSelectDesign(design: Design) {
-    if (selectedDesign?.id === design.id) { setSelectedDesign(null); return; }
-    setSelectedDesign(design);
-    if (selectedCup) {
-      setTimeout(() => previewRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 150);
-    }
-  }
-
-  const bothSelected = !!(selectedCup && selectedDesign);
-  const selectedColor = selectedCup && selectedColorIdx !== null
-    ? selectedCup.colors?.filter(c => c.images[0])[selectedColorIdx] ?? null
-    : null;
-  const previewCupImg = selectedColor
-    ? cfImg(selectedColor.images[0], 200)
-    : selectedCup?.imagePublicId ? cfImg(selectedCup.imagePublicId, 200) : null;
-
-  const isCustom = selectedDesign?.id === '__custom__';
+  const pickCup = (id: string) => {
+    setWarning('');
+    if (id !== cupId) setColor(null);
+    setCupId(id);
+  };
 
   /** Kendi tasarımı: tasarım ekranına; hazır tasarım: doğrudan sepete. */
-  function order() {
-    if (!selectedCup || !selectedDesign) { showToast('Lütfen hem bardak hem tasarım seçiniz.'); return; }
-    const product = cupToProduct(selectedCup);
-    const color = selectedColor?.name;
-    if (isCustom) {
-      router.push(`/tasarla/${product.slug}${color ? `?renk=${encodeURIComponent(color)}` : ''}`);
+  const order = () => {
+    if (!cup || (!design && !isCustom)) {
+      setWarning(!cup ? 'Önce bir kupa seçin.' : 'Şimdi bir desen seçin.');
+      return;
+    }
+    const product = cupToProduct(cup);
+    if (!design) {
+      router.push(`/tasarla/${product.slug}${chosenColor ? `?renk=${encodeURIComponent(chosenColor.name)}` : ''}`);
       return;
     }
     cart.save(productToCartItem(product, {
       qty,
-      color,
-      design: {
-        photos: [],
-        ready: { id: selectedDesign.id, name: selectedDesign.name, image: selectedDesign.imagePublicId },
-      },
+      color: chosenColor?.name,
+      design: { photos: [], ready: { id: design.id, name: design.name, image: design.imagePublicId } },
     }));
     trackEvent('cart_add', { slug: product.slug ?? product.id, qty });
     router.push('/sepet');
-  }
-
-  if (dataLoading) return (
-    <div style={{ minHeight: '60vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-      <div className="spinner" />
-    </div>
-  );
+  };
 
   return (
-    <>
-      {/* hide-scrollbar global style */}
-      <style>{`
-        .hide-scrollbar::-webkit-scrollbar{display:none}
-      `}</style>
-
-      {/* ── Header ───────────────────────────────────────────── */}
-      <header style={{
-        background: '#fff',
-        borderBottom: '1px solid #E5E7EB',
-        padding: '18px 20px 16px',
-        position: 'sticky', top: 0, zIndex: 100,
-      }}>
-        <div style={{ maxWidth: 1100, margin: '0 auto' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12 }}>
-            <Link href="/" style={{ display: 'inline-flex', alignItems: 'center', gap: 5, minHeight: 44, fontSize: 14, color: 'var(--ink-3)', textDecoration: 'none' }}>
-              ← Ürünlere Dön
-            </Link>
-            <Link href="/sepet" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, minHeight: 44, fontSize: 14, fontWeight: 700 }}>
-              <CartIcon size={18} /> Sepet{cart.count > 0 ? ` (${cart.count})` : ''}
-            </Link>
-          </div>
-          <h1 style={{ fontSize: 'clamp(1.4rem,4vw,2rem)', fontWeight: 800, letterSpacing: '-0.02em', lineHeight: 1.15 }}>
-            Kendi kombinasyonunu oluştur
-          </h1>
-          <p style={{ fontSize: 14, color: '#6B7280', marginTop: 4 }}>
-            Bardağını seç, tasarımını seç — biz basalım.
-          </p>
-        </div>
+    <div className="wrap">
+      <header className="page-head">
+        <nav aria-label="Sayfa yolu">
+          <ol className="breadcrumb">
+            <li><Link href="/">Ana sayfa</Link></li>
+            <li aria-current="page">Kendin tasarla</li>
+          </ol>
+        </nav>
+        <h1 className="display">Kupayı ve deseni seçin.</h1>
+        <p className="lead">Hazır desenlerden birini sepete ekleyin ya da kendi fotoğrafınızı koyun.</p>
       </header>
 
-      <main style={{ maxWidth: 1100, margin: '0 auto', padding: '32px 20px 80px', display: 'flex', flexDirection: 'column', gap: 40 }}>
-
-        {/* ── 1. BARDAK SEÇİMİ ─────────────────────────────── */}
-        <section>
-          <SectionTitle number={1} title="Bardağını Seç" />
-          {cups.length === 0 ? (
-            <p style={{ color: '#6B7280', fontSize: 14 }}>Henüz bardak eklenmemiş.</p>
-          ) : (
-            <>
-              <Carousel id="cups-track">
-                {cups.map((cup) => (
-                  <CupCard
-                    key={cup.id}
-                    cup={cup}
-                    expanded={expandedCupId === cup.id}
-                    selected={selectedCup?.id === cup.id}
-                    onClick={() => handleCupClick(cup)}
-                  />
+      {state === 'failed' ? (
+        <div className="kf-empty" role="alert">
+          <p>Kupalar yüklenemedi. Bağlantınızı kontrol edip tekrar deneyin.</p>
+          <button type="button" className="btn btn-primary" onClick={load}>Tekrar deneyin</button>
+        </div>
+      ) : state === 'loading' ? (
+        <div className="kf-grid kf-loading" aria-label="Yükleniyor">
+          {Array.from({ length: 4 }).map((_, i) => <div key={i} className="skeleton kf-skeleton" />)}
+        </div>
+      ) : cups.length === 0 ? (
+        <div className="kf-empty">
+          <p>Şu an seçilebilir kupa yok. İstediğinizi WhatsApp’tan yazın.</p>
+          <a className="btn btn-primary" href={ASK_HREF} target="_blank" rel="noopener noreferrer"><WhatsAppIcon /> WhatsApp’tan yazın</a>
+        </div>
+      ) : (
+        <div className="kf-layout">
+          <div className="kf-choices">
+            <section aria-labelledby="kf-kupa">
+              <h2 id="kf-kupa" className="h3">Kupa</h2>
+              <ul className="kf-grid" id="cups-track">
+                {cups.map((c) => (
+                  <li key={c.id}>
+                    <button type="button" className="kf-tile" aria-pressed={cupId === c.id} onClick={() => pickCup(c.id)}>
+                      <span className="kf-art">
+                        {c.imagePublicId && (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img src={cupImage(c.imagePublicId, 360)} alt="" loading="lazy" />
+                        )}
+                      </span>
+                      <span className="kf-name">{c.name}</span>
+                      <span className="kf-price">{fmt(c.price)}₺</span>
+                    </button>
+                  </li>
                 ))}
-              </Carousel>
+              </ul>
 
-              {/* Varyant paneli — seçilen bardağın altında açılır */}
-              {(() => {
-                const expandedCup = cups.find(c => c.id === expandedCupId);
-                if (!expandedCup) return null;
-                const colors = expandedCup.colors?.filter(c => c.images[0]) ?? [];
-                if (colors.length === 0) return null;
-                return (
-                  <div
-                    ref={variantPanelRef}
-                    style={{
-                      marginTop: 12,
-                      background: '#fff',
-                      border: '2px solid var(--brand)',
-                      borderRadius: 12,
-                      padding: '20px 20px 16px',
-                      animation: 'galleryFadeIn 0.2s ease',
-                    }}
-                  >
-                    <p style={{ fontSize: 13, fontWeight: 700, color: '#374151', marginBottom: 14 }}>
-                      {expandedCup.name} — Renk Seç
-                    </p>
-                    <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-                      {/* Renksiz (ana bardak) seçeneği */}
-                      <button
-                        onClick={() => handleSelectVariant(expandedCup, null)}
-                        style={{
-                          display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6,
-                          background: 'none', border: 'none', cursor: 'pointer', padding: 0,
-                        }}
-                      >
-                        <div style={{
-                          width: 72, height: 72, borderRadius: 10, overflow: 'hidden',
-                          background: '#f3f4f6',
-                          outline: selectedCup?.id === expandedCup.id && selectedColorIdx === null ? '3px solid var(--brand)' : '2px solid #E5E7EB',
-                          outlineOffset: 2, transition: 'outline-color 0.12s',
-                        }}>
-                          {expandedCup.imagePublicId
-                            ? <img src={cfImg(expandedCup.imagePublicId, 144)} alt="Standart" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} /> // eslint-disable-line @next/next/no-img-element
-                            : <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24 }}>☕</div>
-                          }
-                        </div>
-                        <span style={{ fontSize: 11, color: '#6B7280', fontWeight: 600 }}>Standart</span>
+              {cup && variants(cup).length > 0 && (
+                <div className="kf-colors">
+                  <p id="kf-renk">{cup.name} rengi: <b>{chosenColor?.name ?? 'Standart'}</b></p>
+                  <div className="kf-swatches" role="group" aria-labelledby="kf-renk">
+                    <button type="button" className="kf-swatch" aria-pressed={!chosenColor} onClick={() => setColor(null)}>
+                      {cup.imagePublicId && (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={cupImage(cup.imagePublicId, 144)} alt="" />
+                      )}
+                      <span>Standart</span>
+                    </button>
+                    {variants(cup).map((c) => (
+                      <button key={c.name} type="button" className="kf-swatch" aria-pressed={chosenColor?.name === c.name} onClick={() => setColor(c.name)}>
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={cupImage(c.images[0], 144)} alt="" loading="lazy" />
+                        <span>{c.name}</span>
                       </button>
-
-                      {colors.map((c, i) => (
-                        <button
-                          key={i}
-                          onClick={() => handleSelectVariant(expandedCup, i)}
-                          style={{
-                            display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6,
-                            background: 'none', border: 'none', cursor: 'pointer', padding: 0,
-                          }}
-                        >
-                          <div style={{
-                            width: 72, height: 72, borderRadius: 10, overflow: 'hidden',
-                            outline: selectedCup?.id === expandedCup.id && selectedColorIdx === i ? '3px solid var(--brand)' : '2px solid #E5E7EB',
-                            outlineOffset: 2, transition: 'outline-color 0.12s',
-                          }}>
-                            {/* eslint-disable-next-line @next/next/no-img-element */}
-                            <img src={cfImg(c.images[0], 144)} alt={c.name} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
-                          </div>
-                          <span style={{ fontSize: 11, color: '#6B7280', fontWeight: 600 }}>{c.name}</span>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                );
-              })()}
-            </>
-          )}
-        </section>
-
-        {/* ── 2. TASARIM SEÇİMİ ────────────────────────────── */}
-        <section ref={designsRef}>
-          <SectionTitle number={2} title="Tasarımını Seç" />
-
-          {/* Kategori sekmeleri */}
-          {(() => {
-            const cats = ['Tümü', ...Array.from(new Set(designs.map(d => d.category).filter(Boolean) as string[]))];
-            const filtered = designTab === 'Tümü' ? designs : designs.filter(d => d.category === designTab);
-            return (
-              <>
-                {isMobile ? (
-                  <select
-                    value={designTab}
-                    onChange={e => setDesignTab(e.target.value)}
-                    style={{
-                      width: '100%', padding: '10px 14px', marginBottom: 16,
-                      borderRadius: 10, border: '1.5px solid #E5E7EB',
-                      fontSize: 14, fontWeight: 600, color: '#374151',
-                      background: '#fff', cursor: 'pointer',
-                      appearance: 'none',
-                      backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236B7280' stroke-width='2.5'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E")`,
-                      backgroundRepeat: 'no-repeat',
-                      backgroundPosition: 'right 12px center',
-                      paddingRight: 36,
-                    }}
-                  >
-                    {cats.map(cat => <option key={cat} value={cat}>{cat}</option>)}
-                  </select>
-                ) : (
-                  <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 16 }}>
-                    {cats.map(cat => (
-                      <button
-                        key={cat}
-                        onClick={() => setDesignTab(cat)}
-                        style={{
-                          padding: '6px 14px', borderRadius: 20, border: '1.5px solid',
-                          borderColor: designTab === cat ? 'var(--brand)' : '#E5E7EB',
-                          background: designTab === cat ? 'var(--brand)' : '#fff',
-                          color: designTab === cat ? '#fff' : '#374151',
-                          fontSize: 13, fontWeight: 600, cursor: 'pointer',
-                          transition: 'all 0.15s ease',
-                        }}
-                      >{cat}</button>
                     ))}
                   </div>
-                )}
+                </div>
+              )}
+            </section>
 
-                <Carousel id="designs-track">
-                  {/* Kendi tasarımı kartı — sadece Tümü sekmesinde */}
-                  {designTab === 'Tümü' && (
-                    <CarouselCard
-                      selected={selectedDesign?.id === '__custom__'}
-                      onClick={() => handleSelectDesign(CUSTOM_DESIGN)}
-                      highlight
-                    >
-                      <div style={{
-                        width: '100%', aspectRatio: '1/1',
-                        borderRadius: 8,
-                        background: 'linear-gradient(135deg,#1A1A2E,#16213E)',
-                        display: 'flex', flexDirection: 'column',
-                        alignItems: 'center', justifyContent: 'center',
-                        marginBottom: 8, gap: 4,
-                      }}>
-                        <span style={{ fontSize: '1.6rem' }}>🖼️</span>
-                        <span style={{ fontSize: '0.6rem', fontWeight: 700, color: 'var(--sun)', letterSpacing: '0.05em', textTransform: 'uppercase' }}>Kendi</span>
-                      </div>
-                      <div style={{ ...itemNameStyle, color: '#1A1A1A', fontWeight: 700 }}>Kendi Tasarımım</div>
-                    </CarouselCard>
-                  )}
-
-                  {filtered.map((design) => (
-                    <CarouselCard
-                      key={design.id}
-                      selected={selectedDesign?.id === design.id}
-                      onClick={() => handleSelectDesign(design)}
-                    >
-                      <Visual imagePublicId={design.imagePublicId} background={design.gradient ?? ''} color={design.textColor ?? ''} label={design.code} emoji="🎨" />
-                      <div style={itemNameStyle}>{design.name}</div>
-                    </CarouselCard>
+            <section aria-labelledby="kf-desen">
+              <h2 id="kf-desen" className="h3">Desen</h2>
+              {categories.length > 2 && (
+                <div className="mood-tabs kf-tabs" role="group" aria-label="Desen türü">
+                  {categories.map((c) => (
+                    <button key={c} type="button" className="mood-tab" aria-pressed={category === c} onClick={() => setCategory(c)}>{c}</button>
                   ))}
-                </Carousel>
-              </>
-            );
-          })()}
-        </section>
-
-        {/* ── 3. ÖNİZLEME ──────────────────────────────────── */}
-        <section
-          ref={previewRef}
-          style={{
-            opacity: bothSelected ? 1 : 0,
-            transform: bothSelected ? 'translateY(0)' : 'translateY(16px)',
-            transition: 'opacity 0.35s ease, transform 0.35s ease',
-            pointerEvents: bothSelected ? 'auto' : 'none',
-          }}
-        >
-          <SectionTitle number={3} title="Kombinasyonun" />
-
-          <div style={{
-            background: '#fff',
-            borderRadius: 12,
-            border: '2px solid #E5E7EB',
-            padding: '28px 24px',
-            boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
-          }}>
-            {/* Görseller yan yana */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 16, marginBottom: 20, flexWrap: 'wrap' }}>
-              {selectedCup && (
-                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
-                  <div style={{
-                    width: 100, height: 100, borderRadius: 12,
-                    background: previewCupImg ? '#f3f4f6' : selectedCup.gradient,
-                    display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-                    fontWeight: 800, fontSize: '1.3rem', color: selectedCup.textColor,
-                    boxShadow: '0 8px 24px rgba(0,0,0,0.13)', overflow: 'hidden',
-                  }}>
-                    {previewCupImg ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img key={selectedColorIdx ?? 'base'} src={previewCupImg} alt={selectedCup.name} style={{ width: '100%', height: '100%', objectFit: 'cover', animation: 'galleryFadeIn 0.25s ease' }} />
-                    ) : (
-                      <><span>{selectedCup.code}</span><span style={{ fontSize: '0.7rem', opacity: 0.8 }}>☕</span></>
-                    )}
-                  </div>
-                  <span style={{ fontSize: 12, fontWeight: 600, color: '#6B7280' }}>
-                    {selectedCup.name}{selectedColor ? ` — ${selectedColor.name}` : ''}
-                  </span>
                 </div>
               )}
+              <ul className="kf-grid" id="designs-track">
+                {category === ALL && (
+                  <li>
+                    <button type="button" className="kf-tile is-custom" aria-pressed={isCustom} onClick={() => { setWarning(''); setDesignId(CUSTOM); }}>
+                      <span className="kf-art">Fotoğraf, logo ya da yazınız</span>
+                      <span className="kf-name">Kendi Tasarımım</span>
+                    </button>
+                  </li>
+                )}
+                {shown.map((d) => (
+                  <li key={d.id}>
+                    <button type="button" className="kf-tile" aria-pressed={designId === d.id} onClick={() => { setWarning(''); setDesignId(d.id); }}>
+                      <span className="kf-art is-design">
+                        {d.imagePublicId ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img src={designImage(d.imagePublicId)} alt="" loading="lazy" />
+                        ) : d.code}
+                      </span>
+                      <span className="kf-name">{d.name}</span>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </section>
 
-              <span style={{ fontSize: '2rem', color: 'var(--brand)', fontWeight: 800 }}>+</span>
+            <p className="kf-ask">
+              Aradığınız desen yok mu?{' '}
+              <a href={ASK_HREF} target="_blank" rel="noopener noreferrer">WhatsApp’tan yazın</a>
+            </p>
+          </div>
 
-              {selectedDesign && (
-                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
-                  <div style={{
-                    width: 100, height: 100, borderRadius: 12,
-                    background: selectedDesign.id === '__custom__'
-                      ? 'linear-gradient(135deg,#1A1A2E,#16213E)'
-                      : selectedDesign.imagePublicId ? '#f3f4f6' : selectedDesign.gradient,
-                    display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-                    fontWeight: 800, fontSize: '1.3rem', color: selectedDesign.textColor,
-                    boxShadow: '0 8px 24px rgba(0,0,0,0.13)', overflow: 'hidden',
-                  }}>
-                    {selectedDesign.id === '__custom__' ? (
-                      <><span style={{ fontSize: '2rem' }}>🖼️</span><span style={{ fontSize: '0.6rem', color: 'var(--sun)', fontWeight: 700 }}>ÖZEL</span></>
-                    ) : selectedDesign.imagePublicId ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={cfImg(selectedDesign.imagePublicId, 200)} alt={selectedDesign.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                    ) : (
-                      <><span>{selectedDesign.code}</span><span style={{ fontSize: '0.7rem', opacity: 0.8 }}>🎨</span></>
-                    )}
-                  </div>
-                  <span style={{ fontSize: 12, fontWeight: 600, color: '#6B7280' }}>{selectedDesign.name}</span>
-                </div>
-              )}
+          <aside className="kf-summary" aria-label="Seçiminiz">
+            <div className="kf-pair">
+              <figure>
+                <span className="kf-art">
+                  {chosenCupImage ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={cupImage(chosenCupImage, 360)} alt="" />
+                  ) : 'Kupa'}
+                </span>
+                <figcaption>{cup ? `${cup.name}${chosenColor ? `, ${chosenColor.name}` : ''}` : 'Kupa seçin'}</figcaption>
+              </figure>
+              <figure>
+                <span className="kf-art is-design">
+                  {design?.imagePublicId ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={designImage(design.imagePublicId)} alt="" />
+                  ) : isCustom ? 'Sizin tasarımınız' : design?.code ?? 'Desen'}
+                </span>
+                <figcaption>{isCustom ? 'Kendi Tasarımım' : design?.name ?? 'Desen seçin'}</figcaption>
+              </figure>
             </div>
 
-            {/* Kombino adı + fiyat */}
-            {bothSelected && (
-              <div style={{ textAlign: 'center', marginBottom: 20 }}>
-                <div style={{ fontSize: 16, fontWeight: 700, marginBottom: 10 }}>
-                  {selectedDesign!.id === '__custom__'
-                    ? `${selectedCup!.name} bardağına kendi tasarımın`
-                    : `${selectedCup!.name} + ${selectedDesign!.name}`}
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 16, flexWrap: 'wrap' }}>
-                  <span style={{ fontSize: 22, fontWeight: 800, color: 'var(--brand)' }}>{selectedCup!.price}₺</span>
-                  <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'center' }}>
-                    <Chip green>✓ Ücretsiz Tasarım</Chip>
-                    <Chip>🚚 3 İş Günü Teslimat</Chip>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {!isCustom && (
-              <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 12, marginBottom: 16 }}>
-                <span style={{ fontWeight: 700 }}>Adet</span>
+            <div className="kf-buy">
+              <p className="kf-total">{cup ? `${fmt(cup.price * (isCustom ? 1 : qty))}₺` : ''}</p>
+              {!isCustom && (
                 <div className="cart-qty" role="group" aria-label="Adet">
                   <button type="button" onClick={() => setQty(clampQty(qty - 1))} disabled={qty <= 1} aria-label="Adedi azalt">−</button>
                   <input type="text" inputMode="numeric" aria-label="Adet" value={qty} onChange={(e) => setQty(clampQty(Number(e.target.value.replace(/\D/g, '').slice(0, 3)) || 1))} />
                   <button type="button" onClick={() => setQty(clampQty(qty + 1))} disabled={qty >= MAX_QTY} aria-label="Adedi artır">+</button>
                 </div>
-              </div>
-            )}
+              )}
+            </div>
 
-            <button type="button" className="btn btn-primary btn-block" style={{ minHeight: 56 }} onClick={order}>
+            <p className="kf-warning" role="alert">{warning}</p>
+            <button type="button" className="btn btn-primary btn-block kf-order" onClick={order} data-complete={complete}>
               <CartIcon size={20} /> {isCustom ? 'Fotoğrafınızı ekleyin' : 'Sepete ekle'}
             </button>
-          </div>
-        </section>
-
-        {/* ── Özel tasarım bilgi satırı ──────────────────────── */}
-        <div style={{
-          background: '#fff', border: '1px solid #E5E7EB', borderRadius: 12,
-          padding: '16px 20px', display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap',
-        }}>
-          <p style={{ fontSize: 14, color: '#6B7280', flex: 1, minWidth: 220 }}>
-            <strong style={{ color: '#1A1A1A' }}>Kendi fotoğrafınızı veya logonuzu bastırmak ister misiniz?</strong>{' '}
-            Bardağı seçip “Kendi Tasarımım”a basın; fotoğrafınızı ekleyip sepete atın. Sorunuz varsa WhatsApp&apos;tan yazın.
-          </p>
-          <a
-            href={`${WHATSAPP_BASE}?text=${encodeURIComponent('Merhaba, özel tasarım bastırmak istiyorum.')}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            style={{
-              display: 'inline-flex', alignItems: 'center', gap: 6,
-              padding: '10px 18px', background: '#25D366', color: '#fff',
-              borderRadius: 8, fontSize: 13, fontWeight: 700, textDecoration: 'none',
-              whiteSpace: 'nowrap',
-            }}
-          >
-            <WaIcon size={16} />
-            WhatsApp&apos;a Yaz
-          </a>
-        </div>
-
-      </main>
-
-      {/* ── Toast ────────────────────────────────────────────── */}
-      {toast && (
-        <div style={{
-          position: 'fixed', bottom: 90, left: '50%',
-          transform: 'translateX(-50%)',
-          background: '#1F2937', color: '#fff',
-          fontSize: 14, fontWeight: 600,
-          padding: '12px 22px', borderRadius: 100,
-          whiteSpace: 'nowrap', zIndex: 1000,
-          boxShadow: '0 4px 20px rgba(0,0,0,0.2)',
-        }}>
-          {toast}
+            <p className="kf-note">Baskıdan önce önizleme gönderiyoruz; onayınızdan sonra 3 iş gününde kargoda.</p>
+          </aside>
         </div>
       )}
-    </>
-  );
-}
-
-/* ─── YARDIMCI COMPONENT'LER ─────────────────────────────────── */
-
-function SectionTitle({ number, title }: { number: number; title: string }) {
-  return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 18 }}>
-      <div style={{
-        width: 32, height: 32, borderRadius: '50%',
-        background: 'var(--brand)', color: '#fff',
-        fontSize: 14, fontWeight: 800,
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        flexShrink: 0,
-      }}>{number}</div>
-      <h2 style={{ fontSize: '1.15rem', fontWeight: 700, letterSpacing: '-0.01em' }}>{title}</h2>
     </div>
   );
 }
-
-function CupCard({ cup, selected, expanded, onClick }: {
-  cup: Cup;
-  selected: boolean;
-  expanded: boolean;
-  onClick: () => void;
-}) {
-  const colors = cup.colors?.filter(c => c.images[0]) ?? [];
-  const hasVariants = colors.length > 0;
-
-  return (
-    <CarouselCard selected={selected || expanded} onClick={onClick}>
-      <div style={{ position: 'relative', width: '100%', aspectRatio: '1/1', borderRadius: 8, overflow: 'hidden', background: cup.imagePublicId ? '#f3f4f6' : (cup.gradient ?? '#f3f4f6'), marginBottom: 8 }}>
-        {cup.imagePublicId ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={cfImg(cup.imagePublicId, 300)} alt={cup.name} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
-        ) : (
-          <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.5rem' }}>☕</div>
-        )}
-        {/* Varyant göstergesi */}
-        {hasVariants && (
-          <div style={{
-            position: 'absolute', bottom: 6, right: 6,
-            background: expanded ? 'var(--brand)' : 'rgba(0,0,0,0.5)',
-            color: '#fff', fontSize: 9, fontWeight: 700,
-            borderRadius: 4, padding: '2px 5px',
-            transition: 'background 0.15s',
-          }}>
-            {colors.length} renk
-          </div>
-        )}
-      </div>
-      <div style={itemNameStyle}>{cup.name}</div>
-      <div style={{ fontSize: 12, fontWeight: 700, textAlign: 'center', color: 'var(--brand)', marginTop: 2 }}>{cup.price}₺</div>
-    </CarouselCard>
-  );
-}
-
-function CarouselCard({ children, selected, onClick, highlight }: {
-  children: React.ReactNode;
-  selected: boolean;
-  onClick: () => void;
-  highlight?: boolean;
-}) {
-  const borderColor = selected ? 'var(--brand)' : highlight ? 'var(--sun)' : '#E5E7EB';
-  const bgColor     = selected ? 'var(--brand-soft)' : highlight ? 'var(--brand-soft)' : '#fff';
-  return (
-    <div
-      onClick={onClick}
-      style={{
-        flexShrink: 0,
-        width: CARD_W,
-        scrollSnapAlign: 'start',
-        background: bgColor,
-        border: `2px solid ${borderColor}`,
-        borderRadius: 12,
-        padding: 10,
-        cursor: 'pointer',
-        position: 'relative',
-        transform: selected ? 'translateY(-4px)' : undefined,
-        boxShadow: selected ? '0 8px 24px rgba(0,0,0,0.13)' : '0 2px 8px rgba(0,0,0,0.06)',
-        transition: 'transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease, background 0.18s ease',
-        userSelect: 'none',
-        WebkitTapHighlightColor: 'transparent',
-      }}
-      onMouseEnter={(e) => { if (!selected) { const el = e.currentTarget as HTMLDivElement; el.style.transform = 'translateY(-4px)'; el.style.boxShadow = '0 8px 24px rgba(0,0,0,0.13)'; } }}
-      onMouseLeave={(e) => { if (!selected) { const el = e.currentTarget as HTMLDivElement; el.style.transform = ''; el.style.boxShadow = '0 2px 8px rgba(0,0,0,0.06)'; } }}
-    >
-      {selected && (
-        <div style={{
-          position: 'absolute', top: 7, right: 7,
-          width: 20, height: 20, borderRadius: '50%',
-          background: 'var(--brand)', color: '#fff',
-          fontSize: 11, fontWeight: 700,
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          zIndex: 2,
-        }}>✓</div>
-      )}
-      {children}
-    </div>
-  );
-}
-
-function Visual({ imagePublicId, background, color, label, emoji }: {
-  imagePublicId?: string; background: string; color: string; label: string; emoji: string;
-}) {
-  return (
-    <div style={{
-      width: '100%', aspectRatio: '1 / 1',
-      borderRadius: 8,
-      background: imagePublicId ? '#f3f4f6' : background,
-      display: 'flex', flexDirection: 'column',
-      alignItems: 'center', justifyContent: 'center',
-      fontWeight: 800, fontSize: '1.1rem', color,
-      marginBottom: 8, overflow: 'hidden', position: 'relative',
-    }}>
-      {imagePublicId ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img src={cfImg(imagePublicId, 300)} alt={label} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
-      ) : (
-        <><span>{label}</span><span style={{ fontSize: '0.65rem', opacity: 0.8, marginTop: 2 }}>{emoji}</span></>
-      )}
-    </div>
-  );
-}
-
-function Chip({ children, green }: { children: React.ReactNode; green?: boolean }) {
-  return (
-    <span style={{
-      fontSize: 12, borderRadius: 100, padding: '4px 12px', fontWeight: 600,
-      background: green ? '#DCFCE7' : 'var(--brand-soft)',
-      color: green ? '#166534' : 'var(--brand-hover)',
-    }}>{children}</span>
-  );
-}
-
-function WaIcon({ size = 22 }: { size?: number }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor">
-      <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
-    </svg>
-  );
-}
-
-const itemNameStyle: React.CSSProperties = {
-  fontSize: 12,
-  fontWeight: 600,
-  textAlign: 'center',
-  color: '#1A1A1A',
-  lineHeight: 1.3,
-};
