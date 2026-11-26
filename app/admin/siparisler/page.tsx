@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { listOrderRequestsAction } from '@/lib/actions-siparis';
-import { OrderRequest, orderImageUrl, orderNo } from '@/lib/siparis-types';
+import { OrderRequest, PROOF_LABELS, orderImageUrl, orderNo } from '@/lib/siparis-types';
 import { TALEP_LABELS, TALEP_STATUSES, type TalepStatus } from '@/lib/talep-status';
 import { useToast, errorMessage } from '@/components/admin/Toast';
 import { IconCart, IconRefresh } from '@/components/admin/icons';
@@ -93,6 +93,9 @@ export default function SiparislerPage() {
                       {photos ? ` · ${photos} fotoğraf` : ''}{o.total ? ` · ≈ ${fmt(o.total)}₺` : ''}
                     </small>
                   </span>
+                  {o.proof && o.status !== 'tamamlandi' && o.status !== 'iptal' && (
+                    <span className={`sip-badge${o.attention ? ' is-new' : ''}`}>{PROOF_LABELS[o.proof.state]}</span>
+                  )}
                   <span className={`sip-badge${o.status === 'yeni' ? ' is-new' : ''}`}>
                     {o.status === 'yukleniyor' ? 'Yükleniyor' : TALEP_LABELS[o.status].label}
                   </span>

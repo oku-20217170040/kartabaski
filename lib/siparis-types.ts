@@ -8,6 +8,8 @@ export const ORDER_FOLDER = 'karta-baski/siparisler';
 export const MAX_LINE_PHOTOS = 8;
 export const MAX_PHOTO_BYTES = 8 * 1024 * 1024;
 export const MAX_TEXT = 40;
+export const MAX_PROOF_IMAGES = 4;
+export const MAX_PROOF_TEXT = 500;
 /** Yüklemesi yarım kalan siparişler bu süre sonunda silinir. */
 export const UPLOAD_TTL_MS = 24 * 60 * 60 * 1000;
 /** Tamamlanan / iptal edilen siparişlerin fotoğrafları bu süre sonunda silinir. */
@@ -76,6 +78,40 @@ export const OrderLineSchema = z.object({
 });
 export type OrderLine = z.infer<typeof OrderLineSchema>;
 
+/** Yöneticinin gönderdiği baskı önizlemesi ve müşterinin cevabı. */
+export const ProofSchema = z.object({
+  round: z.number(),
+  images: z.array(z.string()).catch([]),
+  message: z.string().optional(),
+  sentAt: z.number(),
+  state: z.enum(['bekliyor', 'onaylandi', 'duzeltme']),
+  reply: z.string().optional(),
+  repliedAt: z.number().optional(),
+});
+export type Proof = z.infer<typeof ProofSchema>;
+
+export const PROOF_LABELS: Record<Proof['state'], string> = {
+  bekliyor: 'Onay bekliyor',
+  onaylandi: 'Müşteri onayladı',
+  duzeltme: 'Düzeltme istendi',
+};
+
+export const ProofReplySchema = z
+  .object({
+    round: z.number().int().min(1),
+    decision: z.enum(['onaylandi', 'duzeltme']),
+    reply: z.string().trim().max(MAX_PROOF_TEXT).optional(),
+  })
+  .refine((v) => v.decision === 'onaylandi' || Boolean(v.reply), { message: 'Neyi düzeltmemizi istediğinizi yazın.' });
+
+export const ShippingSchema = z.object({
+  carrier: trimmed(60).min(2, 'Kargo firmasını yazın'),
+  trackingNo: trimmed(60).min(4, 'Takip numarasını yazın'),
+  // Yalnız https: müşteri sayfasında bağlantı olarak gösterilir.
+  url: trimmed(300).regex(/^https:\/\/[^\s]+$/, 'Bağlantı https:// ile başlamalı').optional(),
+});
+export type Shipping = z.infer<typeof ShippingSchema>;
+
 export const OrderRequestSchema = z.object({
   token: z.string(),
   createdAt: z.number(),
@@ -93,6 +129,12 @@ export const OrderRequestSchema = z.object({
   orderId: z.string().optional(),
   kvkkAt: z.number().optional(),
   photosDeletedAt: z.number().optional(),
+  proof: ProofSchema.optional(),
+  proofHistory: z.array(ProofSchema).optional(),
+  /** Müşteri cevap verdi, yönetici henüz bakmadı. */
+  attention: z.boolean().optional(),
+  shipping: ShippingSchema.optional(),
+  closedAt: z.number().optional(),
 });
 export type OrderRequest = z.infer<typeof OrderRequestSchema>;
 
@@ -100,8 +142,14 @@ export type OrderRequest = z.infer<typeof OrderRequestSchema>;
 export const canCustomerDelete = (status: OrderRequestStatus) =>
   status === 'yukleniyor' || status === 'yeni' || status === 'incelendi';
 
-export const orderImageIds = (o: Pick<OrderRequest, 'items'>): string[] =>
-  o.items.flatMap((i) => [...i.files, ...(i.preview ? [i.preview] : [])]);
+export const orderImageIds = (o: Pick<OrderRequest, 'items' | 'proof' | 'proofHistory'>): string[] => [
+  ...o.items.flatMap((i) => [...i.files, ...(i.preview ? [i.preview] : [])]),
+  ...[...(o.proofHistory ?? []), ...(o.proof ? [o.proof] : [])].flatMap((p) => p.images),
+];
+
+/** Sipariş açıkken (iptal/tamamlanmamış) bekleyen önizleme cevaplanabilir. */
+export const canReplyProof = (o: Pick<OrderRequest, 'status' | 'proof'>) =>
+  o.proof?.state === 'bekliyor' && o.status !== 'tamamlandi' && o.status !== 'iptal';
 
 export const orderUrl = (token: string, base: string = SITE_URL) => `${base}/siparis/${token}`;
 
@@ -126,8 +174,8 @@ export function shortName(name: string): string {
 
 /** Bağlantı başkasına iletilebilir: müşteri sayfasına iletişim bilgisi ve iç notlar maskeli gider. */
 export function customerView(o: OrderRequest) {
-  const { address: _a, adminNote: _n, orderId: _o, ...rest } = o;
-  void _a; void _n; void _o;
+  const { address: _a, adminNote: _n, orderId: _o, attention: _t, ...rest } = o;
+  void _a; void _n; void _o; void _t;
   return { ...rest, name: shortName(o.name), phone: maskPhone(o.phone) };
 }
 export type CustomerOrder = ReturnType<typeof customerView>;

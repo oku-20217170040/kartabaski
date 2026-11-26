@@ -5,7 +5,7 @@ import { runMachineStep } from '@/lib/machine-store';
 import { runAllSocialCycles } from '@/lib/social-run';
 import { runPhotoStep } from '@/lib/photo-auto';
 import { runBroadcastStep } from '@/lib/social-broadcast';
-import { cleanupOrderRequests } from '@/lib/siparis';
+import { cleanupOrderRequests, syncClosedOrders } from '@/lib/siparis';
 
 // Tek otomasyon kapısı. Çağıran: GitHub Actions (.github/workflows/otomasyon-cron.yml, 30 dakikada bir).
 // Sunucu Oracle'da (Docker) olduğu için Vercel cron yok. CRON_SECRET zorunlu: Authorization: Bearer <secret>.
@@ -24,6 +24,7 @@ export async function GET(req: NextRequest) {
     ['photos', () => runPhotoStep()],
     ['broadcast', () => runBroadcastStep()],
     ['social', () => runAllSocialCycles()],
+    ['orderSync', () => syncClosedOrders()],
     ['orders', () => cleanupOrderRequests()],
   ]);
   return NextResponse.json({ ok: steps.every((s) => s.ok), steps });

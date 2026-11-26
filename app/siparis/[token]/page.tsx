@@ -2,7 +2,8 @@ import type { Metadata } from 'next';
 import { notFound, redirect } from 'next/navigation';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
-import { getOrderRequest } from '@/lib/siparis';
+import { getOrderRequest, getProduction } from '@/lib/siparis';
+import { buildTracking } from '@/lib/siparis-takip';
 import { customerView } from '@/lib/siparis-types';
 import { getAdminSession } from '@/lib/require-admin';
 import OrderClient from './OrderClient';
@@ -32,7 +33,7 @@ export default async function SiparisPage({ params, searchParams }: Props) {
     <>
       <Navbar />
       <main id="icerik">
-        <OrderClient order={customerView(order)} />
+        <OrderClient order={customerView(order)} tracking={buildTracking(order, await getProduction(order))} />
       </main>
       <Footer />
     </>

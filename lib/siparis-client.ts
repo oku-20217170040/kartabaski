@@ -1,5 +1,6 @@
 /** Tarayıcı tarafı: fotoğraf hazırlığı ve siparişin gönderilmesi. */
 import type { CartItem } from './cart-types';
+import type { Proof } from './siparis-types';
 import { loadFile } from './cart-files';
 
 const KEEP_BYTES = 4 * 1024 * 1024;
@@ -103,3 +104,21 @@ export async function submitOrder(
 }
 
 export const deleteOrderByCustomer = (token: string) => request(`/api/siparis/${token}`, { method: 'DELETE' });
+
+export const replyProofRequest = async (
+  token: string,
+  body: { round: number; decision: 'onaylandi' | 'duzeltme'; reply?: string },
+): Promise<Proof> =>
+  (await request(`/api/siparis/${token}/onay`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  })).proof;
+
+/** Yönetici: baskı önizlemesi gönderir. */
+export async function sendProofRequest(token: string, files: File[], message: string): Promise<Proof> {
+  const form = new FormData();
+  for (const file of files) form.append('file', await prepareUpload(file), file.name);
+  form.append('message', message);
+  return (await request(`/api/siparis/${token}/onizleme`, { method: 'POST', body: form })).proof;
+}
