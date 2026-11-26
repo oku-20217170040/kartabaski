@@ -16,6 +16,7 @@ npm run test:coverage # Jest with coverage report
 
 ## Güncel durum ve devir (ÖNCE OKU)
 
+- Yapılan işlerin kaydı (ne, nasıl, neden): `docs/CALISMA_GUNLUGU.md`
 - Yarım kalan iş ve sıradaki adımlar: `docs/DEVAM_NOTLARI.md`
 - Admin paneli modülleri, otomasyon (`/api/cron/main`) ve env listesi: `docs/ADMIN_PANEL.md`
 - Telegram yönetim botu ve sunucu zamanlayıcısı: `docs/TELEGRAM_BOTU.md`
@@ -23,6 +24,7 @@ npm run test:coverage # Jest with coverage report
 
 ## Kurallar
 
+- **Her işi not alın.** İş bitince (kod, sunucu, dış hizmet ya da araştırma; yarım kalsa da) `docs/CALISMA_GUNLUGU.md` dosyasının en üstüne neden / ne / nasıl / doğrulama / açık kalanlar kaydı ekleyin. Kayıt aynı iş dalında commit edilir. Depo herkese açık: anahtar, giriş bilgisi, müşteri ya da kişi bilgisi yazılmaz.
 - **Commit mesajları her zaman Türkçe yazılmalıdır.** Örnek: `git commit -m "Ürün detay sayfasına zoom özelliği eklendi"`
 
 ## Architecture

@@ -1,0 +1,89 @@
+# Çalışma günlüğü
+
+Bu projede çalışan her asistan ve geliştirici için ortak hafıza: **ne yapıldı, nasıl yapıldı, neden yapıldı.**
+
+## Kural
+
+Her iş bitiminde (kod, sunucu, dış hizmet ya da yalnız araştırma) bu dosyaya, **en üste**, bir kayıt ekleyin. Yarım kalan iş de yazılır.
+
+```
+## GG.AA.YYYY — Kısa başlık (PR #n)
+- Neden: kullanıcının isteği ya da çözülen sorun
+- Ne: görünen sonuç
+- Nasıl: yaklaşım, ana dosyalar, alınan kararlar ve gerekçeleri
+- Doğrulama: neyle denendi; denenmeyen ne
+- Açık / dikkat: yarım kalanlar, tuzaklar
+```
+
+**Bu depo herkese açık.** Buraya anahtar, parola, kurulum kodu, sohbet kimliği, sunucu giriş bilgisi, müşteri ya da kişi bilgisi yazmayın.
+
+---
+
+## 27.11.2026 — Çalışma günlüğü kuruldu
+- Neden: kullanıcı, yapılan her işin diğer asistan ve modellerin anlayacağı biçimde not edilmesini istedi.
+- Ne: bu dosya; `CLAUDE.md` ve `AGENTS.md` içine kayıt kuralı; `docs/DEVAM_NOTLARI.md` başına güncel durum.
+- Nasıl: 26-27 Kasım işleri commit ve PR geçmişinden geriye dönük yazıldı. #4-#7 için `docs/DEVAM_NOTLARI.md` geçerlidir.
+
+## 27.11.2026 — Yapay zekâda görünürlük: blog ve teknik SEO (devam ediyor)
+- Neden: kullanıcının birinci önceliği sitenin sohbet botlarında ve yapay zekâ aramalarında öne çıkması.
+- Ne: ayrı bir oturum 50 blog yazısı yayınlama ve sonraki 30 güne günde 2 yazı planlama işini yürütüyor (sonucunu kendi kaydıyla ekler). Teknik maddeler onaylandı, henüz uygulanmadı; blog işi bitince yapılacak.
+- Canlı denetim (salt okuma): botlar siteye erişebiliyor (`robots.txt` açık); eksikler: `llms.txt`, RSS, site haritasında görsel, ana sayfada canonical, bakılan ürün sayfasında arama açıklaması, işletme verisinde adres.
+- Uygulanacaklar: ürün açıklamaları, canonical, işletme yapılandırılmış verisi, site haritası görselleri, RSS, IndexNow, `llms.txt`.
+- Karar (kullanıcı): marka **online mağaza** olarak anlatılır. Siteye ve içeriğe fiziksel adres, ziyaret ya da çalışma saati eklenmez; her platformda ad ve telefon aynı tutulur.
+- Açık: diğer sosyal hesaplar ve kupa ölçüleri kullanıcıdan istendi; gelmeden uydurulmayacak. Search Console ve Bing'e site haritası gönderimi, pazaryeri / sosyal profiller, firma rehberleri ve haber siteleri için kullanıcı onay verdi.
+
+## 27.11.2026 — Telegram yönetim botunun gerçek kurulumu
+- Neden: kullanıcı kurulumu kendi tarayıcısından yapmamı istedi.
+- Ne: yönetim grubu kuruldu, mevcut site botu bağlandı (`/kur`), botun ve grubun profil resmi site logosu yapıldı.
+- Nasıl: bot anahtarını kullanıcı `tools/sunucu/telegram-kur.sh` ile kendisi girdi. Bot resmi Bot API `setMyProfilePhoto` ile; grup resmi grup sahibinin tarayıcısından (bot yönetici olmadığı için `setChatPhoto` reddedildi).
+- Açık: diğer yöneticilerin `/katil` yazıp onaylanması gerekiyor. İşletmenin resmi numarası Telegram'da bulunamadı; kullanıcı eklenmesini istemedi.
+
+## 27.11.2026 — Telegram yönetim botu ve sunucu zamanlayıcısı (PR #20)
+- Neden: sipariş bildirimi hiç gitmiyordu (sunucuda anahtar yoktu); yöneticiler işleri Telegram'dan yürütmek istedi. GitHub'ın yarım saatlik zamanlanmış işi iki günde yalnız birkaç kez çalışmıştı.
+- Ne: bildirimler (yeni sipariş, önizleme cevabı, yorum, otomasyon hatası), düğmeler (sahiplenme, üretime aktarma, aşama, kargo, yorum onayı), komutlar, sabah özeti, hatırlatmalar; site ve disk nöbeti.
+- Nasıl: `app/api/telegram` webhook (gizli başlık anahtardan türetilir, ek env yok); `lib/bot.ts` + saf ve testli `lib/bot-utils.ts`; grup ve yöneticiler Firestore `bot/ayar`; panel ile bot aynı sunucu işlevlerini kullanır (`lib/siparis-uretim.ts`). Zamanlayıcı `tools/sunucu/zamanlayici.sh` (ubuntu crontab). Ayrıntı: `docs/TELEGRAM_BOTU.md`.
+- Kararlar: grup mesajlarında açık adres, müşteri notu ve fotoğraf yok (KVKK); silme ve fiyat değişikliği yalnız panelde; “teslim edildi” ikinci onaylı.
+- Doğrulama: birim testleri, sahte Telegram ile test kopyasında uçtan uca, canlıda grup bağlama.
+- Dikkat: `.sh` dosyaları LF kalmalı (`.gitattributes`). Bir bot aynı anda tek webhook'a bağlanır.
+
+## 26.11.2026 — Ayrıntılı adres ve yeni sipariş yönetimi (PR #19)
+- Neden: siparişte eksiksiz teslimat adresi istendi; sipariş ve baskı bilgisi ekranının telefonda açık ve işlevsel olması istendi.
+- Ne: il / ilçe / mahalle seçmeli adres, posta kodu, başka alıcı, kurumsal fatura; panelde “sıradaki adım” kartı, Baskı / Süreç / Müşteri sekmeleri, indirilebilir (aynalanabilir) baskı şablonu, listede arama.
+- Nasıl: `components/address/`, `lib/address.ts`; listeler `tools/adres-verisi.mjs` ile turkiye-api (MIT) 2025 verisinden `public/adres/` altına üretilir, elle düzenlenmez. Baskı şablonu `drawPrint` ile 2400 px.
+- Açık: baskı alanı ölçüleri ürün fotoğrafından tahmin; gerçek cm değerleri gelirse düzeltilecek.
+
+## 26.11.2026 — Sipariş kodu ve kodla takip (PR #18)
+- Neden: müşteri sipariş numarasıyla durum sorgulayabilsin; silme düğmesi kaldırılsın; yönetici WhatsApp'tan takip bağlantısı gönderebilsin.
+- Nasıl: `KB` + 11 karakterlik kod (karışan 0/O, 1/I/L yok); `/siparis-takip` yalnız durum, kargo ve ürün özeti gösterir (kullanıcı kararı: fotoğraf, ad, telefon görünmez); sorgu hız sınırlı; müşteri silme ucu kaldırıldı.
+
+## 26.11.2026 — Yönetim paneli telefona uyarlandı (PR #17)
+- Neden: yöneticiler paneli telefondan kullanıyor.
+- Nasıl: `app/admin/mobile.css` (≤860px): alt sekme çubuğu, yapışkan kaydet çubuğu, alttan pencereler; 360px taşma yok, dokunma hedefi ≥44px.
+
+## 26.11.2026 — Ürün kaydetme hatası (PR #16)
+- Neden: aynı slug'a sahip iki ürün yüzünden kategori güncellenemiyordu.
+- Nasıl: benzersizlik yalnız slug değişince denetlenir; hata metni panele döner; sitede aktif ürün gösterilir.
+
+## 26.11.2026 — 3D kupa ve iki yüze baskı (PR #15)
+- Neden: müşteri sipariş verirken kupayı döndürerek görsün; bazıları iki yüze ayrı fotoğraf istiyor.
+- Nasıl: `components/mug3d/`, `lib/mug3d.ts` (11 model, ürün fotoğraflarından ölçülü, ürün adının başından eşleşir); arka yüz sipariş satırında `back` alanında. Karar: iki yüz aynı fiyat.
+
+## 26.11.2026 — Vitrin, tek sepet, takip, konfigüratör (PR #8-#14)
+- Neden: site “yapay zekâ elinden çıkmış” görünmesin; siparişler tek sepetten ve tek panelden yürüsün; WhatsApp'a yalnız sipariş bağlantısı gitsin.
+- #8 “Tabela” tasarım sistemi (`app/site.css`). #9 fotoğraf düzenleme, tarayıcıda arka plan silme, galeri. #10 tek sepet; fotoğraflar sipariş anına kadar cihazda, Cloudinary'de kapalı. #11 durum çizelgesi, önizleme onayı, kargo. #12-#13 konfigüratör sepete bağlandı ve yeniden tasarlandı. #14 örnek görseller ürüne bağlandı, sipariş akışındaki üç hata.
+- Dikkat: tasarımda degrade, krem zemin, hap rozet, emoji, “01/02/03” yok (bkz. `CLAUDE.md` Styling).
+
+## Sunucu bakımı (26.11.2026)
+- Neden: eski yedek ve imajlar diski dolduruyordu; kullanıcı düzenli temizlik istedi.
+- Ne: sunucuda haftalık temizlik betiği (son 2 geri dönüş imajı ve son 2 yedek kalır; 7 günden eski ortak derleme önbelleği silinir). Daha fazlasını silmek için kullanıcı onayı gerekir; sunucu başka projelerle ortaktır.
+
+---
+
+## Her sürümde izlenen yol
+1. Test, tür kontrolü, lint; kullanıcının geliştirme sunucusu `.next` klasörünü bozmamak için build **ayrı bir kopyada**.
+2. Sunucudaki kod yayındaki sürümle karşılaştırılır; yedek alınır, çalışan imaj `onceki-…` adıyla etiketlenir.
+3. `git archive` paketi gönderilip özeti (sha256) doğrulanır; derleme arka planda, bitince sağlık durumu denetlenir.
+4. Push, PR, birleştirme. PR'daki kırmızı “Vercel” denetimi önemsizdir.
+5. Canlı denemede yalnız “QA Test” adlı kayıt açılır ve doğrulanarak silinir; kullanıcının kayıtlarına dokunulmaz.
+
+Girişsiz admin denemesi: proje geçici bir klasöre kopyalanır; Firebase, oturum ve Telegram sahteleriyle değiştirilir; gerçek anahtar kopyalanmaz.
