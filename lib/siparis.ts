@@ -8,6 +8,7 @@ import { adminDb } from './firebase-admin';
 import { deletePrivate, uploadPrivate } from './cloudinary-private';
 import { ProductSchema } from './schemas';
 import { displayTitle } from './format';
+import { formatAddress } from './address';
 import { cartTotal } from './cart';
 import { getActive, getPriceMin, getSlug, getTitle } from './product-utils';
 import { looksLikeImage } from './image-sniff';
@@ -118,6 +119,7 @@ export async function createOrder(input: OrderInput): Promise<{ token: string }>
   void _items; void _kvkk; void _website;
   await ref(token).set({
     ...compact(contact),
+    address: formatAddress(contact),
     code: makeOrderCode(randomInt),
     items: lines,
     total: cartTotal(lines as unknown as OrderLine[]),

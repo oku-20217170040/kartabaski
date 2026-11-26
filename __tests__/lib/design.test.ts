@@ -25,7 +25,7 @@ describe('sipariş', () => {
   const token = 'a'.repeat(32);
   const input = {
     items: [{ productId: 'abc_1', qty: 2, photoCount: 1, hasPreview: false, text: 'Elif' }],
-    name: 'Ayşe Yılmaz', phone: '0555 111 22 33', kvkk: true,
+    name: 'Ayşe Yılmaz', phone: '0555 111 22 33', city: 'İzmir', district: 'Bornova', neighborhood: 'Kazımdirik Mahallesi', street: '372. Sokak', buildingNo: '12', postalCode: '35100', kvkk: true,
   };
 
   it('WhatsApp mesajında yalnızca bağlantı vardır', () => {

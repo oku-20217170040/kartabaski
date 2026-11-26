@@ -4,6 +4,7 @@ import { MAX_CART_ITEMS, MAX_QTY, PHONE_RE } from './cart-schemas';
 import { SITE_URL } from './site';
 import { TALEP_STATUSES, type TalepStatus } from './talep-status';
 import { SIDE_LABELS } from './design-sides';
+import { POSTAL_RE } from './address';
 
 export const ORDER_FOLDER = 'karta-baski/siparisler';
 export const MAX_LINE_PHOTOS = 8;
@@ -20,6 +21,78 @@ export const ORDER_TOKEN_RE = /^[a-f0-9]{32}$/;
 export type OrderRequestStatus = 'yukleniyor' | TalepStatus;
 
 const trimmed = (max: number) => z.string().trim().max(max);
+const required = (min: number, max: number, message: string) => z.string({ message }).trim().min(min, message).max(max);
+
+const phone = (message: string) => z.string({ message }).trim().max(20, message).regex(PHONE_RE, message);
+
+/** Paketi siparişi verenden başkası alacaksa. */
+const RecipientSchema = z.object({
+  name: required(2, 80, 'Teslim alacak kişinin adını yazın'),
+  phone: phone('Teslim alacak kişinin telefonunu yazın'),
+});
+
+const InvoiceSchema = z.object({
+  company: required(2, 120, 'Firma ünvanını yazın'),
+  taxOffice: required(2, 60, 'Vergi dairesini yazın'),
+  // 10 hane vergi numarası; şahıs şirketlerinde 11 hane.
+  taxNo: z.string({ message: 'Vergi numarası 10 ya da 11 haneli olmalı' }).trim().regex(/^\d{10,11}$/, 'Vergi numarası 10 ya da 11 haneli olmalı'),
+});
+
+/** İletişim ve teslimat alanları; form ve sunucu aynı kuralları kullanır. */
+const contactShape = {
+  name: required(2, 80, 'Ad soyad gerekli'),
+  phone: phone('Geçerli bir telefon numarası girin'),
+  city: required(2, 60, 'İl seçin'),
+  district: required(2, 60, 'İlçe seçin'),
+  neighborhood: required(2, 100, 'Mahalle ya da köy seçin'),
+  street: required(2, 120, 'Cadde ya da sokak yazın'),
+  buildingNo: required(1, 20, 'Bina numarasını yazın'),
+  doorNo: trimmed(20).optional(),
+  postalCode: z.string({ message: 'Posta kodu 5 haneli olmalı' }).trim().regex(POSTAL_RE, 'Posta kodu 5 haneli olmalı'),
+  directions: trimmed(200).optional(),
+  recipient: RecipientSchema.optional(),
+  invoice: InvoiceSchema.optional(),
+  note: trimmed(500).optional(),
+};
+const ContactSchema = z.object(contactShape);
+export type ContactInput = z.input<typeof ContactSchema>;
+
+export type ContactField =
+  | 'name' | 'phone' | 'city' | 'district' | 'neighborhood' | 'street' | 'buildingNo' | 'doorNo' | 'postalCode' | 'directions' | 'note'
+  | 'recipientName' | 'recipientPhone' | 'company' | 'taxOffice' | 'taxNo';
+
+/** Sepet sayfasındaki formun durumu. */
+export const EMPTY_CONTACT = {
+  name: '', phone: '', city: '', district: '', neighborhood: '', street: '', buildingNo: '', doorNo: '', postalCode: '', directions: '', note: '',
+  otherRecipient: false, recipientName: '', recipientPhone: '',
+  corporate: false, company: '', taxOffice: '', taxNo: '',
+  website: '', // honeypot
+};
+export type ContactForm = typeof EMPTY_CONTACT;
+
+/** Formdan gönderilecek veri; seçilmeyen bölümler hiç gitmez. */
+export function toContact(f: ContactForm): ContactInput {
+  const optional = (v: string) => v.trim() || undefined;
+  return {
+    name: f.name.trim(), phone: f.phone.trim(), city: f.city.trim(), district: f.district.trim(), neighborhood: f.neighborhood.trim(),
+    street: f.street.trim(), buildingNo: f.buildingNo.trim(), doorNo: optional(f.doorNo), postalCode: f.postalCode.trim(),
+    directions: optional(f.directions), note: optional(f.note),
+    recipient: f.otherRecipient ? { name: f.recipientName.trim(), phone: f.recipientPhone.trim() } : undefined,
+    invoice: f.corporate ? { company: f.company.trim(), taxOffice: f.taxOffice.trim(), taxNo: f.taxNo.trim() } : undefined,
+  };
+}
+
+/** Alan adına göre ilk uyarı. */
+export function contactErrors(contact: unknown): Partial<Record<ContactField, string>> {
+  const result = ContactSchema.safeParse(contact);
+  const errors: Partial<Record<ContactField, string>> = {};
+  for (const issue of result.success ? [] : result.error.issues) {
+    const [first, second] = issue.path.map(String);
+    const field = (first === 'recipient' ? (second === 'phone' ? 'recipientPhone' : 'recipientName') : first === 'invoice' ? second : first) as ContactField;
+    errors[field] ??= issue.message;
+  }
+  return errors;
+}
 
 export const PlacementSchema = z.object({
   x: z.number().min(-1).max(1),
@@ -63,12 +136,7 @@ export const OrderInputSchema = z.object({
     .array(OrderItemInput)
     .min(1, 'Sepet boş')
     .max(MAX_CART_ITEMS, `En fazla ${MAX_CART_ITEMS} satır`),
-  name: trimmed(80).min(2, 'Ad soyad gerekli'),
-  phone: trimmed(20).regex(PHONE_RE, 'Geçerli bir telefon numarası girin'),
-  city: trimmed(60).optional(),
-  district: trimmed(60).optional(),
-  address: trimmed(300).optional(),
-  note: trimmed(500).optional(),
+  ...contactShape,
   kvkk: z.literal(true, { message: 'Aydınlatma metnini onaylamanız gerekiyor' }),
   website: z.string().max(0, 'Sipariş gönderilemedi. Sayfayı yenileyip tekrar deneyin.').optional(), // honeypot
 });
@@ -191,7 +259,16 @@ export const OrderRequestSchema = z.object({
   phone: z.string().catch(''),
   city: z.string().optional(),
   district: z.string().optional(),
+  /** Kargo etiketine yazılan tek satır adres (yeni siparişte parçalardan üretilir). */
   address: z.string().optional(),
+  neighborhood: z.string().optional(),
+  street: z.string().optional(),
+  buildingNo: z.string().optional(),
+  doorNo: z.string().optional(),
+  postalCode: z.string().optional(),
+  directions: z.string().optional(),
+  recipient: z.object({ name: z.string(), phone: z.string() }).optional(),
+  invoice: z.object({ company: z.string(), taxOffice: z.string(), taxNo: z.string() }).optional(),
   note: z.string().optional(),
   adminNote: z.string().optional(),
   orderId: z.string().optional(),
@@ -256,8 +333,18 @@ export function shortName(name: string): string {
 
 /** Bağlantı başkasına iletilebilir: müşteri sayfasına iletişim bilgisi ve iç notlar maskeli gider. */
 export function customerView(o: OrderRequest) {
-  const { address: _a, adminNote: _n, orderId: _o, attention: _t, ...rest } = o;
-  void _a; void _n; void _o; void _t;
+  const {
+    address: _a, neighborhood: _h, street: _s, buildingNo: _b, doorNo: _d, postalCode: _p, directions: _y, recipient: _r, invoice: _i,
+    adminNote: _n, orderId: _o, attention: _t, ...rest
+  } = o;
+  void _a; void _h; void _s; void _b; void _d; void _p; void _y; void _r; void _i; void _n; void _o; void _t;
   return { ...rest, name: shortName(o.name), phone: maskPhone(o.phone) };
 }
 export type CustomerOrder = ReturnType<typeof customerView>;
+
+/** Kargo etiketine yapıştırılacak metin: alıcı, telefon, adres ve tarif. */
+export function shippingLabel(o: Pick<OrderRequest, 'name' | 'phone' | 'address' | 'directions' | 'recipient'>): string {
+  const to = o.recipient ?? o;
+  return [to.name, to.phone, o.address, o.directions ? `Tarif: ${o.directions}` : ''].filter(Boolean).join('\n');
+}
+

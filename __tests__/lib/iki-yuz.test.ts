@@ -9,7 +9,7 @@ const cartRaw = (design: unknown) => JSON.stringify([{ key: 'd:1', productId: 'p
 
 const input = (item: Record<string, unknown>) => ({
   items: [{ productId: 'p1', qty: 1, photoCount: 0, hasPreview: false, ...item }],
-  name: 'Ali Veli', phone: '0555 111 22 33', kvkk: true,
+  name: 'Ali Veli', phone: '0555 111 22 33', city: 'İzmir', district: 'Bornova', neighborhood: 'Kazımdirik Mahallesi', street: '372. Sokak', buildingNo: '12', postalCode: '35100', kvkk: true,
 });
 
 const line = (extra: Record<string, unknown> = {}) =>

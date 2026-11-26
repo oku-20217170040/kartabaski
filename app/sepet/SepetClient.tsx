@@ -10,10 +10,11 @@ import { useCart } from '@/lib/cart-context';
 import { loadFile } from '@/lib/cart-files';
 import { cartImageSrc } from '@/lib/cart-products';
 import { cartTotal, clampQty, MAX_QTY, reconcileCart } from '@/lib/cart';
-import { PHONE_RE } from '@/lib/cart-schemas';
 import type { CartItem, CartProductInfo } from '@/lib/cart-types';
 import { getCartProductInfoAction } from '@/lib/actions-siparis';
 import { submitOrder } from '@/lib/siparis-client';
+import { EMPTY_CONTACT, contactErrors, toContact } from '@/lib/siparis-types';
+import AddressFields from '@/components/address/AddressFields';
 import { trackEvent } from '@/lib/analytics-client';
 import { formatPriceRange } from '@/lib/format';
 import { lineHref } from '@/lib/configurator-lines';
@@ -66,13 +67,11 @@ function designSummary(item: CartItem): string[] {
   return parts.length ? parts : ['Tasarım eklenmedi'];
 }
 
-const EMPTY = { name: '', phone: '', city: '', district: '', address: '', note: '', website: '' /* honeypot */ };
-
 export default function SepetClient() {
   const router = useRouter();
   const { items, ready, remove, setQty, clear } = useCart();
   const [info, setInfo] = useState<CartProductInfo[]>([]);
-  const [form, setForm] = useState(EMPTY);
+  const [form, setForm] = useState(EMPTY_CONTACT);
   const [kvkk, setKvkk] = useState(false);
   const [touched, setTouched] = useState(false);
   const [progress, setProgress] = useState<string | null>(null);
@@ -81,6 +80,7 @@ export default function SepetClient() {
   const [recheck, setRecheck] = useState(0);
 
   const set = (k: keyof typeof form, v: string) => setForm((f) => ({ ...f, [k]: v }));
+  const patch = (p: Partial<typeof form>) => setForm((f) => ({ ...f, ...p }));
 
   // Sepetteki ürünlerin güncel fiyat/aktiflik bilgisi (yalnız ilgili belgeler okunur)
   const idsKey = useMemo(() => Array.from(new Set(items.map((i) => i.productId))).sort().join(','), [items]);
@@ -96,30 +96,31 @@ export default function SepetClient() {
   const unpriced = available.filter((i) => i.unitPrice <= 0).length;
   const qtyTotal = available.reduce((s, i) => s + i.qty, 0);
 
-  const errs = {
-    name: form.name.trim().length < 2 ? 'Ad soyad girin' : '',
-    phone: !PHONE_RE.test(form.phone.trim()) ? 'Geçerli bir telefon numarası girin' : '',
-    kvkk: !kvkk ? 'Devam etmek için onaylayın' : '',
-  };
-  const valid = !errs.name && !errs.phone && !errs.kvkk;
-  const show = (k: keyof typeof errs) => (touched && errs[k] ? <div className="cart-err">{errs[k]}</div> : null);
+  const fields = contactErrors(toContact(form));
+  const consentError = kvkk ? '' : 'Devam etmek için onaylayın';
+  const valid = !Object.keys(fields).length && !consentError;
+  const shownErrors = touched ? fields : {};
+  const show = (k: 'name' | 'phone') => (shownErrors[k] ? <div className="cart-err" id={`c-${k}-hata`}>{shownErrors[k]}</div> : null);
+  const invalid = (k: 'name' | 'phone') => ({ 'aria-invalid': Boolean(shownErrors[k]), 'aria-describedby': shownErrors[k] ? `c-${k}-hata` : undefined });
   const busy = progress !== null;
 
   const handleSubmit = async () => {
     setTouched(true);
     setError('');
+    if (!valid) {
+      // Eksik ilk alana götür: telefonda uyarı ekranın dışında kalmasın.
+      const first = Object.keys(fields)[0] ?? 'kvkk';
+      const field = document.getElementById(`c-${first}`);
+      field?.scrollIntoView({ block: 'center' });
+      field?.focus({ preventScroll: true });
+    }
     if (!valid || available.length === 0 || busy) return;
     setProgress('Sipariş hazırlanıyor…');
     try {
       const token = await submitOrder(
         available,
         {
-          name: form.name.trim(),
-          phone: form.phone.trim(),
-          city: form.city.trim() || undefined,
-          district: form.district.trim() || undefined,
-          address: form.address.trim() || undefined,
-          note: form.note.trim() || undefined,
+          ...toContact(form),
           kvkk,
           website: form.website,
         },
@@ -241,7 +242,7 @@ export default function SepetClient() {
         </div>
 
         <form className="cart-form" onSubmit={(e) => { e.preventDefault(); handleSubmit(); }} noValidate>
-          <h2 className="h3">Size nasıl ulaşalım?</h2>
+          <h2 className="h3">İletişim ve teslimat</h2>
 
           {/* Honeypot: botlar doldurur, insanlar görmez */}
           <input
@@ -251,39 +252,25 @@ export default function SepetClient() {
           />
 
           <label className="cart-label" htmlFor="c-name">Ad soyad</label>
-          <input id="c-name" className="cart-input" autoComplete="name" maxLength={80} value={form.name} onChange={(e) => set('name', e.target.value)} />
+          <input id="c-name" {...invalid('name')} className="cart-input" autoComplete="name" maxLength={80} value={form.name} onChange={(e) => set('name', e.target.value)} />
           {show('name')}
 
           <label className="cart-label" htmlFor="c-phone">Telefon</label>
-          <input id="c-phone" className="cart-input" type="tel" autoComplete="tel" placeholder="05xx xxx xx xx" maxLength={18} value={form.phone} onChange={(e) => set('phone', e.target.value)} />
+          <input id="c-phone" {...invalid('phone')} className="cart-input" type="tel" autoComplete="tel" placeholder="05xx xxx xx xx" maxLength={18} value={form.phone} onChange={(e) => set('phone', e.target.value)} />
           {show('phone')}
 
-          <details className="cart-more-info">
-            <summary>Teslimat adresi ekleyin (isteğe bağlı)</summary>
-            <div className="cart-two">
-              <div>
-                <label className="cart-label" htmlFor="c-city">İl</label>
-                <input id="c-city" className="cart-input" autoComplete="address-level1" maxLength={60} value={form.city} onChange={(e) => set('city', e.target.value)} />
-              </div>
-              <div>
-                <label className="cart-label" htmlFor="c-district">İlçe</label>
-                <input id="c-district" className="cart-input" autoComplete="address-level2" maxLength={60} value={form.district} onChange={(e) => set('district', e.target.value)} />
-              </div>
-            </div>
-            <label className="cart-label" htmlFor="c-address">Adres</label>
-            <input id="c-address" className="cart-input" autoComplete="street-address" maxLength={300} value={form.address} onChange={(e) => set('address', e.target.value)} />
-          </details>
+          <AddressFields form={form} onChange={patch} errors={shownErrors} />
 
           <label className="cart-label" htmlFor="c-note">Sipariş notu <span>(isteğe bağlı)</span></label>
           <textarea id="c-note" className="cart-input" rows={3} maxLength={500} placeholder="Teslim tarihi, fatura vb." value={form.note} onChange={(e) => set('note', e.target.value)} />
 
           <label className="cart-consent">
-            <input type="checkbox" checked={kvkk} onChange={(e) => setKvkk(e.target.checked)} />
+            <input id="c-kvkk" type="checkbox" checked={kvkk} onChange={(e) => setKvkk(e.target.checked)} />
             <span>
               <Link href="/gizlilik" target="_blank">Aydınlatma metnini</Link> okudum; bilgilerimin ve fotoğraflarımın siparişim için işlenmesini onaylıyorum.
             </span>
           </label>
-          {show('kvkk')}
+          {touched && consentError && <div className="cart-err">{consentError}</div>}
 
           {error && <div className="cart-err cart-err-box" role="alert">{error}</div>}
 
