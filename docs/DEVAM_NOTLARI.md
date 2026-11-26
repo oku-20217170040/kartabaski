@@ -1,4 +1,18 @@
-# Devir notları — nerede kaldık (25 Kasım 2026)
+# Devir notları — nerede kaldık
+
+## Güncel durum (27 Kasım 2026)
+Ayrıntılı kayıt: `docs/CALISMA_GUNLUGU.md`.
+- Canlıda ve `main`'de: PR #20'ye kadar (adres, sipariş yönetimi, sipariş koduyla takip, 3D kupa, Telegram yönetim botu).
+- Sürüyor: 50 blog yazısı ve bir aylık yayın planı (ayrı oturum). Ardından teknik SEO / yapay zekâ görünürlüğü maddeleri.
+- Bekleyen kullanıcı bilgisi: kupa baskı alanı ve hacimleri, diğer sosyal hesaplar.
+- Marka online mağaza olarak anlatılır; siteye adres eklenmez.
+- Bekleyen kullanıcı adımı: diğer yöneticiler Telegram grubunda `/katil` yazacak; sosyal medya anahtarları girilmedi.
+- Zamanlayıcı artık sunucudadır (`tools/sunucu/zamanlayici.sh`); aşağıdaki eski notta geçen GitHub zamanlaması geçersizdir.
+- Canlıya alma sırası için günlüğün “Her sürümde izlenen yol” bölümüne bakın.
+
+---
+
+Aşağısı 25 Kasım 2026 tarihli eski nottur.
 
 Bu dosya başka bir yapay zeka asistanının (Antigravity vb.) işi kaldığı yerden devralması içindir. Önce `CLAUDE.md`, sonra `docs/ADMIN_PANEL.md`, sonra bu dosyayı oku.
 
