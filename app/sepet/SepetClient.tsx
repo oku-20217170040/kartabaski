@@ -67,6 +67,7 @@ export default function SepetClient() {
   const [progress, setProgress] = useState<string | null>(null);
   const [error, setError] = useState('');
   const [leaving, setLeaving] = useState(false);
+  const [recheck, setRecheck] = useState(0);
 
   const set = (k: keyof typeof form, v: string) => setForm((f) => ({ ...f, [k]: v }));
 
@@ -77,7 +78,7 @@ export default function SepetClient() {
     let alive = true;
     getCartProductInfoAction(idsKey.split(',')).then((r) => { if (alive) setInfo(r); }).catch(() => {});
     return () => { alive = false; };
-  }, [ready, idsKey]);
+  }, [ready, idsKey, recheck]);
 
   const { available, unavailable } = useMemo(() => reconcileCart(items, info), [items, info]);
   const total = cartTotal(available);
@@ -120,6 +121,7 @@ export default function SepetClient() {
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Sipariş gönderilemedi. Lütfen tekrar deneyin.');
       setProgress(null);
+      setRecheck((n) => n + 1);
     }
   };
 

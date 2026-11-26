@@ -61,6 +61,16 @@ export default function ProductDetailClient({ slug, product, similar }: Props) {
   const [colorIdx, setColorIdx] = useState<number | null>(colors.length > 0 ? 0 : null);
   const [copied, setCopied] = useState(false);
   const [canShare, setCanShare] = useState(false);
+  /** Vitrinden gelindiyse açılacak fotoğrafın adı (?gorsel=). */
+  const [wanted, setWanted] = useState('');
+
+  useEffect(() => {
+    const q = new URLSearchParams(window.location.search);
+    const i = colors.findIndex((c) => c.name === q.get('renk'));
+    if (i >= 0) setColorIdx(i);
+    setWanted(q.get('gorsel') ?? '');
+  }, [colors]);
+
   const imageIds: string[] = useMemo(() => {
     if (!product) return [];
     const own = colorIdx !== null ? colors[colorIdx]?.images : undefined;
@@ -77,6 +87,8 @@ export default function ProductDetailClient({ slug, product, similar }: Props) {
   }, []);
 
   if (!product) return null;
+
+  const start = wanted ? Math.max(0, imageIds.findIndex((id) => id.endsWith(wanted))) : 0;
 
   const rawTitle = getTitle(product);
   const title = displayTitle(rawTitle);
@@ -101,7 +113,10 @@ export default function ProductDetailClient({ slug, product, similar }: Props) {
     </>
   );
 
-  const selectColor = (i: number) => setColorIdx(i);
+  const selectColor = (i: number) => {
+    setWanted('');
+    setColorIdx(i);
+  };
 
   const share = async () => {
     try {
@@ -136,7 +151,7 @@ export default function ProductDetailClient({ slug, product, similar }: Props) {
 
           <div className="pdp-grid">
             {/* Renk değişince galeri başa döner. */}
-            <ProductGallery key={colorIdx ?? 'tek'} ids={imageIds} title={title} />
+            <ProductGallery key={`${colorIdx ?? 'tek'}-${start}`} ids={imageIds} title={title} initial={start} />
 
             <div className="pdp-info">
               {category && <p className="eyebrow">{category}</p>}

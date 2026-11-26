@@ -14,6 +14,7 @@ import { looksLikeImage } from './image-sniff';
 import type { ConfiguratorCup, ConfiguratorDesign, Product } from '@/types';
 import { CUP_ID_PREFIX, cupToProduct, isCupId } from './configurator-lines';
 import type { CartOverview, CartProductInfo } from './cart-types';
+import { missingProductInfo } from './cart';
 import {
   MAX_PHOTO_BYTES, MAX_PROOF_IMAGES, ORDER_FOLDER, ORDER_TOKEN_RE, OrderInput, OrderLine, OrderRequest, OrderRequestSchema,
   PHOTO_TTL_MS, Proof, Shipping, UPLOAD_TTL_MS, canCustomerDelete, canReplyProof, orderImageIds,
@@ -68,9 +69,15 @@ async function readDesigns(ids: string[]): Promise<Map<string, { id: string; nam
   }));
 }
 
-/** /sepet sayfası için: yalnızca sepetteki ürünlerin güncel bilgisi (az okuma). */
+/**
+ * /sepet sayfası için: yalnızca sepetteki ürünlerin güncel bilgisi (az okuma).
+ * Silinmiş ürün de "satışta değil" olarak döner; sepet onu işaretleyebilsin.
+ */
 export async function getCartProductInfo(ids: string[]): Promise<CartProductInfo[]> {
-  return (await readProducts(ids)).map((p) => ({
+  const products = await readProducts(ids);
+  const found = new Set(products.map((p) => p.id));
+  const gone = Array.from(new Set(ids)).filter((id) => !found.has(id)).map(missingProductInfo);
+  return [...gone, ...products.map((p) => ({
     id: p.id,
     slug: getSlug(p),
     title: displayTitle(getTitle(p)),
@@ -79,27 +86,26 @@ export async function getCartProductInfo(ids: string[]): Promise<CartProductInfo
     category: p.category,
     active: getActive(p),
     colors: (p.colors ?? []).map((c) => c.name),
-  }));
+  }))];
 }
 
 /** Siparişi "yükleniyor" olarak açar. Ad ve fiyat Firestore'dan okunur. */
-export async function createOrder(input: OrderInput): Promise<{ token: string; accepted: number[] }> {
+export async function createOrder(input: OrderInput): Promise<{ token: string }> {
   const products = new Map((await readProducts(input.items.map((i) => i.productId))).map((p) => [p.id, p]));
   const designs = await readDesigns(input.items.flatMap((i) => (i.readyId ? [i.readyId] : [])));
   const lines: Record<string, unknown>[] = [];
-  const accepted: number[] = [];
-  input.items.forEach(({ productId, readyId, ...line }, index) => {
+  input.items.forEach(({ productId, readyId, ...line }) => {
     const p = products.get(productId);
-    if (!p || !getActive(p)) return;
+    // Satır sessizce atlanmaz: müşteri neyin sipariş edildiğini bilmeli.
+    if (!p || !getActive(p)) {
+      throw new OrderError('Sepetinizdeki bir ürün artık satışta değil. İşaretlenen satırı çıkarıp tekrar deneyin.', 409);
+    }
     const ready = readyId ? designs.get(readyId) : undefined;
     if (readyId && !ready) throw new OrderError(`“${displayTitle(getTitle(p))}” için seçtiğiniz hazır tasarım artık yok. Satırı sepetten çıkarıp yeniden seçin.`);
-    accepted.push(index);
     lines.push(compact({
       ...line, ready, productId, slug: getSlug(p), title: displayTitle(getTitle(p)), unitPrice: getPriceMin(p) || 0, files: [],
     }));
   });
-  if (!lines.length) throw new OrderError('Sepetteki ürünler artık satışta değil.');
-
   const token = randomBytes(16).toString('hex');
   const now = Date.now();
   const { items: _items, kvkk: _kvkk, website: _website, ...contact } = input;
@@ -110,7 +116,7 @@ export async function createOrder(input: OrderInput): Promise<{ token: string; a
     total: cartTotal(lines as unknown as OrderLine[]),
     status: 'yukleniyor', createdAt: now, updatedAt: now, kvkkAt: now,
   });
-  return { token, accepted };
+  return { token };
 }
 
 export async function getOrderRequest(token: string): Promise<OrderRequest | null> {

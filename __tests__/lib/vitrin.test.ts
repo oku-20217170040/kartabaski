@@ -1,5 +1,5 @@
 import { toLines } from '@/components/MugPreview';
-import { PRINT_SAMPLES, VITRIN_MUGS, vitrinOrderText } from '@/lib/vitrin';
+import { PRINT_SAMPLES, VITRIN_MUGS, sampleHref, vitrinOrderText } from '@/lib/vitrin';
 import { existsSync } from 'fs';
 import path from 'path';
 
@@ -25,6 +25,15 @@ describe('vitrin görselleri', () => {
   it('her kupa ve örnek için dosya public/vitrin altında bulunur', () => {
     for (const { file } of [...VITRIN_MUGS, ...PRINT_SAMPLES]) {
       expect(existsSync(path.join(process.cwd(), 'public', 'vitrin', `${file}.webp`))).toBe(true);
+    }
+  });
+});
+
+describe('baskı örnekleri', () => {
+  it('her örnek kendi ürününün sayfasını o renk ve fotoğrafla açar', () => {
+    for (const s of PRINT_SAMPLES) {
+      expect(s.product).toMatch(/^[a-z0-9-]+$/);
+      expect(sampleHref(s)).toBe(`/urun/${s.product}?renk=${encodeURIComponent(s.color)}&gorsel=${s.photo}`);
     }
   });
 });

@@ -54,18 +54,26 @@ export interface PrintSample {
   label: string;
   tone: 'sun' | 'ink' | 'brand' | 'pink' | 'navy' | 'green' | 'orange' | 'red';
   size?: 'big' | 'wide';
+  /** Örneğin kesildiği fotoğrafın ürünü, rengi ve Cloudinary adı. */
+  product: string;
+  color: string;
+  photo: string;
 }
+
+/** Örneğe tıklayınca ürün sayfası o renk ve o fotoğrafla açılır. */
+export const sampleHref = (s: PrintSample) =>
+  `/urun/${s.product}?renk=${encodeURIComponent(s.color)}&gorsel=${encodeURIComponent(s.photo)}`;
 
 /** Sıra, 4 sütunlu mozaikte boşluk kalmayacak şekilde seçildi. */
 export const PRINT_SAMPLES: readonly PrintSample[] = [
-  { file: 'b-kuslar', label: 'Detaylı çizim', tone: 'sun', size: 'big' },
-  { file: 'b-fincan', label: 'Küçük çizim', tone: 'ink' },
-  { file: 'b-geometrik', label: 'Geometrik desen', tone: 'red' },
-  { file: 'b-dalga', label: 'Arma', tone: 'pink' },
-  { file: 'b-kus', label: 'Çizgi çalışması', tone: 'brand' },
-  { file: 'b-gunbatimi', label: 'Boydan boya görsel', tone: 'navy', size: 'wide' },
-  { file: 'b-sekil', label: 'Desen', tone: 'green' },
-  { file: 'b-cekirdek', label: 'Tek renk simge', tone: 'orange' },
+  { file: 'b-kuslar', label: 'Detaylı çizim', tone: 'sun', size: 'big', product: 'beyaz-kahve-fincani', color: 'Siyah', photo: 'sgti42nzezunmutuix3q' },
+  { file: 'b-fincan', label: 'Küçük çizim', tone: 'ink', product: 'beyaz-kahve-fincani', color: 'Lacivert', photo: 'pmfmsjlakoa74fu9ptzq' },
+  { file: 'b-geometrik', label: 'Geometrik desen', tone: 'red', product: 'afilli-porselen-kupa', color: 'Beyaz', photo: 'ausyk2m3ogm5jfyqn7o8' },
+  { file: 'b-dalga', label: 'Arma', tone: 'pink', product: 'afilli-porselen-kupa', color: 'Mor', photo: 'hksclsbjqr22gcu7mjp6' },
+  { file: 'b-kus', label: 'Çizgi çalışması', tone: 'brand', product: 'beyaz-kahve-fincani', color: 'Siyah', photo: 'hxfunxtgwertmnj7pcif' },
+  { file: 'b-gunbatimi', label: 'Boydan boya görsel', tone: 'navy', size: 'wide', product: 'porselen-motto-fincan', color: 'Siyah', photo: 'dzkoexp4rscfndvnxeys' },
+  { file: 'b-sekil', label: 'Desen', tone: 'green', product: 'beyaz-latte-fincani', color: 'Transparan', photo: 'xs6ltls1gnuyqc5mo7fm' },
+  { file: 'b-cekirdek', label: 'Tek renk simge', tone: 'orange', product: 'porselen-motto-fincan', color: 'Mavi', photo: 'jokwzatxuj2rwglg8otl' },
 ];
 
 export function vitrinOrderText({ text, color, handwriting, hasPhoto }: {

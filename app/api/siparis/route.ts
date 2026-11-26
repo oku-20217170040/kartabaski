@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createOrder } from '@/lib/siparis';
-import { OrderInputSchema } from '@/lib/siparis-types';
+import { parseOrderInput } from '@/lib/siparis-types';
 import { failure, tooLarge, tooMany } from './respond';
 
 export const dynamic = 'force-dynamic';
@@ -10,7 +10,7 @@ export async function POST(req: NextRequest) {
   const blocked = tooMany(req, 'siparis-yeni', 8, 10 * 60 * 1000) ?? tooLarge(req, 128 * 1024);
   if (blocked) return blocked;
   try {
-    const input = OrderInputSchema.safeParse(await req.json().catch(() => null));
+    const input = parseOrderInput(await req.json().catch(() => null));
     if (!input.success) {
       return NextResponse.json({ error: input.error.issues[0]?.message || 'Sipariş bilgileri geçersiz.' }, { status: 400 });
     }

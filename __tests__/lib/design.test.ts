@@ -1,5 +1,5 @@
 import { DEFAULT_PLACEMENT, MAX_SCALE, MIN_SCALE, clampPlacement, photoRect } from '@/lib/photo-layout';
-import { OrderInputSchema, canCustomerDelete, customerView, maskPhone, orderMessage, shortName, OrderRequest } from '@/lib/siparis-types';
+import { parseOrderInput, OrderInputSchema, canCustomerDelete, customerView, maskPhone, orderMessage, shortName, OrderRequest } from '@/lib/siparis-types';
 import { toAlpha, toModelInput } from '@/lib/remove-background';
 import { classifyPath } from '@/lib/analytics-utils';
 
@@ -40,6 +40,14 @@ describe('sipariş', () => {
     expect(OrderInputSchema.safeParse({ ...input, website: 'bot' }).success).toBe(false);
     expect(OrderInputSchema.safeParse({ ...input, items: [{ productId: 'a/b', qty: 1, photoCount: 0, hasPreview: false }] }).success).toBe(false);
     expect(OrderInputSchema.safeParse({ ...input, items: [{ productId: 'a', qty: 1, photoCount: 9, hasPreview: false }] }).success).toBe(false);
+  });
+
+  it('hata mesajları Türkçedir', () => {
+    const message = (data: unknown) => parseOrderInput(data).error?.issues[0]?.message ?? '';
+    expect(message({ ...input, website: 'bot' })).toBe('Sipariş gönderilemedi. Sayfayı yenileyip tekrar deneyin.');
+    expect(message(null)).toContain('Sipariş bilgileri geçersiz');
+    expect(message({ ...input, items: [{ ...input.items[0], qty: 9999 }] })).toContain('Sipariş bilgileri geçersiz');
+    expect(message({ ...input, phone: '1' })).toBe('Geçerli bir telefon numarası girin');
   });
 
   it('üretime alınan sipariş müşterice silinemez', () => {

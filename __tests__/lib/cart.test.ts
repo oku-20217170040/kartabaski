@@ -14,6 +14,7 @@ import {
   setQty,
   upsertLine,
   designFileIds,
+  missingProductInfo,
   waNumber,
 } from '@/lib/cart';
 import { isTalepStatus } from '@/lib/talep-status';
@@ -92,6 +93,13 @@ describe('reconcileCart', () => {
     const { available, unavailable } = reconcileCart([item('a')], []);
     expect(available).toHaveLength(1);
     expect(unavailable).toHaveLength(0);
+  });
+
+  it('silinmiş ürünü unavailable yapar', () => {
+    const { available, unavailable } = reconcileCart([item('a'), item('b')], [missingProductInfo('a')]);
+    expect(unavailable.map((i) => i.productId)).toEqual(['a']);
+    expect(unavailable[0].title).toBe('Kupa a');
+    expect(available.map((i) => i.productId)).toEqual(['b']);
   });
 
   it('artık olmayan rengi temizler', () => {
