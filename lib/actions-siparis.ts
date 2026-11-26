@@ -9,7 +9,7 @@ import {
 } from './siparis';
 import { createOrderFromCart } from './orders';
 import { isCupId } from './configurator-lines';
-import { ORDER_TOKEN_RE, OrderRequest, ShippingSchema, orderUrl } from './siparis-types';
+import { ORDER_TOKEN_RE, OrderRequest, ShippingSchema, lineNote, orderUrl } from './siparis-types';
 import type { Production } from './siparis-takip';
 import { isTalepStatus } from './talep-status';
 import type { CartOverview, CartProductInfo } from './cart-types';
@@ -111,7 +111,7 @@ export async function sendOrderToMachineAction(token: string): Promise<string> {
       qty: i.qty,
       unitPrice: i.unitPrice,
       color: i.color,
-      note: [i.ready ? `Hazır tasarım: ${i.ready.name}` : '', i.text ? `Yazı: ${i.text}` : '', i.needsDesign ? 'Tasarım hazırlanacak' : '', i.note].filter(Boolean).join(' · ') || undefined,
+      note: lineNote(i) || undefined,
     })),
     note: [order.note, [order.district, order.city].filter(Boolean).join(' / '), order.address, orderUrl(token)]
       .filter(Boolean).join(' · '),

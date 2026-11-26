@@ -10,15 +10,17 @@ interface Props {
   removing: boolean;
   onToggleBg: () => void;
   onRemove: () => void;
+  /** Fotoğraf kupanın üstünde sürüklenemiyorsa ipucu gizlenir. */
+  dragHint?: boolean;
 }
 
 /** Kupadaki fotoğrafı büyütme, döndürme, ortalama ve arka plan silme düğmeleri. */
-export default function PhotoControls({ placement, onChange, removeBg, removing, onToggleBg, onRemove }: Props) {
+export default function PhotoControls({ placement, onChange, removeBg, removing, onToggleBg, onRemove, dragHint = true }: Props) {
   const set = (patch: Partial<Placement>) => onChange(clampPlacement({ ...placement, ...patch }));
 
   return (
     <div className="foto">
-      <p className="foto-ipucu">Fotoğrafı kupanın üstünde sürükleyerek taşıyın.</p>
+      {dragHint && <p className="foto-ipucu">Fotoğrafı kupanın üstünde sürükleyerek taşıyın.</p>}
 
       <div className="foto-boyut">
         <button type="button" className="vitrin-tool foto-kare" aria-label="Küçült" onClick={() => set({ scale: placement.scale / 1.15 })}>−</button>

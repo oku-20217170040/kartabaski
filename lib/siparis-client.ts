@@ -71,14 +71,15 @@ export async function submitOrder(
 ): Promise<string> {
   // Dosyaları baştan oku: biri kayıpsa sunucuda yarım sipariş açılmasın.
   const lines = await Promise.all(items.map(async (item) => {
-    const photos: Blob[] = [];
-    for (const id of item.design?.photos ?? []) {
+    const load = (ids: string[]) => Promise.all(ids.map(async (id) => {
       const blob = await loadFile(id);
       if (!blob) throw new Error(`“${item.title}” için eklediğiniz fotoğraf bu cihazda bulunamadı. Satırı düzenleyip yeniden ekleyin.`);
-      photos.push(blob);
-    }
+      return blob;
+    }));
+    const photos = await load(item.design?.photos ?? []);
+    const backPhotos = await load(item.design?.back?.photos ?? []);
     const preview = item.design?.preview ? await loadFile(item.design.preview) : null;
-    return { item, photos, preview };
+    return { item, photos, backPhotos, preview };
   }));
 
   const { token } = await request('/api/siparis', {
@@ -86,21 +87,27 @@ export async function submitOrder(
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       ...contact,
-      items: lines.map(({ item, photos, preview }) => {
+      items: lines.map(({ item, photos, backPhotos, preview }) => {
         const d = item.design;
+        const b = d?.back;
         return {
           productId: item.productId, qty: item.qty, color: item.color, note: item.note,
           text: d?.text, font: d?.font, placement: d?.placement, removeBg: d?.removeBg, needsDesign: d?.needsDesign,
           photoCount: photos.length, hasPreview: Boolean(preview), readyId: d?.ready?.id,
+          back: b && {
+            text: b.text, font: b.font, placement: b.placement, removeBg: b.removeBg,
+            photoCount: backPhotos.length, readyId: b.ready?.id,
+          },
         };
       }),
     }),
   }) as { token: string };
 
   // Sunucu satır sırasını korur.
-  const uploads = lines.flatMap(({ item, photos, preview }, line) => {
+  const uploads = lines.flatMap(({ item, photos, backPhotos, preview }, line) => {
     return [
       ...photos.map((blob, n) => ({ line, kind: 'photo', blob, where: `“${item.title}”, ${n + 1}. fotoğraf` })),
+      ...backPhotos.map((blob, n) => ({ line, kind: 'back', blob, where: `“${item.title}”, arka yüz ${n + 1}. fotoğraf` })),
       ...(preview ? [{ line, kind: 'preview', blob: preview, where: `“${item.title}” önizlemesi` }] : []),
     ];
   });

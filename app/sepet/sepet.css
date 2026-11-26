@@ -6,6 +6,7 @@
 .cart-row.is-off { opacity: .6; }
 .cart-thumb { flex: 0 0 88px; width: 88px; height: 88px; border-radius: var(--radius); overflow: hidden; background: var(--surface); display: block; }
 .cart-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.cart-thumb img.is-wide { object-fit: contain; background: var(--paper-2); }
 .cart-row-main { flex: 1; min-width: 0; }
 .cart-row-title { font-family: var(--serif); font-weight: 600; font-size: 18px; line-height: 1.25; display: inline-block; }
 .cart-row-title:hover { color: var(--brand); }

@@ -3,19 +3,25 @@ import type { Placement } from './photo-layout';
 
 export interface ReadyDesign { id: string; name: string; image?: string }
 
-/** Bir sepet satırının tasarımı. Fotoğraflar sipariş oluşturulana kadar cihazda (IndexedDB) durur. */
-export interface CartDesign {
+/** Kupanın bir yüzüne basılacaklar. Fotoğraflar sipariş oluşturulana kadar cihazda (IndexedDB) durur. */
+export interface DesignSide {
   text?: string;
   font?: 'duz' | 'el';
   placement?: Placement;
   removeBg?: boolean;
   /** Konfigüratörden seçilen hazır tasarım. */
   ready?: ReadyDesign;
-  /** Müşterinin tasarımı yok; atölye hazırlayacak. */
-  needsDesign?: boolean;
   /** lib/cart-files kimlikleri. */
   photos: string[];
+}
+
+/** Bir sepet satırının tasarımı; kendi alanları ön yüzdür. */
+export interface CartDesign extends DesignSide {
+  /** Müşterinin tasarımı yok; atölye hazırlayacak. */
+  needsDesign?: boolean;
   preview?: string;
+  /** Varsa baskı iki yüzedir. */
+  back?: DesignSide;
 }
 
 /** Tarayıcıda (localStorage) tutulan sepet satırı. Aynı ürün + renk tek satırdır; adet artar. */

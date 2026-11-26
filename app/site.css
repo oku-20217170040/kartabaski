@@ -190,6 +190,7 @@ h1, h2, h3 { font-stretch: 112%; text-wrap: balance; }
 .vitrin-error { margin-top: 14px; font-size: 14.5px; font-weight: 700; }
 .vitrin-error:empty { display: none; }
 .foto { width: min(100%, 520px); margin-top: 20px; }
+.mug.is-mirrored img { transform: scaleX(-1); }
 .foto-ipucu { font-size: 14px; font-weight: 600; text-align: center; }
 .foto-boyut { display: flex; align-items: center; gap: 12px; margin-top: 8px; }
 .foto-boyut input { flex: 1; min-width: 0; height: 44px; accent-color: var(--on-field); }

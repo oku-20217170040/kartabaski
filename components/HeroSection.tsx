@@ -188,7 +188,7 @@ export default function HeroSection({ lowestPrice, mugProduct }: Props) {
           </div>
 
           <p className="vitrin-facts">
-            Tek adet de basıyoruz. Basmadan önce nasıl duracağını gönderiyoruz, onayınızdan sonra 3 iş gününde kargoda.
+            Tek adet de basıyoruz, iki yüzüne ayrı fotoğraf da. Basmadan önce nasıl duracağını gönderiyoruz, onayınızdan sonra 3 iş gününde kargoda.
             {lowestPrice ? ` Kupalar ${lowestPrice.toLocaleString('tr-TR')}₺’den başlıyor.` : ''}
           </p>
         </div>

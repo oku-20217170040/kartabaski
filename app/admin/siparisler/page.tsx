@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { listOrderRequestsAction } from '@/lib/actions-siparis';
-import { OrderRequest, PROOF_LABELS, orderImageUrl, orderNo } from '@/lib/siparis-types';
+import { lineFiles, OrderRequest, PROOF_LABELS, orderImageUrl, orderNo } from '@/lib/siparis-types';
 import { TALEP_LABELS, TALEP_STATUSES, type TalepStatus } from '@/lib/talep-status';
 import { useToast, errorMessage } from '@/components/admin/Toast';
 import { cartImageSrc } from '@/lib/cart-products';
@@ -76,16 +76,17 @@ export default function SiparislerPage() {
       ) : (
         <ul className="sip-list">
           {shown.map((o) => {
-            const own = o.items.map((i) => i.preview ?? i.files[0]).find(Boolean);
+            const own = o.items.map((i) => i.preview ?? lineFiles(i)[0]).find(Boolean);
+            const wide = o.items.some((i) => i.back && i.preview === own);
             const image = own ? orderImageUrl(o.token, own, 240) : cartImageSrc(o.items.find((i) => i.ready?.image)?.ready?.image);
-            const photos = o.items.reduce((s, i) => s + i.files.length, 0);
+            const photos = o.items.reduce((s, i) => s + lineFiles(i).length, 0);
             return (
               <li key={o.token}>
                 <Link href={`/admin/siparisler/${o.token}`} className={`card sip-row${o.status === 'yeni' ? ' is-new' : ''}`}>
                   <span className="sip-thumb">
                     {image && (
                       // eslint-disable-next-line @next/next/no-img-element
-                      <img src={image} alt="" loading="lazy" />
+                      <img src={image} alt="" loading="lazy" className={wide ? 'is-wide' : undefined} />
                     )}
                   </span>
                   <span className="sip-main">
