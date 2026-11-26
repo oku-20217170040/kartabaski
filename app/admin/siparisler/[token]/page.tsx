@@ -7,7 +7,8 @@ import {
   deleteOrderRequestAction, getOrderRequestAction, sendOrderToMachineAction,
   updateOrderRequestNoteAction, updateOrderRequestStatusAction,
 } from '@/lib/actions-siparis';
-import { OrderRequest, lineSides, orderImageUrl, orderNo } from '@/lib/siparis-types';
+import { OrderRequest, lineSides, orderImageUrl, orderNo, orderUrl } from '@/lib/siparis-types';
+import { trackingLink } from '../takip-linki';
 import { TALEP_LABELS, TALEP_STATUSES, type TalepStatus } from '@/lib/talep-status';
 import { customerWhatsappLink } from '@/lib/cart';
 import { lineHref } from '@/lib/configurator-lines';
@@ -71,7 +72,7 @@ export default function SiparisDetayPage({ params }: { params: { token: string }
   const remove = async () => {
     const ok = await confirm({
       title: 'Sipariş silinsin mi?',
-      message: `${orderNo(order.token)} numaralı sipariş ve fotoğrafları kalıcı olarak silinecek.`,
+      message: `${orderNo(order)} kodlu sipariş ve fotoğrafları kalıcı olarak silinecek.`,
       confirmLabel: 'Sil',
       danger: true,
     });
@@ -84,14 +85,18 @@ export default function SiparisDetayPage({ params }: { params: { token: string }
 
   const place = [order.district, order.city].filter(Boolean).join(' / ');
 
-  const waHref = customerWhatsappLink({ name: order.name, phone: order.phone, id: order.token });
+  const waHref = customerWhatsappLink({ name: order.name, phone: order.phone, id: order.token, code: order.code });
+  const copyLink = () =>
+    navigator.clipboard.writeText(orderUrl(order.token))
+      .then(() => toast.success('Takip bağlantısı kopyalandı.'))
+      .catch(() => toast.error('Kopyalanamadı. Bağlantıyı “Müşteri sayfası”ndan alın.'));
 
   return (
     <div className="has-savebar">
       <div className="admin-header">
         <div>
           <Link href="/admin/siparisler" className="adm-back-link">← Tüm siparişler</Link>
-          <h1 className="adm-page-title">Sipariş {orderNo(order.token)}</h1>
+          <h1 className="adm-page-title sip-title">Sipariş {orderNo(order)}</h1>
           <p className="adm-page-sub">{new Date(order.createdAt).toLocaleString('tr-TR')}</p>
         </div>
       </div>
@@ -116,9 +121,13 @@ export default function SiparisDetayPage({ params }: { params: { token: string }
           </dl>
           {order.note && <p className="sip-note"><b>Müşteri notu:</b> {order.note}</p>}
 
-          <a className="btn btn-primary sip-wa sip-wide-wa" href={waHref} target="_blank" rel="noopener noreferrer">
-            <IconWhatsApp size={16} /> Müşteriye yaz
-          </a>
+          <div className="sip-actions">
+            <a className="btn btn-primary sip-wa" href={trackingLink(order)} target="_blank" rel="noopener noreferrer">
+              <IconWhatsApp size={16} /> Takip linki gönder
+            </a>
+            <button type="button" className="btn btn-secondary btn-sm" onClick={copyLink}>Linki kopyala</button>
+            <a className="btn btn-secondary btn-sm sip-wa sip-wide-wa" href={waHref} target="_blank" rel="noopener noreferrer">Müşteriye yaz</a>
+          </div>
 
           <label className="form-label" htmlFor="sip-durum">Durum</label>
           <select id="sip-durum" className="form-select" value={order.status} disabled={busy} onChange={(e) => setStatus(e.target.value as TalepStatus)}>

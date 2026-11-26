@@ -1,0 +1,16 @@
+/* Sipariş kodu sorgusu (.tak- öneki). Çizelge stilleri sipariş sayfasından gelir. */
+.tak-form { display: grid; gap: 8px; max-width: 560px; margin-top: 24px; }
+.tak-form label { font-weight: 700; font-size: 15px; }
+.tak-form > div { display: flex; gap: 8px; flex-wrap: wrap; }
+.tak-form input { flex: 1 1 220px; min-width: 0; min-height: 52px; padding: 0 14px; border: 2px solid var(--ink); border-radius: var(--radius); background: var(--paper); color: var(--ink); font: inherit; font-size: 18px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; }
+.tak-form .btn { min-height: 52px; flex: 0 0 auto; }
+.tak-error { margin-top: 14px; max-width: 560px; color: var(--danger); font-weight: 650; }
+.tak-result { margin-top: 32px; padding-top: 24px; border-top: 2px solid var(--ink); }
+.tak-code { margin-top: 4px; font-size: 22px; font-weight: 880; font-stretch: 75%; letter-spacing: .03em; overflow-wrap: anywhere; }
+.tak-items { list-style: none; margin-top: 28px; border-top: 2px solid var(--ink); }
+.tak-items li { display: grid; gap: 4px; padding: 14px 0; border-bottom: 1px solid var(--line); overflow-wrap: anywhere; }
+.tak-items span { color: var(--ink-2); }
+.tak-note { margin-top: 16px; max-width: 560px; font-size: 14px; color: var(--ink-3); }
+.tak-help { display: flex; flex-wrap: wrap; align-items: center; gap: 16px; margin-top: 32px; }
+.tak-help a:last-child { display: inline-flex; align-items: center; min-height: 44px; font-size: 14px; text-decoration: underline; text-underline-offset: 4px; }
+@media (max-width: 480px) { .tak-form .btn, .tak-help .btn { flex: 1 1 100%; justify-content: center; } }

@@ -180,6 +180,8 @@ export type Shipping = z.infer<typeof ShippingSchema>;
 
 export const OrderRequestSchema = z.object({
   token: z.string(),
+  /** Müşterinin gördüğü sipariş kodu (KB…); eski kayıtta ilk okumada eklenir. */
+  code: z.string().optional(),
   createdAt: z.number(),
   updatedAt: z.number(),
   status: z.enum(['yukleniyor', ...TALEP_STATUSES]),
@@ -204,10 +206,6 @@ export const OrderRequestSchema = z.object({
 });
 export type OrderRequest = z.infer<typeof OrderRequestSchema>;
 
-/** Üretime alınmadan önce müşteri siparişini silebilir. */
-export const canCustomerDelete = (status: OrderRequestStatus) =>
-  status === 'yukleniyor' || status === 'yeni' || status === 'incelendi';
-
 export const orderImageIds = (o: Pick<OrderRequest, 'items' | 'proof' | 'proofHistory'>): string[] => [
   ...o.items.flatMap((i) => [...lineFiles(i), ...(i.preview ? [i.preview] : [])]),
   ...[...(o.proofHistory ?? []), ...(o.proof ? [o.proof] : [])].flatMap((p) => p.images),
@@ -222,7 +220,25 @@ export const orderUrl = (token: string, base: string = SITE_URL) => `${base}/sip
 /** WhatsApp'a yalnızca sipariş bağlantısı gider. */
 export const orderMessage = (token: string, base?: string) => `Siparişim: ${orderUrl(token, base)}`;
 
-export const orderNo = (token: string) => token.slice(0, 6).toUpperCase();
+/* Okurken karışan 0/O ve 1/I/L kullanılmaz. 31^11 olasılık: kod tahmin edilemez. */
+export const ORDER_CODE_ALPHABET = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
+export const ORDER_CODE_RE = new RegExp(`^KB[${ORDER_CODE_ALPHABET}]{11}$`);
+
+/** `pick(n)`: 0 ile n-1 arasında rastgele sayı. */
+export const makeOrderCode = (pick: (max: number) => number) =>
+  `KB${Array.from({ length: 11 }, () => ORDER_CODE_ALPHABET[pick(ORDER_CODE_ALPHABET.length)]).join('')}`;
+
+/** Müşterinin yazdığı kodu düzeltir (boşluk, tire, küçük harf); geçersizse null. */
+export function normalizeOrderCode(input: string): string | null {
+  const code = input.replace(/[\s-]/g, '').toUpperCase();
+  return ORDER_CODE_RE.test(code) ? code : null;
+}
+
+export const orderNo = (o: { token: string; code?: string }) => o.code ?? o.token.slice(0, 6).toUpperCase();
+
+/** Yöneticinin müşteriye gönderdiği takip mesajı: özel bağlantı ve sipariş kodu. */
+export const trackingMessage = (o: { token: string; code?: string; name?: string }, base?: string) =>
+  `Merhaba${o.name ? ` ${o.name}` : ''}, siparişinizi bu bağlantıdan takip edebilirsiniz: ${orderUrl(o.token, base)}\nSipariş kodunuz: ${orderNo(o)}`;
 
 export const orderImageUrl = (token: string, id: string, width?: 240 | 900) =>
   `/api/siparis/${token}/gorsel?id=${encodeURIComponent(id)}${width ? `&w=${width}` : '&indir=1'}`;

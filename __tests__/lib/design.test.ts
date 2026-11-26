@@ -1,5 +1,5 @@
 import { DEFAULT_PLACEMENT, MAX_SCALE, MIN_SCALE, clampPlacement, photoRect } from '@/lib/photo-layout';
-import { parseOrderInput, OrderInputSchema, canCustomerDelete, customerView, maskPhone, orderMessage, shortName, OrderRequest } from '@/lib/siparis-types';
+import { parseOrderInput, OrderInputSchema, customerView, maskPhone, orderMessage, shortName, OrderRequest } from '@/lib/siparis-types';
 import { toAlpha, toModelInput } from '@/lib/remove-background';
 import { classifyPath } from '@/lib/analytics-utils';
 
@@ -48,12 +48,6 @@ describe('sipariş', () => {
     expect(message(null)).toContain('Sipariş bilgileri geçersiz');
     expect(message({ ...input, items: [{ ...input.items[0], qty: 9999 }] })).toContain('Sipariş bilgileri geçersiz');
     expect(message({ ...input, phone: '1' })).toBe('Geçerli bir telefon numarası girin');
-  });
-
-  it('üretime alınan sipariş müşterice silinemez', () => {
-    expect(canCustomerDelete('yeni')).toBe(true);
-    expect(canCustomerDelete('siparis')).toBe(false);
-    expect(canCustomerDelete('tamamlandi')).toBe(false);
   });
 
   it('müşteri görünümünde iletişim bilgisi maskelenir, adres ve iç not gitmez', () => {

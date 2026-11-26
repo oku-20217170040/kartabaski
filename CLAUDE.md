@@ -164,6 +164,7 @@ Copy `.env.local.example` to `.env.local` and fill in:
 | `/yorum/[token]` | Customer review form (invite link) |
 | `/tasarla/[slug]` | Design editor; adds a designed line to the cart (photos stay in IndexedDB) |
 | `/siparis/[token]` | Order page; WhatsApp message carries only this link. A logged-in admin is redirected to `/admin/siparisler/[token]` (`?musteri=1` shows the customer view) |
+| `/siparis-takip` | Order lookup by code (`KB` + 11 chars): status, cargo and item summary only — no name, phone, texts or photos (`publicOrder`). Photos and proof approval stay on `/siparis/[token]`; customers cannot delete orders themselves |
 | `/gizlilik` | KVKK notice |
 
 `app/sitemap.ts` and `app/robots.ts` auto-generate SEO sitemap and robots.txt.

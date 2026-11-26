@@ -33,6 +33,9 @@
 .ord-cover img { display: block; width: 100%; height: auto; }
 .ord-side { display: grid; grid-template-columns: minmax(0, 1fr); gap: 6px; min-width: 0; }
 .ord-side h3 { margin-top: 8px; padding-top: 8px; border-top: 2px solid var(--ink); font-size: 16px; }
+.ord-title { overflow-wrap: anywhere; }
+.ord-code { margin-top: 14px; font-size: 14px; color: var(--ink-2); overflow-wrap: anywhere; }
+.ord-code a { text-decoration: underline; text-underline-offset: 3px; font-weight: 700; }
 .ord-ready { width: 96px; height: 96px; object-fit: contain; border: 1px solid var(--line); border-radius: var(--radius); }
 .ord-info p { margin-top: 6px; overflow-wrap: anywhere; }
 .ord-info h2 a { display: inline-flex; align-items: center; min-height: 44px; }

@@ -45,6 +45,10 @@ export default function GizlilikPage() {
               Sipariş bağlantınızı bilen kişi sipariş sayfanızı ve fotoğraflarınızı görebilir. Sayfada telefonunuz maskeli
               gösterilir, açık adresiniz gösterilmez. Bağlantıyı yalnızca güvendiğiniz kişilerle paylaşın.
             </p>
+            <p>
+              Sipariş takibi sayfasında yalnızca sipariş kodunu giren kişi siparişin aşamasını, kargo takip bilgisini ve
+              ürün adlarını, adetlerini ve renklerini görür; fotoğraflar, yazılar, ad ve telefon gösterilmez.
+            </p>
             <h2>Ne kadar saklıyoruz?</h2>
             <ul>
               <li>Sipariş oluşturulana kadar fotoğraflarınız yalnızca kendi cihazınızda durur.</li>
@@ -54,9 +58,8 @@ export default function GizlilikPage() {
             </ul>
             <h2>Haklarınız</h2>
             <p>
-              Üretime alınmamış siparişinizi ve fotoğraflarınızı sipariş sayfasındaki “Siparişimi ve fotoğraflarımı sil”
-              düğmesiyle kendiniz silebilirsiniz. KVKK’nın 11. maddesindeki haklarınız (bilgi alma, düzeltme, silme, itiraz)
-              için <a href="mailto:info@kartabaski.com">info@kartabaski.com</a> adresine ya da{' '}
+              Siparişinizin ve fotoğraflarınızın silinmesini isteyebilirsiniz. KVKK’nın 11. maddesindeki haklarınız
+              (bilgi alma, düzeltme, silme, itiraz) için <a href="mailto:info@kartabaski.com">info@kartabaski.com</a> adresine ya da{' '}
               <a href={`tel:+${PHONE}`}>{PHONE_DISPLAY}</a> numarasına başvurabilirsiniz.
             </p>
             <p><Link href="/">Ana sayfaya dönün</Link></p>

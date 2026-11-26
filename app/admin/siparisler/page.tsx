@@ -9,6 +9,7 @@ import { useToast, errorMessage } from '@/components/admin/Toast';
 import { cartImageSrc } from '@/lib/cart-products';
 import { IconCart, IconRefresh, IconWhatsApp } from '@/components/admin/icons';
 import { customerWhatsappLink } from '@/lib/cart';
+import { trackingLink } from './takip-linki';
 import './siparisler.css';
 
 const fmt = (n: number) => new Intl.NumberFormat('tr-TR').format(n);
@@ -92,7 +93,8 @@ export default function SiparislerPage() {
                     )}
                   </span>
                   <span className="sip-main">
-                    <b>No: {orderNo(o.token)} · {o.name}</b>
+                    <b>{o.name}</b>
+                    <small className="sip-code">{orderNo(o)}</small>
                     <small>
                       {formatDate(o.createdAt)} · {o.items.length} tasarım, {o.items.reduce((s, i) => s + i.qty, 0)} adet
                       {photos ? ` · ${photos} fotoğraf` : ''}{o.total ? ` · ≈ ${fmt(o.total)}₺` : ''}
@@ -109,9 +111,10 @@ export default function SiparislerPage() {
                 </Link>
                 <div className="sip-quick">
                   <a className="btn btn-secondary btn-sm" href={`tel:${o.phone}`}>Ara</a>
-                  <a className="btn btn-secondary btn-sm" href={customerWhatsappLink({ name: o.name, phone: o.phone, id: o.token })} target="_blank" rel="noopener noreferrer">
+                  <a className="btn btn-secondary btn-sm" href={customerWhatsappLink({ name: o.name, phone: o.phone, id: o.token, code: o.code })} target="_blank" rel="noopener noreferrer">
                     <IconWhatsApp size={16} /> WhatsApp
                   </a>
+                  <a className="btn btn-secondary btn-sm" href={trackingLink(o)} target="_blank" rel="noopener noreferrer">Takip linki</a>
                 </div>
               </li>
             );

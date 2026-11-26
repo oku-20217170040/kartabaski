@@ -115,16 +115,17 @@ h1, h2, h3 { font-stretch: 112%; text-wrap: balance; }
 
 /* ── Üst bar ──────────────────────────────────────────────────────────── */
 .site-header { position: sticky; top: 0; z-index: 40; background: var(--paper); border-bottom: 2px solid var(--ink); }
-.site-header .wrap { display: flex; align-items: center; gap: 40px; height: var(--header-h); }
+.site-header .wrap { display: flex; align-items: center; gap: 22px; height: var(--header-h); }
 .brand { display: flex; align-items: center; gap: 10px; flex-shrink: 0; min-height: 44px; }
 .brand img { width: 40px; height: 40px; object-fit: contain; }
 .brand-name { font-stretch: 125%; font-weight: 900; font-size: 19px; line-height: 1; letter-spacing: -0.01em; text-transform: uppercase; white-space: nowrap; }
-.main-nav { display: flex; gap: 26px; font-size: 15px; font-weight: 600; }
+.main-nav { display: flex; gap: 17px; font-size: 14px; font-weight: 600; }
 .main-nav a { display: inline-flex; align-items: center; min-height: 44px; white-space: nowrap; text-underline-offset: 8px; text-decoration-thickness: 3px; }
 .main-nav a:hover { text-decoration-line: underline; }
 .main-nav a[aria-current="page"] { text-decoration-line: underline; text-decoration-color: var(--brand); }
 .header-actions { margin-left: auto; display: flex; align-items: center; gap: 10px; }
 .menu-toggle { display: none; }
+.header-actions svg { flex-shrink: 0; }
 
 .drawer-backdrop { position: fixed; inset: 0; z-index: 60; background: rgba(18, 18, 20, .55); animation: fade-in .2s var(--ease); }
 .drawer { position: fixed; top: 0; right: 0; bottom: 0; z-index: 61; width: min(400px, 90vw); background: var(--paper); display: flex; flex-direction: column; animation: slide-in .25s var(--ease); }
@@ -474,6 +475,14 @@ button.gal-slide { border: 0; background: transparent; cursor: zoom-in; }
 @keyframes spin { to { transform: rotate(360deg); } }
 
 /* ── Duyarlı düzen ────────────────────────────────────────────────────── */
+/* Yedi menü bağlantısı sığsın: teklif düğmesi daha erken gizlenir, dar masaüstünde menü çekmeceye geçer. */
+@media (max-width: 1260px) {
+  .header-actions .hide-md { display: none; }
+}
+@media (max-width: 1160px) {
+  .main-nav { display: none; }
+  .menu-toggle { display: inline-flex; }
+}
 @media (max-width: 1180px) {
   .site-header .wrap { gap: 24px; }
   .main-nav { gap: 18px; font-size: 14px; }

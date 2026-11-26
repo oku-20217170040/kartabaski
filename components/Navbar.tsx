@@ -14,6 +14,7 @@ const NAV_LINKS = [
   { href: '/kurumsal', label: 'Kurumsal' },
   { href: '/konfigurator', label: 'Kendin Tasarla' },
   { href: '/nasil-siparis-verilir', label: 'Nasıl Çalışır' },
+  { href: '/siparis-takip', label: 'Sipariş Takibi' },
   { href: '/blog', label: 'Blog' },
 ];
 

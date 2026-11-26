@@ -11,7 +11,8 @@
 .sip-main small { font-size: 13px; color: var(--ink-3); }
 .sip-badges { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 6px; }
 /* Hızlı arama düğmeleri yalnız telefonda (mobile.css açar). */
-.sip-quick { display: none; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 6px; }
+.sip-code { font-weight: 700; letter-spacing: .03em; }
+.sip-quick { display: none; grid-template-columns: auto 1fr 1fr; gap: 6px; margin-top: 6px; }
 .admin-layout .sip-quick .btn { justify-content: center; }
 .sip-badge { flex-shrink: 0; padding: 3px 10px; border: 1px solid var(--line); border-radius: var(--radius); font-size: 12px; font-weight: 600; background: var(--paper-2); }
 .sip-badge.is-new { background: var(--brand); border-color: var(--brand); color: var(--on-brand); }
@@ -27,6 +28,7 @@
 .sip-actions { display: flex; flex-wrap: wrap; gap: 8px; }
 .sip-actions .btn, .sip-wa { min-height: 44px; justify-content: center; }
 .sip-h2 { margin: 0; font-size: 16px; }
+.sip-title { overflow-wrap: anywhere; }
 .sip-stage { margin: 0; font-size: 20px; font-weight: 800; }
 .sip-proof-state { margin: 0; font-size: 14px; font-weight: 700; }
 .sip-proof-state.is-onaylandi { color: var(--brand); }

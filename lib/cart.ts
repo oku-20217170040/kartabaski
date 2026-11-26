@@ -192,8 +192,8 @@ export function waNumber(phone: string): string {
   return d;
 }
 
-export function customerWhatsappLink(t: { name?: string; phone?: string; id?: string }): string {
-  const no = requestNo(t.id);
+export function customerWhatsappLink(t: { name?: string; phone?: string; id?: string; code?: string }): string {
+  const no = t.code ?? requestNo(t.id);
   const text = `Merhaba${t.name ? ` ${t.name}` : ''}, KAR-TA BASKI'dan yazıyoruz.${no ? ` ${no} numaralı` : ''} siparişiniz için bilgi vermek istiyoruz.`;
   return `https://wa.me/${waNumber(t.phone ?? '')}?text=${encodeURIComponent(text)}`;
 }

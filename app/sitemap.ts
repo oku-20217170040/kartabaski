@@ -45,6 +45,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${base}/kategoriler`, lastModified: now, changeFrequency: 'weekly', priority: 0.7 },
     { url: `${base}/kurumsal`, lastModified: now, changeFrequency: 'weekly', priority: 0.8 },
     { url: `${base}/nasil-siparis-verilir`, lastModified: now, changeFrequency: 'monthly', priority: 0.6 },
+    { url: `${base}/siparis-takip`, lastModified: now, changeFrequency: 'yearly', priority: 0.3 },
     { url: `${base}/hakkimizda`, lastModified: now, changeFrequency: 'monthly', priority: 0.5 },
     { url: `${base}/blog`, lastModified: now, changeFrequency: 'weekly', priority: 0.7 },
     ...posts,

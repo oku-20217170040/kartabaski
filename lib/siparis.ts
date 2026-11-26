@@ -1,6 +1,6 @@
 import 'server-only';
 
-import { randomBytes } from 'crypto';
+import { randomBytes, randomInt } from 'crypto';
 import { FieldValue } from 'firebase-admin/firestore';
 import { getOrder } from './orders';
 import type { Production } from './siparis-takip';
@@ -17,7 +17,7 @@ import type { CartOverview, CartProductInfo } from './cart-types';
 import { missingProductInfo } from './cart';
 import {
   ImageKind, MAX_PHOTO_BYTES, MAX_PROOF_IMAGES, ORDER_FOLDER, ORDER_TOKEN_RE, OrderInput, OrderLine, OrderRequest, OrderRequestSchema,
-  PHOTO_TTL_MS, Proof, Shipping, UPLOAD_TTL_MS, appendImage, canAddImage, canCustomerDelete, canReplyProof, orderImageIds, uploadsComplete,
+  PHOTO_TTL_MS, Proof, Shipping, UPLOAD_TTL_MS, appendImage, canAddImage, canReplyProof, makeOrderCode, orderImageIds, uploadsComplete,
 } from './siparis-types';
 import type { TalepStatus } from './talep-status';
 
@@ -118,6 +118,7 @@ export async function createOrder(input: OrderInput): Promise<{ token: string }>
   void _items; void _kvkk; void _website;
   await ref(token).set({
     ...compact(contact),
+    code: makeOrderCode(randomInt),
     items: lines,
     total: cartTotal(lines as unknown as OrderLine[]),
     status: 'yukleniyor', createdAt: now, updatedAt: now, kvkkAt: now,
@@ -128,7 +129,30 @@ export async function createOrder(input: OrderInput): Promise<{ token: string }>
 export async function getOrderRequest(token: string): Promise<OrderRequest | null> {
   if (!ORDER_TOKEN_RE.test(token)) return null;
   const snap = await ref(token).get();
-  return snap.exists ? parse(token, snap.data()) : null;
+  const order = snap.exists ? parse(token, snap.data()) : null;
+  return order ? ensureCode(order) : null;
+}
+
+/** Kod sisteminden önce açılan siparişe ilk okumada kod verir (saklama süresini etkilemez). */
+async function ensureCode(order: OrderRequest): Promise<OrderRequest> {
+  if (order.code || order.status === 'yukleniyor') return order;
+  const code = await adminDb.runTransaction(async (tx) => {
+    const snap = await tx.get(ref(order.token));
+    const saved = snap.data()?.code as string | undefined;
+    if (!snap.exists || saved) return saved;
+    const made = makeOrderCode(randomInt);
+    tx.update(ref(order.token), { code: made });
+    return made;
+  });
+  return { ...order, code };
+}
+
+/** Müşterinin yazdığı sipariş kodu (biçimi önceden doğrulanmış olmalı). */
+export async function findOrderByCode(code: string): Promise<OrderRequest | null> {
+  const snap = await adminDb.collection(COL).where('code', '==', code).limit(1).get();
+  const found = snap.docs[0];
+  const order = found ? parse(found.id, found.data()) : null;
+  return order && order.status !== 'yukleniyor' ? order : null;
 }
 
 /** Görsel olduğunu doğrulayıp kapalı depoya yükler. */
@@ -192,21 +216,14 @@ export async function deleteOrderRequest(token: string): Promise<void> {
   await ref(token).delete();
 }
 
-export async function deleteByCustomer(token: string): Promise<OrderRequest> {
-  const order = await getOrderRequest(token);
-  if (!order) throw new OrderError('Sipariş bulunamadı.', 404);
-  if (!canCustomerDelete(order.status)) throw new OrderError('Siparişiniz üretime alındı; iptal için WhatsApp’tan yazın.', 409);
-  await deleteOrderRequest(token);
-  return order;
-}
-
 // ── Yönetici ─────────────────────────────────────────────────────────────────
 
 export async function listOrderRequests(): Promise<OrderRequest[]> {
   const snap = await adminDb.collection(COL).orderBy('createdAt', 'desc').limit(300).get();
-  return snap.docs
+  return Promise.all(snap.docs
     .map((d) => parse(d.id, d.data()))
-    .filter((o): o is OrderRequest => o !== null && o.status !== 'yukleniyor');
+    .filter((o): o is OrderRequest => o !== null && o.status !== 'yukleniyor')
+    .map(ensureCode));
 }
 
 export async function countNewOrderRequests(): Promise<number> {

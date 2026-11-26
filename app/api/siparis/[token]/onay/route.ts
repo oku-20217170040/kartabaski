@@ -15,7 +15,7 @@ export async function POST(req: NextRequest, { params }: { params: { token: stri
     if (!body.success) return NextResponse.json({ error: body.error.issues[0]?.message || 'Geçersiz istek.' }, { status: 400 });
     const { order, proof } = await replyProof(params.token, body.data.round, body.data.decision, body.data.reply);
     await notifyAdmin(
-      `${proof.state === 'onaylandi' ? 'Önizleme onaylandı' : 'Düzeltme istendi'} (No: ${orderNo(order.token)})`,
+      `${proof.state === 'onaylandi' ? 'Önizleme onaylandı' : 'Düzeltme istendi'} (No: ${orderNo(order)})`,
       [order.name, proof.reply, orderUrl(order.token)].filter(Boolean).join('\n'),
     ).catch(() => false);
     return NextResponse.json({ proof });
