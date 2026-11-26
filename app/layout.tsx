@@ -1,7 +1,6 @@
 import type { Metadata } from 'next';
 // Fontlar projeyle birlikte gelir (fontsource); build sırasında Google Fonts'a bağlanılmaz.
-import '@fontsource-variable/bricolage-grotesque';
-import '@fontsource-variable/instrument-sans';
+import '@fontsource-variable/archivo/standard.css';
 import './site.css';
 import WhatsAppFloat from '@/components/WhatsAppFloat';
 import ErrorBoundary from '@/components/ErrorBoundary';

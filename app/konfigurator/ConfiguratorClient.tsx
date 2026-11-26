@@ -21,7 +21,7 @@ const CUSTOM_DESIGN: Design = {
   code: 'ÖZEL',
   name: 'Kendi Tasarımım',
   gradient: 'linear-gradient(135deg,#1A1A2E,#16213E)',
-  textColor: '#C9A84C',
+  textColor: 'var(--sun)',
   active: true,
   order: 0,
   createdAt: 0,
@@ -249,7 +249,7 @@ export default function ConfiguratorClient() {
             ← Ürünlere Dön
           </Link>
           <h1 style={{ fontSize: 'clamp(1.4rem,4vw,2rem)', fontWeight: 800, letterSpacing: '-0.02em', lineHeight: 1.15 }}>
-            Kendi <span style={{ color: '#FF6B35' }}>Kombinasyonunu</span> Oluştur
+            Kendi kombinasyonunu oluştur
           </h1>
           <p style={{ fontSize: 14, color: '#6B7280', marginTop: 4 }}>
             Bardağını seç, tasarımını seç — biz basalım.
@@ -290,7 +290,7 @@ export default function ConfiguratorClient() {
                     style={{
                       marginTop: 12,
                       background: '#fff',
-                      border: '2px solid #FF6B35',
+                      border: '2px solid var(--brand)',
                       borderRadius: 12,
                       padding: '20px 20px 16px',
                       animation: 'galleryFadeIn 0.2s ease',
@@ -311,7 +311,7 @@ export default function ConfiguratorClient() {
                         <div style={{
                           width: 72, height: 72, borderRadius: 10, overflow: 'hidden',
                           background: '#f3f4f6',
-                          outline: selectedCup?.id === expandedCup.id && selectedColorIdx === null ? '3px solid #FF6B35' : '2px solid #E5E7EB',
+                          outline: selectedCup?.id === expandedCup.id && selectedColorIdx === null ? '3px solid var(--brand)' : '2px solid #E5E7EB',
                           outlineOffset: 2, transition: 'outline-color 0.12s',
                         }}>
                           {expandedCup.imagePublicId
@@ -333,7 +333,7 @@ export default function ConfiguratorClient() {
                         >
                           <div style={{
                             width: 72, height: 72, borderRadius: 10, overflow: 'hidden',
-                            outline: selectedCup?.id === expandedCup.id && selectedColorIdx === i ? '3px solid #FF6B35' : '2px solid #E5E7EB',
+                            outline: selectedCup?.id === expandedCup.id && selectedColorIdx === i ? '3px solid var(--brand)' : '2px solid #E5E7EB',
                             outlineOffset: 2, transition: 'outline-color 0.12s',
                           }}>
                             {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -386,8 +386,8 @@ export default function ConfiguratorClient() {
                         onClick={() => setDesignTab(cat)}
                         style={{
                           padding: '6px 14px', borderRadius: 20, border: '1.5px solid',
-                          borderColor: designTab === cat ? '#FF6B35' : '#E5E7EB',
-                          background: designTab === cat ? '#FF6B35' : '#fff',
+                          borderColor: designTab === cat ? 'var(--brand)' : '#E5E7EB',
+                          background: designTab === cat ? 'var(--brand)' : '#fff',
                           color: designTab === cat ? '#fff' : '#374151',
                           fontSize: 13, fontWeight: 600, cursor: 'pointer',
                           transition: 'all 0.15s ease',
@@ -414,7 +414,7 @@ export default function ConfiguratorClient() {
                         marginBottom: 8, gap: 4,
                       }}>
                         <span style={{ fontSize: '1.6rem' }}>🖼️</span>
-                        <span style={{ fontSize: '0.6rem', fontWeight: 700, color: '#C9A84C', letterSpacing: '0.05em', textTransform: 'uppercase' }}>Kendi</span>
+                        <span style={{ fontSize: '0.6rem', fontWeight: 700, color: 'var(--sun)', letterSpacing: '0.05em', textTransform: 'uppercase' }}>Kendi</span>
                       </div>
                       <div style={{ ...itemNameStyle, color: '#1A1A1A', fontWeight: 700 }}>Kendi Tasarımım</div>
                     </CarouselCard>
@@ -479,7 +479,7 @@ export default function ConfiguratorClient() {
                 </div>
               )}
 
-              <span style={{ fontSize: '2rem', color: '#FF6B35', fontWeight: 800 }}>+</span>
+              <span style={{ fontSize: '2rem', color: 'var(--brand)', fontWeight: 800 }}>+</span>
 
               {selectedDesign && (
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
@@ -493,7 +493,7 @@ export default function ConfiguratorClient() {
                     boxShadow: '0 8px 24px rgba(0,0,0,0.13)', overflow: 'hidden',
                   }}>
                     {selectedDesign.id === '__custom__' ? (
-                      <><span style={{ fontSize: '2rem' }}>🖼️</span><span style={{ fontSize: '0.6rem', color: '#C9A84C', fontWeight: 700 }}>ÖZEL</span></>
+                      <><span style={{ fontSize: '2rem' }}>🖼️</span><span style={{ fontSize: '0.6rem', color: 'var(--sun)', fontWeight: 700 }}>ÖZEL</span></>
                     ) : selectedDesign.imagePublicId ? (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img src={cfImg(selectedDesign.imagePublicId, 200)} alt={selectedDesign.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
@@ -515,7 +515,7 @@ export default function ConfiguratorClient() {
                     : `${selectedCup!.name} + ${selectedDesign!.name}`}
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 16, flexWrap: 'wrap' }}>
-                  <span style={{ fontSize: 22, fontWeight: 800, color: '#FF6B35' }}>{selectedCup!.price}₺</span>
+                  <span style={{ fontSize: 22, fontWeight: 800, color: 'var(--brand)' }}>{selectedCup!.price}₺</span>
                   <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'center' }}>
                     <Chip green>✓ Ücretsiz Tasarım</Chip>
                     <Chip>🚚 3 İş Günü Teslimat</Chip>
@@ -541,7 +541,7 @@ export default function ConfiguratorClient() {
               }}
             >
               <WaIcon />
-              {selectedDesign?.id === '__custom__' ? '📱 Kendi Tasarımım İçin WhatsApp\'a Yaz' : '📱 WhatsApp\'tan Sipariş Ver'}
+              {selectedDesign?.id === '__custom__' ? 'Kendi Tasarımım İçin WhatsApp\'a Yaz' : 'WhatsApp\'tan Sipariş Ver'}
             </a>
           </div>
         </section>
@@ -598,7 +598,7 @@ function SectionTitle({ number, title }: { number: number; title: string }) {
     <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 18 }}>
       <div style={{
         width: 32, height: 32, borderRadius: '50%',
-        background: '#FF6B35', color: '#fff',
+        background: 'var(--brand)', color: '#fff',
         fontSize: 14, fontWeight: 800,
         display: 'flex', alignItems: 'center', justifyContent: 'center',
         flexShrink: 0,
@@ -630,7 +630,7 @@ function CupCard({ cup, selected, expanded, onClick }: {
         {hasVariants && (
           <div style={{
             position: 'absolute', bottom: 6, right: 6,
-            background: expanded ? '#FF6B35' : 'rgba(0,0,0,0.5)',
+            background: expanded ? 'var(--brand)' : 'rgba(0,0,0,0.5)',
             color: '#fff', fontSize: 9, fontWeight: 700,
             borderRadius: 4, padding: '2px 5px',
             transition: 'background 0.15s',
@@ -640,7 +640,7 @@ function CupCard({ cup, selected, expanded, onClick }: {
         )}
       </div>
       <div style={itemNameStyle}>{cup.name}</div>
-      <div style={{ fontSize: 12, fontWeight: 700, textAlign: 'center', color: '#FF6B35', marginTop: 2 }}>{cup.price}₺</div>
+      <div style={{ fontSize: 12, fontWeight: 700, textAlign: 'center', color: 'var(--brand)', marginTop: 2 }}>{cup.price}₺</div>
     </CarouselCard>
   );
 }
@@ -651,8 +651,8 @@ function CarouselCard({ children, selected, onClick, highlight }: {
   onClick: () => void;
   highlight?: boolean;
 }) {
-  const borderColor = selected ? '#FF6B35' : highlight ? '#C9A84C' : '#E5E7EB';
-  const bgColor     = selected ? '#FFF1EC' : highlight ? '#FFFBEB' : '#fff';
+  const borderColor = selected ? 'var(--brand)' : highlight ? 'var(--sun)' : '#E5E7EB';
+  const bgColor     = selected ? 'var(--brand-soft)' : highlight ? 'var(--brand-soft)' : '#fff';
   return (
     <div
       onClick={onClick}
@@ -679,7 +679,7 @@ function CarouselCard({ children, selected, onClick, highlight }: {
         <div style={{
           position: 'absolute', top: 7, right: 7,
           width: 20, height: 20, borderRadius: '50%',
-          background: '#FF6B35', color: '#fff',
+          background: 'var(--brand)', color: '#fff',
           fontSize: 11, fontWeight: 700,
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           zIndex: 2,
@@ -717,8 +717,8 @@ function Chip({ children, green }: { children: React.ReactNode; green?: boolean 
   return (
     <span style={{
       fontSize: 12, borderRadius: 100, padding: '4px 12px', fontWeight: 600,
-      background: green ? '#DCFCE7' : '#FFF1EC',
-      color: green ? '#166534' : '#E85A25',
+      background: green ? '#DCFCE7' : 'var(--brand-soft)',
+      color: green ? '#166534' : 'var(--brand-hover)',
     }}>{children}</span>
   );
 }

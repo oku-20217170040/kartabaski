@@ -38,33 +38,33 @@ describe('CATALOG_MOODS', () => {
 
     expect(CATALOG_MOODS[0]).toEqual({
       id: 'sihirli',
-      eyebrow: 'Isıyla beliren sürpriz',
+      eyebrow: 'Isıya duyarlı siyah sır',
       title: 'Sihirli Kupalar',
-      caption: 'Sıcak içecekle ortaya çıkan gizli fotoğraf ve mesajlar.',
+      caption: 'Sıcak çay veya kahve döküldüğünde mat kaplama açılır, alttaki fotoğraf görünür.',
       categories: ['Sihirli Kupa'],
       keywords: ['sihirli', 'ısıyla'],
     });
     expect(CATALOG_MOODS[1]).toEqual({
       id: 'kahve',
-      eyebrow: 'Keyif saatleri',
-      title: 'Kahve & Latte Ritüeli',
-      caption: 'Türk kahvesi, filtre kahve ve latte için zarif fincanlar.',
+      eyebrow: 'Türk kahvesi & espresso',
+      title: 'Kahve & Latte Fincanları',
+      caption: 'Tabaklı porselen, konik latte ve günlük kahve servisi için seramik fincan kalıpları.',
       categories: ['Seramik Kahve Fincanı', 'Kahve Fincanı', 'Latte Fincanı'],
       keywords: ['fincan', 'latte', 'espresso', 'tabaklı'],
     });
     expect(CATALOG_MOODS[2]).toEqual({
       id: 'hediye',
-      eyebrow: 'Tek adet özel üretim',
-      title: 'Fotoğraflı & İsimli Hediye',
-      caption: 'Sevdiklerinize isim, tarih veya anı fotoğrafıyla kalıcı hediye.',
+      eyebrow: '1 adetten başlayan baskı',
+      title: 'İsimli & Fotoğraflı Kupalar',
+      caption: 'İçi ve kulpu renkli lüks kupalar; tarih, isim veya telefon fotoğrafıyla çift yön baskı.',
       categories: ['Lüks Kupa', 'Özel Tasarım', 'Büyük Kupa'],
       keywords: ['hediye', 'özel', 'lüks', 'renkli', 'kalp', 'motto'],
     });
     expect(CATALOG_MOODS[3]).toEqual({
       id: 'kurumsal',
-      eyebrow: '45+ adette özel fiyat',
-      title: 'Ofis & Kurumsal',
-      caption: 'Şirket logonuzla ekip masaları, lansman ve müşteri hediyeleri.',
+      eyebrow: '45+ adette kademeli fiyat',
+      title: 'Kurumsal & Ofis Serisi',
+      caption: 'Şirket logosuyla toplantı odaları, ekip karşılama kitleri ve etkinlik gönderimleri.',
       categories: ['Kurumsal', 'Pro Kupa'],
       keywords: ['kurumsal', 'logo', 'pro kupa', 'ofis', 'toplu'],
     });
@@ -206,7 +206,7 @@ describe('buildMoodsWithCounts', () => {
     ]);
 
     expect(result[0].title).toBe('Sihirli Kupalar');
-    expect(result[0].eyebrow).toBe('Isıyla beliren sürpriz');
+    expect(result[0].eyebrow).toBe('Isıya duyarlı siyah sır');
   });
 
   it('boş ürün dizisinde tüm mood sayaçlarını 0 döndürür', () => {

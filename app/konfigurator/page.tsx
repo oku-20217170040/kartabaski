@@ -1,8 +1,7 @@
 import type { Metadata } from 'next';
-import '@fontsource-variable/plus-jakarta-sans';
 import ConfiguratorClient from './ConfiguratorClient';
 
-// Konfiguratör, sitenin geri kalanından bağımsız özgün tasarımıyla (ve fontuyla) çalışır.
+// Konfigüratörün kendi yerleşimi var; renk ve yazı tipi siteyle ortaktır.
 
 export const metadata: Metadata = {
   title: 'Kendi Kombinasyonunu Oluştur',

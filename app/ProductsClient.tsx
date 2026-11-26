@@ -6,7 +6,7 @@ import { Product, CATEGORIES, Category } from '@/types';
 import ProductCard from '@/components/ProductCard';
 import CuratedMoods from '@/components/CuratedMoods';
 import StudioPromoCard from '@/components/StudioPromoCard';
-import { SearchIcon, ChevronLeftIcon, ChevronRightIcon } from '@/components/icons';
+import { SearchIcon, ChevronLeftIcon, ChevronRightIcon, CloseIcon } from '@/components/icons';
 import { getTitle, getCategory, getActive, getPriceMin, getFeatured } from '@/lib/product-utils';
 import { buildMoodsWithCounts, isValidMoodId, matchesMood } from '@/lib/catalog-moods';
 import type { MoodId } from '@/lib/catalog-moods-types';
@@ -16,10 +16,10 @@ const PAGE_SIZE = 12;
 type SortOption = 'featured' | 'newest' | 'price_asc' | 'price_desc';
 
 const SORT_LABELS: Record<SortOption, string> = {
-  featured: 'Önerilen',
-  newest: 'En yeni',
-  price_asc: 'Fiyat: düşükten yükseğe',
-  price_desc: 'Fiyat: yüksekten düşüğe',
+  featured: 'Öne çıkanlar',
+  newest: 'Son eklenenler',
+  price_asc: 'Fiyat: artan',
+  price_desc: 'Fiyat: azalan',
 };
 
 /** Compact page list: 1 … 4 5 6 … 12 */
@@ -56,11 +56,6 @@ export default function ProductsClient({ initialProducts }: { initialProducts: P
 
   const activeProducts = useMemo(() => initialProducts.filter(getActive), [initialProducts]);
   const moods = useMemo(() => buildMoodsWithCounts(initialProducts), [initialProducts]);
-
-  const categories = useMemo(() => {
-    const used = new Set(activeProducts.map(getCategory));
-    return CATEGORIES.filter((c) => used.has(c));
-  }, [activeProducts]);
 
   const filtered = useMemo(() => {
     const q = normalize(search);
@@ -120,8 +115,7 @@ export default function ProductsClient({ initialProducts }: { initialProducts: P
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const visible = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
   const hasFilters = Boolean(activeMood || category || search);
-  const selectedMoodMeta = activeMood ? moods.find((m) => m.id === activeMood) : null;
-  const showStudioPromo = page === 1 && !hasFilters && visible.length >= 4;
+  const showStudioPromo = page === 1 && !hasFilters && visible.length >= 7;
 
   return (
     <div ref={topRef} style={{ scrollMarginTop: 'calc(var(--header-h) + 16px)' }}>
@@ -132,34 +126,13 @@ export default function ProductsClient({ initialProducts }: { initialProducts: P
         onSelectMood={setMood}
       />
 
-      {selectedMoodMeta && (
-        <div className="mood-active-bar" role="status">
-          <span>
-            <strong>{selectedMoodMeta.title}</strong> koleksiyonu gösteriliyor · {filtered.length} ürün
-          </span>
-          <button type="button" className="mood-clear-btn" onClick={() => setMood(null)}>
-            Tüm modellere dön
-          </button>
-        </div>
-      )}
-
       <div className="catalog-toolbar">
-        <div className="chips" role="group" aria-label="Kategoriye göre filtrele">
-          <button type="button" className="chip" aria-pressed={!category && !activeMood} onClick={() => clearAllFilters()}>
-            Tümü
+        <p className="result-count" aria-live="polite">{filtered.length} ürün</p>
+        {category && (
+          <button type="button" className="chip" onClick={() => setCategory('')} aria-label={`${category} filtresini kaldır`}>
+            {category} <CloseIcon size={14} />
           </button>
-          {categories.map((c) => (
-            <button
-              key={c}
-              type="button"
-              className="chip"
-              aria-pressed={category === c}
-              onClick={() => setCategory(category === c ? '' : c)}
-            >
-              {c}
-            </button>
-          ))}
-        </div>
+        )}
         <div className="toolbar-right">
           <label className="field-search">
             <span className="sr-only">Ürün ara</span>
@@ -167,7 +140,7 @@ export default function ProductsClient({ initialProducts }: { initialProducts: P
             <input
               className="input"
               type="search"
-              placeholder="Ürün ara"
+              placeholder="Ürün arayın"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
@@ -183,12 +156,10 @@ export default function ProductsClient({ initialProducts }: { initialProducts: P
         </div>
       </div>
 
-      <p className="result-count" aria-live="polite">{filtered.length} ürün</p>
-
       {filtered.length === 0 ? (
         <div className="empty">
-          <h3>Bu aramaya uyan ürün yok</h3>
-          <p>Farklı bir kelime deneyin ya da tüm ürünlere dönün. Aradığınızı bulamazsanız bize yazın, özel olarak hazırlayalım.</p>
+          <h3>Böyle bir ürün bulamadık</h3>
+          <p>Başka bir kelime deneyin ya da filtreleri kaldırın. Aklınızda belli bir kupa varsa WhatsApp&apos;tan yazın.</p>
           {hasFilters && (
             <button type="button" className="btn btn-outline btn-sm" onClick={clearAllFilters}>
               Filtreleri temizle
@@ -200,7 +171,7 @@ export default function ProductsClient({ initialProducts }: { initialProducts: P
           {visible.map((p, i) => (
             <Fragment key={p.id}>
               <ProductCard product={p} priority={page === 1 && i < 4} />
-              {showStudioPromo && i === 3 && <StudioPromoCard />}
+              {showStudioPromo && i === 6 && <StudioPromoCard />}
             </Fragment>
           ))}
         </div>
