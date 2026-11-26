@@ -16,8 +16,8 @@ import { CUP_ID_PREFIX, cupToProduct, isCupId } from './configurator-lines';
 import type { CartOverview, CartProductInfo } from './cart-types';
 import { missingProductInfo } from './cart';
 import {
-  MAX_PHOTO_BYTES, MAX_PROOF_IMAGES, ORDER_FOLDER, ORDER_TOKEN_RE, OrderInput, OrderLine, OrderRequest, OrderRequestSchema,
-  PHOTO_TTL_MS, Proof, Shipping, UPLOAD_TTL_MS, canCustomerDelete, canReplyProof, orderImageIds,
+  ImageKind, MAX_PHOTO_BYTES, MAX_PROOF_IMAGES, ORDER_FOLDER, ORDER_TOKEN_RE, OrderInput, OrderLine, OrderRequest, OrderRequestSchema,
+  PHOTO_TTL_MS, Proof, Shipping, UPLOAD_TTL_MS, appendImage, canAddImage, canCustomerDelete, canReplyProof, orderImageIds, uploadsComplete,
 } from './siparis-types';
 import type { TalepStatus } from './talep-status';
 
@@ -92,18 +92,24 @@ export async function getCartProductInfo(ids: string[]): Promise<CartProductInfo
 /** Siparişi "yükleniyor" olarak açar. Ad ve fiyat Firestore'dan okunur. */
 export async function createOrder(input: OrderInput): Promise<{ token: string }> {
   const products = new Map((await readProducts(input.items.map((i) => i.productId))).map((p) => [p.id, p]));
-  const designs = await readDesigns(input.items.flatMap((i) => (i.readyId ? [i.readyId] : [])));
+  const designs = await readDesigns(input.items.flatMap((i) => [i.readyId, i.back?.readyId].filter((x): x is string => Boolean(x))));
   const lines: Record<string, unknown>[] = [];
-  input.items.forEach(({ productId, readyId, ...line }) => {
+  input.items.forEach(({ productId, readyId, back, ...line }) => {
     const p = products.get(productId);
     // Satır sessizce atlanmaz: müşteri neyin sipariş edildiğini bilmeli.
     if (!p || !getActive(p)) {
       throw new OrderError('Sepetinizdeki bir ürün artık satışta değil. İşaretlenen satırı çıkarıp tekrar deneyin.', 409);
     }
-    const ready = readyId ? designs.get(readyId) : undefined;
-    if (readyId && !ready) throw new OrderError(`“${displayTitle(getTitle(p))}” için seçtiğiniz hazır tasarım artık yok. Satırı sepetten çıkarıp yeniden seçin.`);
+    const findReady = (id?: string) => {
+      if (!id) return undefined;
+      const found = designs.get(id);
+      if (!found) throw new OrderError(`“${displayTitle(getTitle(p))}” için seçtiğiniz hazır tasarım artık yok. Satırı sepetten çıkarıp yeniden seçin.`);
+      return found;
+    };
+    const { readyId: backReadyId, ...backSide } = back ?? { readyId: undefined };
     lines.push(compact({
-      ...line, ready, productId, slug: getSlug(p), title: displayTitle(getTitle(p)), unitPrice: getPriceMin(p) || 0, files: [],
+      ...line, ready: findReady(readyId), productId, slug: getSlug(p), title: displayTitle(getTitle(p)), unitPrice: getPriceMin(p) || 0, files: [],
+      back: back ? compact({ ...backSide, ready: findReady(backReadyId), files: [] }) : undefined,
     }));
   });
   const token = randomBytes(16).toString('hex');
@@ -135,13 +141,13 @@ async function storeImage(file: Blob): Promise<string> {
 }
 
 /** Yükleme aşamasındaki siparişin bir satırına fotoğraf ya da önizleme ekler. */
-export async function addOrderImage(token: string, line: number, kind: 'photo' | 'preview', file: Blob): Promise<void> {
+export async function addOrderImage(token: string, line: number, kind: ImageKind, file: Blob): Promise<void> {
   const check = (o: OrderRequest | null) => {
     if (!o) throw new OrderError('Sipariş bulunamadı.', 404);
     if (o.status !== 'yukleniyor') throw new OrderError('Bu siparişe artık fotoğraf eklenemiyor.', 409);
     const item = o.items[line];
     if (!item) throw new OrderError('Sipariş satırı bulunamadı.', 404);
-    if (kind === 'photo' ? item.files.length >= item.photoCount : !item.hasPreview || item.preview) {
+    if (!canAddImage(item, kind)) {
       throw new OrderError('Bu satır için fotoğraf sınırına ulaşıldı.', 409);
     }
   };
@@ -154,9 +160,7 @@ export async function addOrderImage(token: string, line: number, kind: 'photo' |
       const order = snap.exists ? parse(token, snap.data()) : null;
       check(order);
       const items = (snap.data()?.items ?? []) as Record<string, unknown>[];
-      const item = { ...items[line] };
-      if (kind === 'photo') item.files = [...((item.files as string[]) ?? []), id];
-      else item.preview = id;
+      const item = appendImage(items[line], kind, id);
       tx.update(ref(token), { items: items.map((x, i) => (i === line ? item : x)), updatedAt: Date.now() });
     });
   } catch (error) {
@@ -172,7 +176,7 @@ export async function completeOrder(token: string): Promise<{ order: OrderReques
     const order = snap.exists ? parse(token, snap.data()) : null;
     if (!order) throw new OrderError('Sipariş bulunamadı.', 404);
     if (order.status !== 'yukleniyor') return false;
-    if (order.items.some((i) => i.files.length < i.photoCount)) throw new OrderError('Fotoğrafların tamamı yüklenmedi. Tekrar deneyin.', 409);
+    if (!order.items.every(uploadsComplete)) throw new OrderError('Fotoğrafların tamamı yüklenmedi. Tekrar deneyin.', 409);
     tx.update(ref(token), { status: 'yeni', updatedAt: Date.now() });
     return true;
   });
@@ -350,7 +354,9 @@ export async function cleanupOrderRequests(limit = 20): Promise<{ abandoned: num
     const order = parse(d.id, d.data());
     if (!order) continue;
     await deletePrivate(orderImageIds(order));
-    const items = (d.data().items as Record<string, unknown>[]).map(({ preview: _p, ...i }) => ({ ...i, files: [] }));
+    const items = (d.data().items as Record<string, unknown>[]).map(({ preview: _p, ...i }) => ({
+      ...i, files: [], ...(i.back ? { back: { ...(i.back as object), files: [] } } : {}),
+    }));
     const blank = (p: Proof) => ({ ...p, images: [] });
     await ref(d.id).update(compactUpdate({
       items,

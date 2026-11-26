@@ -17,6 +17,7 @@ import { submitOrder } from '@/lib/siparis-client';
 import { trackEvent } from '@/lib/analytics-client';
 import { formatPriceRange } from '@/lib/format';
 import { lineHref } from '@/lib/configurator-lines';
+import { SIDE_LABELS, sideSummary } from '@/lib/design-sides';
 import '@/components/cart/cart.css';
 import './sepet.css';
 
@@ -24,7 +25,9 @@ const fmt = (n: number) => new Intl.NumberFormat('tr-TR').format(n);
 
 /** Satır görseli: cihazdaki kupa önizlemesi ya da ilk fotoğraf; yoksa ürün görseli. */
 function Thumb({ item }: { item: CartItem }) {
-  const fileId = item.design?.preview ?? item.design?.photos[0];
+  const fileId = item.design?.preview ?? item.design?.photos[0] ?? item.design?.back?.photos[0];
+  // İki yüzü yan yana gösteren önizleme kırpılmaz.
+  const wide = Boolean(item.design?.back && item.design.preview);
   const [url, setUrl] = useState<string | null>(null);
   useEffect(() => {
     if (!fileId) { setUrl(null); return; }
@@ -39,12 +42,20 @@ function Thumb({ item }: { item: CartItem }) {
   }, [fileId]);
   const src = url ?? cartImageSrc(item.design?.ready?.image ?? item.image);
   // eslint-disable-next-line @next/next/no-img-element
-  return src ? <img src={src} alt="" /> : null;
+  return src ? <img src={src} alt="" className={wide ? 'is-wide' : undefined} /> : null;
 }
 
 function designSummary(item: CartItem): string[] {
   const d = item.design;
   if (!d) return ['Tasarım eklenmedi'];
+  if (d.back) {
+    return [
+      'İki yüze baskı',
+      `${SIDE_LABELS.front}: ${sideSummary(d) || 'boş'}`,
+      `${SIDE_LABELS.back}: ${sideSummary(d.back) || 'boş'}`,
+      ...(d.needsDesign ? ['Tasarımı biz hazırlayacağız'] : []),
+    ];
+  }
   const parts = [
     d.ready ? `Hazır tasarım: ${d.ready.name}` : '',
     d.text ? `Yazı: ${d.text}` : '',

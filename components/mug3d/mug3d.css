@@ -1,0 +1,16 @@
+/* Üç boyutlu kupa (.m3d) ve düz baskı şeridi (.strip). */
+.m3d { display: grid; gap: 8px; width: 100%; max-width: 460px; justify-items: center; min-width: 0; }
+.m3d-stage { position: relative; width: 100%; aspect-ratio: 4 / 3; cursor: grab; touch-action: pan-y; user-select: none; }
+.m3d-stage:active { cursor: grabbing; }
+.m3d-stage canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+.m3d-stage[data-ready="false"]::after { content: 'Kupa hazırlanıyor…'; position: absolute; inset: 0; display: grid; place-items: center; font-size: 14px; font-weight: 650; }
+.m3d-hint { font-size: 13.5px; font-weight: 600; text-align: center; }
+.m3d-buttons { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; }
+.m3d-buttons button { min-width: 44px; min-height: 44px; padding: 0 10px; border: 2px solid currentColor; border-radius: var(--radius); background: transparent; color: inherit; font: inherit; font-size: 14.5px; font-weight: 650; cursor: pointer; }
+.m3d-buttons button[aria-pressed="true"], .m3d-buttons button:hover { background: var(--ink); border-color: var(--ink); color: var(--paper); }
+
+.strip { width: min(100%, 340px); display: grid; gap: 6px; }
+.strip p { font-size: 13.5px; font-weight: 600; text-align: center; }
+.strip canvas { display: block; width: 100%; height: auto; border: 2px dashed currentColor; border-radius: var(--radius); }
+.strip canvas.is-draggable { touch-action: none; cursor: grab; }
+.strip canvas.is-draggable:active { cursor: grabbing; }

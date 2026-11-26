@@ -1,4 +1,4 @@
-import type { CartDesign, CartItem, CartProductInfo } from './cart-types';
+import type { CartDesign, CartItem, CartProductInfo, DesignSide } from './cart-types';
 import { MAX_CART_ITEMS, MAX_QTY } from './cart-schemas';
 
 // Saf sepet mantığı: Firebase / ürün bağımlılığı yok (istemci ve sunucu ortak).
@@ -39,7 +39,9 @@ export function upsertLine(items: CartItem[], item: CartItem): CartItem[] {
 
 /** Satırların cihazda tuttuğu dosya kimlikleri. */
 export function designFileIds(items: CartItem[]): string[] {
-  return items.flatMap((i) => (i.design ? [...i.design.photos, ...(i.design.preview ? [i.design.preview] : [])] : []));
+  return items.flatMap((i) => (i.design
+    ? [...i.design.photos, ...(i.design.back?.photos ?? []), ...(i.design.preview ? [i.design.preview] : [])]
+    : []));
 }
 
 export function removeFromCart(items: CartItem[], key: string): CartItem[] {
@@ -102,9 +104,9 @@ export function reconcileCart(
 
 const FILE_ID = /^[A-Za-z0-9-]{1,64}$/;
 
-function parseDesign(x: unknown): CartDesign | undefined {
-  if (!x || typeof x !== 'object') return undefined;
-  const d = x as Record<string, unknown>;
+const MAX_PHOTOS = 8;
+
+function parseSide(d: Record<string, unknown>, room: number): DesignSide {
   const photos = Array.isArray(d.photos) ? d.photos.filter((p): p is string => typeof p === 'string' && FILE_ID.test(p)) : [];
   const p = d.placement as Record<string, unknown> | undefined;
   const placement = p && ['x', 'y', 'scale', 'rotate'].every((k) => typeof p[k] === 'number')
@@ -115,13 +117,26 @@ function parseDesign(x: unknown): CartDesign | undefined {
     ? { id: r.id, name: r.name.slice(0, 120), ...(typeof r.image === 'string' ? { image: r.image } : {}) }
     : undefined;
   return {
-    photos: photos.slice(0, 8),
+    photos: photos.slice(0, room),
     ...(ready ? { ready } : {}),
-    ...(typeof d.preview === 'string' && FILE_ID.test(d.preview) ? { preview: d.preview } : {}),
     ...(typeof d.text === 'string' && d.text.trim() ? { text: d.text.slice(0, 40) } : {}),
     ...(d.font === 'el' || d.font === 'duz' ? { font: d.font } : {}),
     ...(placement ? { placement } : {}),
     ...(d.removeBg === true ? { removeBg: true } : {}),
+  };
+}
+
+function parseDesign(x: unknown): CartDesign | undefined {
+  if (!x || typeof x !== 'object') return undefined;
+  const d = x as Record<string, unknown>;
+  const front = parseSide(d, MAX_PHOTOS);
+  const back = d.back && typeof d.back === 'object'
+    ? parseSide(d.back as Record<string, unknown>, MAX_PHOTOS - front.photos.length)
+    : undefined;
+  return {
+    ...front,
+    ...(back ? { back } : {}),
+    ...(typeof d.preview === 'string' && FILE_ID.test(d.preview) ? { preview: d.preview } : {}),
     ...(d.needsDesign === true ? { needsDesign: true } : {}),
   };
 }

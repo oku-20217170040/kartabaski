@@ -7,7 +7,7 @@ import {
   deleteOrderRequestAction, getOrderRequestAction, sendOrderToMachineAction,
   updateOrderRequestNoteAction, updateOrderRequestStatusAction,
 } from '@/lib/actions-siparis';
-import { OrderRequest, orderImageUrl, orderNo } from '@/lib/siparis-types';
+import { OrderRequest, lineSides, orderImageUrl, orderNo } from '@/lib/siparis-types';
 import { TALEP_LABELS, TALEP_STATUSES, type TalepStatus } from '@/lib/talep-status';
 import { customerWhatsappLink } from '@/lib/cart';
 import { lineHref } from '@/lib/configurator-lines';
@@ -148,25 +148,10 @@ export default function SiparisDetayPage({ params }: { params: { token: string }
               </h2>
               <dl className="sip-facts">
                 {item.color && <div><dt>Renk</dt><dd>{item.color}</dd></div>}
-                {item.ready && <div><dt>Hazır tasarım</dt><dd>{item.ready.name}</dd></div>}
-                {item.text && <div><dt>Yazı ({item.font === 'el' ? 'el yazısı' : 'düz yazı'})</dt><dd>{item.text}</dd></div>}
-                {item.removeBg && <div><dt>Arka plan</dt><dd>Silinsin</dd></div>}
+                {item.back && <div><dt>Baskı</dt><dd>İki yüze ayrı</dd></div>}
                 {item.needsDesign && <div><dt>Tasarım</dt><dd>Biz hazırlayacağız</dd></div>}
-                {item.placement && (
-                  <div>
-                    <dt>Fotoğraf yerleşimi</dt>
-                    <dd>Boyut {pct(item.placement.scale)} · yatay {pct(item.placement.x)} · dikey {pct(item.placement.y)} · açı {Math.round(item.placement.rotate)}°</dd>
-                  </div>
-                )}
               </dl>
               {item.note && <p className="sip-note">{item.note}</p>}
-              {item.ready?.image && (
-                <figure className="sip-preview">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={cartImageSrc(item.ready.image) ?? ''} alt={item.ready.name} style={{ width: 160 }} />
-                  <figcaption>Seçilen hazır tasarım</figcaption>
-                </figure>
-              )}
               {item.preview && (
                 <figure className="sip-preview">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -174,17 +159,40 @@ export default function SiparisDetayPage({ params }: { params: { token: string }
                   <figcaption>Müşterinin gördüğü önizleme</figcaption>
                 </figure>
               )}
-              {item.files.length > 0 && (
-                <ul className="sip-files">
-                  {item.files.map((id, i) => (
-                    <li key={id}>
+              {lineSides(item).map((s) => (
+                <div className="sip-side" key={s.label || 'tek'}>
+                  {s.label && <h3>{s.label}</h3>}
+                  <dl className="sip-facts">
+                    {s.ready && <div><dt>Hazır tasarım</dt><dd>{s.ready.name}</dd></div>}
+                    {s.text && <div><dt>Yazı ({s.font === 'el' ? 'el yazısı' : 'düz yazı'})</dt><dd>{s.text}</dd></div>}
+                    {s.removeBg && <div><dt>Arka plan</dt><dd>Silinsin</dd></div>}
+                    {s.placement && (
+                      <div>
+                        <dt>Fotoğraf yerleşimi</dt>
+                        <dd>Boyut {pct(s.placement.scale)} · yatay {pct(s.placement.x)} · dikey {pct(s.placement.y)} · açı {Math.round(s.placement.rotate)}°</dd>
+                      </div>
+                    )}
+                  </dl>
+                  {s.ready?.image && (
+                    <figure className="sip-preview">
                       {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={orderImageUrl(order.token, id, 240)} alt={`Fotoğraf ${i + 1}`} loading="lazy" />
-                      <a className="btn btn-secondary btn-sm" href={orderImageUrl(order.token, id)}>Orijinali indir</a>
-                    </li>
-                  ))}
-                </ul>
-              )}
+                      <img src={cartImageSrc(s.ready.image) ?? ''} alt={s.ready.name} style={{ width: 160 }} />
+                      <figcaption>Seçilen hazır tasarım</figcaption>
+                    </figure>
+                  )}
+                  {s.files.length > 0 && (
+                    <ul className="sip-files">
+                      {s.files.map((id, i) => (
+                        <li key={id}>
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img src={orderImageUrl(order.token, id, 240)} alt={`${s.label} fotoğraf ${i + 1}`.trim()} loading="lazy" />
+                          <a className="btn btn-secondary btn-sm" href={orderImageUrl(order.token, id)}>Orijinali indir</a>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              ))}
             </article>
           ))}
         </section>

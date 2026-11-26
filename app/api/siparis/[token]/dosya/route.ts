@@ -13,7 +13,8 @@ export async function POST(req: NextRequest, { params }: { params: { token: stri
     const form = await req.formData().catch(() => null);
     const file = form?.get('file');
     const line = Number(form?.get('line'));
-    const kind = form?.get('kind') === 'preview' ? 'preview' : 'photo';
+    const sent = form?.get('kind');
+    const kind = sent === 'preview' || sent === 'back' ? sent : 'photo';
     if (!(file instanceof Blob) || !Number.isInteger(line) || line < 0) {
       return NextResponse.json({ error: 'Dosya bulunamadı.' }, { status: 400 });
     }

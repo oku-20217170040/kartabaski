@@ -14,7 +14,7 @@ export async function POST(req: NextRequest, { params }: { params: { token: stri
   try {
     const { order, first } = await completeOrder(params.token);
     if (first) {
-      const lines = order.items.map((i, n) => `${n + 1}) ${i.title} x${i.qty}${i.color ? ` (${i.color})` : ''}`);
+      const lines = order.items.map((i, n) => `${n + 1}) ${i.title} x${i.qty}${i.color ? ` (${i.color})` : ''}${i.back ? ' · iki yüz' : ''}`);
       await notifyAdmin(
         `Yeni sipariş (No: ${orderNo(order.token)})`,
         [...lines, `${order.name} · ${order.phone}`, orderUrl(order.token)].join('\n'),

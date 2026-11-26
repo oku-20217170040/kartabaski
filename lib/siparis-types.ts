@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { MAX_CART_ITEMS, MAX_QTY, PHONE_RE } from './cart-schemas';
 import { SITE_URL } from './site';
 import { TALEP_STATUSES, type TalepStatus } from './talep-status';
+import { SIDE_LABELS } from './design-sides';
 
 export const ORDER_FOLDER = 'karta-baski/siparisler';
 export const MAX_LINE_PHOTOS = 8;
@@ -27,29 +28,39 @@ export const PlacementSchema = z.object({
   rotate: z.number().min(-180).max(180),
 });
 
-const LineDesign = {
+/** Bir baskı yüzünün biçim alanları. */
+const SideStyle = {
   text: trimmed(MAX_TEXT).optional(),
   font: z.enum(['duz', 'el']).optional(),
   placement: PlacementSchema.optional(),
   removeBg: z.boolean().optional(),
-  needsDesign: z.boolean().optional(),
 };
+const LineDesign = { ...SideStyle, needsDesign: z.boolean().optional() };
+
+const ReadyId = z.string().regex(/^[A-Za-z0-9_-]{1,60}$/).optional();
+const PhotoCount = z.number().int().min(0).max(MAX_LINE_PHOTOS);
+
+const OrderItemInput = z
+  .object({
+    productId: z.string().regex(/^[A-Za-z0-9_-]{1,60}$/, 'Geçersiz ürün'),
+    qty: z.number().int().min(1).max(MAX_QTY),
+    color: trimmed(60).optional(),
+    note: trimmed(200).optional(),
+    photoCount: PhotoCount,
+    hasPreview: z.boolean(),
+    readyId: ReadyId,
+    ...LineDesign,
+    /** Varsa baskı iki yüzedir; yukarıdaki alanlar ön yüzdür. */
+    back: z.object({ ...SideStyle, photoCount: PhotoCount, readyId: ReadyId }).optional(),
+  })
+  .refine((i) => i.photoCount + (i.back?.photoCount ?? 0) <= MAX_LINE_PHOTOS, {
+    message: `Bir üründe en fazla ${MAX_LINE_PHOTOS} fotoğraf olabilir.`,
+  });
 
 // İstemci yalnız ürün kimliği, adet, renk ve tasarım gönderir; ad ve fiyat sunucuda okunur.
 export const OrderInputSchema = z.object({
   items: z
-    .array(
-      z.object({
-        productId: z.string().regex(/^[A-Za-z0-9_-]{1,60}$/, 'Geçersiz ürün'),
-        qty: z.number().int().min(1).max(MAX_QTY),
-        color: trimmed(60).optional(),
-        note: trimmed(200).optional(),
-        photoCount: z.number().int().min(0).max(MAX_LINE_PHOTOS),
-        hasPreview: z.boolean(),
-        readyId: z.string().regex(/^[A-Za-z0-9_-]{1,60}$/).optional(),
-        ...LineDesign,
-      }),
-    )
+    .array(OrderItemInput)
     .min(1, 'Sepet boş')
     .max(MAX_CART_ITEMS, `En fazla ${MAX_CART_ITEMS} satır`),
   name: trimmed(80).min(2, 'Ad soyad gerekli'),
@@ -67,6 +78,9 @@ export type OrderInput = z.infer<typeof OrderInputSchema>;
 export const parseOrderInput = (data: unknown) =>
   OrderInputSchema.safeParse(data, { error: () => 'Sipariş bilgileri geçersiz. Sayfayı yenileyip tekrar deneyin.' });
 
+/** Konfigüratördeki hazır tasarım (herkese açık görsel). */
+const ReadySchema = z.object({ id: z.string(), name: z.string(), image: z.string().optional() });
+
 export const OrderLineSchema = z.object({
   productId: z.string(),
   slug: z.string(),
@@ -80,10 +94,55 @@ export const OrderLineSchema = z.object({
   hasPreview: z.boolean().catch(false),
   files: z.array(z.string()).catch([]),
   preview: z.string().optional(),
-  /** Konfigüratördeki hazır tasarım (herkese açık görsel). */
-  ready: z.object({ id: z.string(), name: z.string(), image: z.string().optional() }).optional(),
+  ready: ReadySchema.optional(),
+  back: z.object({
+    ...SideStyle,
+    photoCount: z.number().catch(0),
+    files: z.array(z.string()).catch([]),
+    ready: ReadySchema.optional(),
+  }).optional(),
 });
 export type OrderLine = z.infer<typeof OrderLineSchema>;
+export type ImageKind = 'photo' | 'back' | 'preview';
+
+/** İki yüzün bütün fotoğrafları (önce ön yüz). */
+export const lineFiles = (l: Pick<OrderLine, 'files' | 'back'>) => [...l.files, ...(l.back?.files ?? [])];
+
+export const uploadsComplete = (l: Pick<OrderLine, 'files' | 'photoCount' | 'back'>) =>
+  l.files.length >= l.photoCount && (!l.back || l.back.files.length >= l.back.photoCount);
+
+export function canAddImage(l: OrderLine, kind: ImageKind): boolean {
+  if (kind === 'preview') return l.hasPreview && !l.preview;
+  if (kind === 'back') return Boolean(l.back && l.back.files.length < l.back.photoCount);
+  return l.files.length < l.photoCount;
+}
+
+/** Ham satır kaydına yüklenen görseli ekler. */
+export function appendImage(item: Record<string, unknown>, kind: ImageKind, id: string): Record<string, unknown> {
+  if (kind === 'preview') return { ...item, preview: id };
+  if (kind === 'photo') return { ...item, files: [...((item.files as string[]) ?? []), id] };
+  const back = item.back as { files?: string[] };
+  return { ...item, back: { ...back, files: [...(back.files ?? []), id] } };
+}
+
+/** Satırın baskı yüzleri; tek yüzlü baskıda ad boştur. */
+export function lineSides(l: OrderLine) {
+  const { text, font, placement, removeBg, ready, files, back } = l;
+  return [
+    { label: back ? SIDE_LABELS.front : '', text, font, placement, removeBg, ready, files },
+    ...(back ? [{ ...back, label: SIDE_LABELS.back }] : []),
+  ];
+}
+
+/** Üretim hattına giden satır notu. */
+export function lineNote(l: OrderLine): string {
+  const sides = lineSides(l).map((s) => {
+    const parts = [s.ready ? `Hazır tasarım: ${s.ready.name}` : '', s.text ? `Yazı: ${s.text}` : ''].filter(Boolean).join(', ');
+    if (!s.label) return parts;
+    return `${s.label}: ${parts || `${s.files.length} fotoğraf`}`;
+  });
+  return [l.back ? 'İki yüze baskı' : '', ...sides, l.needsDesign ? 'Tasarım hazırlanacak' : '', l.note].filter(Boolean).join(' · ');
+}
 
 /** Yöneticinin gönderdiği baskı önizlemesi ve müşterinin cevabı. */
 export const ProofSchema = z.object({
@@ -150,7 +209,7 @@ export const canCustomerDelete = (status: OrderRequestStatus) =>
   status === 'yukleniyor' || status === 'yeni' || status === 'incelendi';
 
 export const orderImageIds = (o: Pick<OrderRequest, 'items' | 'proof' | 'proofHistory'>): string[] => [
-  ...o.items.flatMap((i) => [...i.files, ...(i.preview ? [i.preview] : [])]),
+  ...o.items.flatMap((i) => [...lineFiles(i), ...(i.preview ? [i.preview] : [])]),
   ...[...(o.proofHistory ?? []), ...(o.proof ? [o.proof] : [])].flatMap((p) => p.images),
 ];
 

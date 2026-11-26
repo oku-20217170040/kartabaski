@@ -7,7 +7,7 @@ import { Timeline, Shipment, ProofReview } from './OrderTracking';
 import type { Tracking } from '@/lib/siparis-takip';
 import { WhatsAppIcon } from '@/components/icons';
 import { WHATSAPP_BASE } from '@/lib/constants';
-import { CustomerOrder, canCustomerDelete, orderImageUrl, orderMessage, orderNo } from '@/lib/siparis-types';
+import { CustomerOrder, canCustomerDelete, lineFiles, lineSides, orderImageUrl, orderMessage, orderNo } from '@/lib/siparis-types';
 import { deleteOrderByCustomer } from '@/lib/siparis-client';
 import { lineHref } from '@/lib/configurator-lines';
 import { cartImageSrc } from '@/lib/cart-products';
@@ -89,8 +89,8 @@ export default function OrderClient({ order, tracking }: { order: CustomerOrder;
 
       <ul className="ord-lines">
         {order.items.map((item, n) => {
-          const own = item.preview ?? item.files[0];
-          const cover = own ? orderImageUrl(order.token, own, 900) : cartImageSrc(item.ready?.image);
+          const own = item.preview ?? lineFiles(item)[0];
+          const cover = own ? orderImageUrl(order.token, own, 900) : cartImageSrc(item.ready?.image ?? item.back?.ready?.image);
           return (
             <li key={`${item.productId}-${n}`}>
               <div className="ord-cover">
@@ -105,21 +105,31 @@ export default function OrderClient({ order, tracking }: { order: CustomerOrder;
                   {item.qty} adet{item.color ? ` · ${item.color}` : ''}
                   {item.unitPrice > 0 ? ` · ${fmt(item.unitPrice)}₺’den başlayan` : ''}
                 </p>
-                {item.ready && <p>Hazır tasarım: <b>{item.ready.name}</b></p>}
-                {item.text && <p>Yazı: <b>{item.text}</b> ({item.font === 'el' ? 'el yazısı' : 'düz yazı'})</p>}
+                {item.back && <p><b>İki yüze baskı</b></p>}
                 {item.needsDesign && <p>Tasarımı biz hazırlayacağız.</p>}
-                {item.removeBg && <p>Fotoğrafın arka planı silinecek.</p>}
                 {item.note && <p>Not: {item.note}</p>}
-                {item.files.length > 0 && (
-                  <ul className="ord-files">
-                    {item.files.map((id, i) => (
-                      <li key={id}>
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img src={orderImageUrl(order.token, id, 240)} alt={`Yüklediğiniz fotoğraf ${i + 1}`} loading="lazy" />
-                      </li>
-                    ))}
-                  </ul>
-                )}
+                {lineSides(item).map((s) => (
+                  <div className="ord-side" key={s.label || 'tek'}>
+                    {s.label && <h3>{s.label}</h3>}
+                    {s.ready && <p>Hazır tasarım: <b>{s.ready.name}</b></p>}
+                    {s.label && s.ready?.image && (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img className="ord-ready" src={cartImageSrc(s.ready.image) ?? ''} alt={`${s.label} deseni`} loading="lazy" />
+                    )}
+                    {s.text && <p>Yazı: <b>{s.text}</b> ({s.font === 'el' ? 'el yazısı' : 'düz yazı'})</p>}
+                    {s.removeBg && <p>Fotoğrafın arka planı silinecek.</p>}
+                    {s.files.length > 0 && (
+                      <ul className="ord-files">
+                        {s.files.map((id, i) => (
+                          <li key={id}>
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img src={orderImageUrl(order.token, id, 240)} alt={`${s.label ? `${s.label}, y` : 'Y'}üklediğiniz fotoğraf ${i + 1}`} loading="lazy" />
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                ))}
               </div>
             </li>
           );
