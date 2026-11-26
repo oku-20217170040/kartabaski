@@ -13,6 +13,8 @@ import { customerWhatsappLink } from '@/lib/cart';
 import { useToast, errorMessage } from '@/components/admin/Toast';
 import { useConfirm } from '@/components/admin/ConfirmDialog';
 import { IconTrash, IconWhatsApp } from '@/components/admin/icons';
+import TrackingPanel from './TrackingPanel';
+import type { Production } from '@/lib/siparis-takip';
 import '../siparisler.css';
 
 const fmt = (n: number) => new Intl.NumberFormat('tr-TR').format(n);
@@ -23,13 +25,14 @@ export default function SiparisDetayPage({ params }: { params: { token: string }
   const router = useRouter();
   const { confirm, dialog } = useConfirm();
   const [order, setOrder] = useState<OrderRequest | null>(null);
+  const [production, setProduction] = useState<Production | null>(null);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [note, setNote] = useState('');
 
   useEffect(() => {
     getOrderRequestAction(params.token)
-      .then((o) => { setOrder(o); setNote(o?.adminNote ?? ''); })
+      .then((r) => { setOrder(r?.order ?? null); setProduction(r?.production ?? null); setNote(r?.order.adminNote ?? ''); })
       .catch((e) => toast.error(errorMessage(e, 'Sipariş yüklenemedi.')))
       .finally(() => setLoading(false));
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -60,6 +63,7 @@ export default function SiparisDetayPage({ params }: { params: { token: string }
     run(async () => {
       const orderId = await sendOrderToMachineAction(order.token);
       setOrder({ ...order, status: 'siparis', orderId });
+      setProduction((await getOrderRequestAction(order.token))?.production ?? null);
     }, 'Üretim hattına aktarıldı.');
 
   const remove = async () => {
@@ -89,6 +93,7 @@ export default function SiparisDetayPage({ params }: { params: { token: string }
       </div>
 
       <div className="sip-detail">
+        <div className="sip-lines">
         <section className="card sip-card">
           <dl className="sip-facts">
             <div><dt>Müşteri</dt><dd>{order.name}</dd></div>
@@ -128,6 +133,9 @@ export default function SiparisDetayPage({ params }: { params: { token: string }
             </button>
           </div>
         </section>
+
+        <TrackingPanel order={order} production={production} onChange={(o, p) => { setOrder(o); setProduction(p); }} />
+        </div>
 
         <section className="sip-lines">
           {order.photosDeletedAt && <p className="adm-page-sub">Saklama süresi dolduğu için fotoğraflar silindi.</p>}

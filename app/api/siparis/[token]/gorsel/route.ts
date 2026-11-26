@@ -10,9 +10,10 @@ export const dynamic = 'force-dynamic';
 const cache = new Map<string, { at: number; ids: Set<string> }>();
 const CACHE_MS = 20_000;
 
-async function allowedIds(token: string): Promise<Set<string>> {
+async function allowedIds(token: string, wanted: string): Promise<Set<string>> {
   const hit = cache.get(token);
-  if (hit && Date.now() - hit.at < CACHE_MS) return hit.ids;
+  // İstenen kimlik listede yoksa yeni yüklenmiş olabilir: belge yeniden okunur.
+  if (hit && hit.ids.has(wanted) && Date.now() - hit.at < CACHE_MS) return hit.ids;
   const order = await getOrderRequest(token);
   const ids = new Set(order ? orderImageIds(order) : []);
   if (cache.size > 500) cache.clear();
@@ -26,7 +27,7 @@ export async function GET(req: NextRequest, { params }: { params: { token: strin
   if (blocked) return blocked;
   try {
     const id = req.nextUrl.searchParams.get('id') ?? '';
-    if (!(await allowedIds(params.token)).has(id)) return NextResponse.json({ error: 'Görsel bulunamadı.' }, { status: 404 });
+    if (!(await allowedIds(params.token, id)).has(id)) return NextResponse.json({ error: 'Görsel bulunamadı.' }, { status: 404 });
     const width = Number(req.nextUrl.searchParams.get('w'));
     const transform = width === 240 || width === 900 ? `c_limit,q_auto,w_${width}` : '';
     const upstream = await fetch(signedImageUrl(id, transform), { cache: 'no-store' });

@@ -1,7 +1,10 @@
 'use client';
 
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useState } from 'react';
+import { Timeline, Shipment, ProofReview } from './OrderTracking';
+import type { Tracking } from '@/lib/siparis-takip';
 import { WhatsAppIcon } from '@/components/icons';
 import { WHATSAPP_BASE } from '@/lib/constants';
 import { CustomerOrder, canCustomerDelete, orderImageUrl, orderMessage, orderNo } from '@/lib/siparis-types';
@@ -10,22 +13,28 @@ import { trackEvent } from '@/lib/analytics-client';
 
 const fmt = (n: number) => new Intl.NumberFormat('tr-TR').format(n);
 
-const STATUS_TEXT: Record<CustomerOrder['status'], string> = {
-  yukleniyor: 'Yükleniyor',
-  yeni: 'Siparişiniz alındı',
-  incelendi: 'İnceleniyor',
-  siparis: 'Üretime alındı',
-  tamamlandi: 'Tamamlandı',
-  iptal: 'İptal edildi',
-};
-
-export default function OrderClient({ order }: { order: CustomerOrder }) {
+export default function OrderClient({ order, tracking }: { order: CustomerOrder; tracking: Tracking }) {
+  const router = useRouter();
+  const [proof, setProof] = useState(order.proof);
   const [asking, setAsking] = useState(false);
   const [busy, setBusy] = useState(false);
   const [deleted, setDeleted] = useState(false);
   const [error, setError] = useState('');
   const waHref = `${WHATSAPP_BASE}?text=${encodeURIComponent(orderMessage(order.token))}`;
   const place = [order.district, order.city].filter(Boolean).join(' / ');
+  // Cevap verilince başlık sayfa yenilenmeden de doğru kalsın.
+  const headline = proof?.state !== order.proof?.state
+    ? (proof?.state === 'onaylandi' ? 'Onayınız alındı' : 'Düzeltme isteğiniz bizde')
+    : tracking.headline;
+
+  const review = proof && proof.images.length > 0 && !tracking.cancelled && (
+    <ProofReview
+      key={proof.round}
+      order={order}
+      proof={proof}
+      onReplied={(next) => { setProof(next); router.refresh(); }}
+    />
+  );
 
   const remove = async () => {
     setBusy(true);
@@ -53,12 +62,12 @@ export default function OrderClient({ order }: { order: CustomerOrder }) {
   return (
     <div className="wrap ord">
       <header className="ord-head">
-        <p className="ord-status">{STATUS_TEXT[order.status]}</p>
+        <p className="ord-status" role="status">{headline}</p>
         <h1 className="h2">Sipariş {orderNo(order.token)}</h1>
         <p>
           {order.status === 'yeni'
             ? 'Son adım: aşağıdaki düğmeyle bize WhatsApp’tan haber verin. Mesaja yalnızca bu sayfanın bağlantısı eklenir.'
-            : 'Sorunuz olursa WhatsApp’tan yazın.'}
+            : 'Gelişmeleri bu sayfadan takip edebilirsiniz. Sorunuz olursa WhatsApp’tan yazın.'}
         </p>
         <a
           className="btn btn-primary ord-wa"
@@ -70,6 +79,11 @@ export default function OrderClient({ order }: { order: CustomerOrder }) {
           <WhatsAppIcon /> {order.status === 'yeni' ? 'WhatsApp’tan gönderin' : 'WhatsApp’tan yazın'}
         </a>
       </header>
+
+      {order.proof?.state === 'bekliyor' && review}
+      <Timeline tracking={tracking} />
+      {order.shipping && <Shipment shipping={order.shipping} />}
+      {order.proof?.state !== 'bekliyor' && review}
 
       <ul className="ord-lines">
         {order.items.map((item, n) => {

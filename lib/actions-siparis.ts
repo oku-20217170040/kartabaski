@@ -4,11 +4,12 @@ import { headers } from 'next/headers';
 import { requireAdmin } from './require-admin';
 import { rateLimit } from './rate-limit';
 import {
-  countNewOrderRequests, deleteOrderRequest, getCartProductInfo, getOrderRequest, getOrderRequestOverview,
-  listOrderRequests, setOrderAdmin,
+  countNewOrderRequests, countRepliedOrders, deleteOrderRequest, getCartProductInfo, getOrderRequest, getOrderRequestOverview,
+  getProduction, listOrderRequests, markOrderSeen, setOrderAdmin, setShipping,
 } from './siparis';
 import { createOrderFromCart } from './orders';
-import { ORDER_TOKEN_RE, OrderRequest, orderUrl } from './siparis-types';
+import { ORDER_TOKEN_RE, OrderRequest, ShippingSchema, orderUrl } from './siparis-types';
+import type { Production } from './siparis-takip';
 import { isTalepStatus } from './talep-status';
 import type { CartOverview, CartProductInfo } from './cart-types';
 
@@ -36,9 +37,11 @@ function assertToken(token: string) {
   if (!ORDER_TOKEN_RE.test(token)) throw new Error('Geçersiz sipariş');
 }
 
+/** Menü rozeti: yeni siparişler + önizlemeye cevap veren müşteriler. */
 export async function countNewOrderRequestsAction(): Promise<number> {
   await requireAdmin();
-  return countNewOrderRequests();
+  const [fresh, replied] = await Promise.all([countNewOrderRequests(), countRepliedOrders()]);
+  return fresh + replied;
 }
 
 export async function getOrderRequestOverviewAction(): Promise<CartOverview> {
@@ -51,9 +54,22 @@ export async function listOrderRequestsAction(): Promise<OrderRequest[]> {
   return listOrderRequests();
 }
 
-export async function getOrderRequestAction(token: string): Promise<OrderRequest | null> {
+/** Ayrıntı sayfası: sipariş + üretim durumu. Açılınca müşteri cevabı "görüldü" sayılır. */
+export async function getOrderRequestAction(token: string): Promise<{ order: OrderRequest; production: Production | null } | null> {
   await requireAdmin();
-  return getOrderRequest(token);
+  const order = await getOrderRequest(token);
+  if (!order) return null;
+  if (order.attention) await markOrderSeen(token);
+  return { order, production: await getProduction(order) };
+}
+
+export async function setOrderShippingAction(token: string, data: unknown): Promise<void> {
+  await requireAdmin();
+  assertToken(token);
+  if (data === null) return setShipping(token, null);
+  const parsed = ShippingSchema.safeParse(data);
+  if (!parsed.success) throw new Error(parsed.error.issues[0]?.message || 'Kargo bilgisi geçersiz');
+  await setShipping(token, parsed.data);
 }
 
 export async function updateOrderRequestStatusAction(token: string, status: string): Promise<void> {

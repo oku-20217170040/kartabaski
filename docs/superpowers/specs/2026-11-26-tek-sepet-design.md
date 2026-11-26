@@ -21,5 +21,12 @@ Onay: 26 Kasım 2026. Amaç: tek sipariş yolu; her kupa tasarımıyla sepete gi
 ## Yönetim
 Tek menü `/admin/siparisler`: liste, ayrıntı, orijinal indirme, müşteriye WhatsApp, durum, iç not, üretim hattına aktarma (`createOrderFromCart`), silme. Eski Sepet Talepleri ve Tasarım Siparişleri modülleri kaldırılır (kayıt yoktu).
 
-## Sonraki aşamalar
-2: durum çizelgesi, baskı önizlemesi onayı, kargo takip no. 3: konfigüratör aynı sepete.
+## Aşama 2 (uygulandı)
+- Çizelge: Alındı → Tasarım ve onay → Baskı → Paketleme → Kargoda → Teslim; aşama üretim hattındaki işten okunur (`lib/siparis-takip.ts`).
+- Önizleme: yönetici ≤4 görsel + not gönderir; müşteri onaylar ya da açıklamalı düzeltme ister. Her gönderim yeni turdur; eski tur onaylanamaz. Cevapta menü rozeti artar.
+- Kargo: firma, takip no, isteğe bağlı `https` bağlantı (firma bağlantıları tahmin edilmez).
+- Onay yetkisi sipariş bağlantısını bilen kişidedir; ek telefon doğrulaması yoktur.
+- Üretimde teslim/iptal olan sipariş cron ile kapanır; fotoğraf saklama süresi `closedAt`'ten sayılır.
+
+## Sonraki aşama
+3: konfigüratör aynı sepete.

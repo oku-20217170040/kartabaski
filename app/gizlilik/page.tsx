@@ -28,7 +28,7 @@ export default function GizlilikPage() {
             <ul>
               <li>Ad soyad ve telefon numarası; isterseniz il, ilçe ve teslimat adresi</li>
               <li>Kupaya basılmasını istediğiniz fotoğraf, logo, çizim ve yazılar</li>
-              <li>Siparişle ilgili notlarınız</li>
+              <li>Siparişle ilgili notlarınız, baskı önizlemesine verdiğiniz cevaplar ve kargo takip bilgisi</li>
             </ul>
             <h2>Ne için kullanıyoruz?</h2>
             <p>

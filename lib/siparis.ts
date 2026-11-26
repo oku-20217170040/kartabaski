@@ -1,6 +1,9 @@
 import 'server-only';
 
 import { randomBytes } from 'crypto';
+import { FieldValue } from 'firebase-admin/firestore';
+import { getOrder } from './orders';
+import type { Production } from './siparis-takip';
 import { adminDb } from './firebase-admin';
 import { deletePrivate, uploadPrivate } from './cloudinary-private';
 import { ProductSchema } from './schemas';
@@ -11,8 +14,8 @@ import { looksLikeImage } from './image-sniff';
 import type { Product } from '@/types';
 import type { CartOverview, CartProductInfo } from './cart-types';
 import {
-  MAX_PHOTO_BYTES, ORDER_FOLDER, ORDER_TOKEN_RE, OrderInput, OrderLine, OrderRequest, OrderRequestSchema,
-  PHOTO_TTL_MS, UPLOAD_TTL_MS, canCustomerDelete, orderImageIds,
+  MAX_PHOTO_BYTES, MAX_PROOF_IMAGES, ORDER_FOLDER, ORDER_TOKEN_RE, OrderInput, OrderLine, OrderRequest, OrderRequestSchema,
+  PHOTO_TTL_MS, Proof, Shipping, UPLOAD_TTL_MS, canCustomerDelete, canReplyProof, orderImageIds,
 } from './siparis-types';
 import type { TalepStatus } from './talep-status';
 
@@ -97,6 +100,15 @@ export async function getOrderRequest(token: string): Promise<OrderRequest | nul
   return snap.exists ? parse(token, snap.data()) : null;
 }
 
+/** Görsel olduğunu doğrulayıp kapalı depoya yükler. */
+async function storeImage(file: Blob): Promise<string> {
+  if (file.size > MAX_PHOTO_BYTES) throw new OrderError('Fotoğraf 8 MB’dan büyük olamaz.', 413);
+  const bytes = Buffer.from(await file.arrayBuffer());
+  if (!looksLikeImage(bytes.subarray(0, 16))) throw new OrderError('Yalnızca fotoğraf yükleyebilirsiniz.');
+  const type = file.type.startsWith('image/') ? file.type : 'image/jpeg';
+  return uploadPrivate(`data:${type};base64,${bytes.toString('base64')}`, ORDER_FOLDER);
+}
+
 /** Yükleme aşamasındaki siparişin bir satırına fotoğraf ya da önizleme ekler. */
 export async function addOrderImage(token: string, line: number, kind: 'photo' | 'preview', file: Blob): Promise<void> {
   const check = (o: OrderRequest | null) => {
@@ -109,11 +121,7 @@ export async function addOrderImage(token: string, line: number, kind: 'photo' |
     }
   };
   check(await getOrderRequest(token));
-  if (file.size > MAX_PHOTO_BYTES) throw new OrderError('Fotoğraf 8 MB’dan büyük olamaz.', 413);
-  const bytes = Buffer.from(await file.arrayBuffer());
-  if (!looksLikeImage(bytes.subarray(0, 16))) throw new OrderError('Yalnızca fotoğraf yükleyebilirsiniz.');
-  const type = file.type.startsWith('image/') ? file.type : 'image/jpeg';
-  const id = await uploadPrivate(`data:${type};base64,${bytes.toString('base64')}`, ORDER_FOLDER);
+  const id = await storeImage(file);
 
   try {
     await adminDb.runTransaction(async (tx) => {
@@ -194,7 +202,106 @@ export async function getOrderRequestOverview(): Promise<CartOverview> {
 }
 
 export async function setOrderAdmin(token: string, patch: { status?: TalepStatus; adminNote?: string; orderId?: string }): Promise<void> {
-  await ref(token).update(compactUpdate({ ...patch, updatedAt: Date.now() }));
+  const now = Date.now();
+  // Fotoğraf saklama süresi siparişin kapandığı andan sayılır.
+  const closing = patch.status === undefined ? undefined
+    : patch.status === 'tamamlandi' || patch.status === 'iptal' ? now : FieldValue.delete();
+  await ref(token).update(compactUpdate({ ...patch, closedAt: closing, updatedAt: now }));
+}
+
+/** Siparişin üretim hattındaki işi (aktarılmadıysa ya da silindiyse null). */
+export async function getProduction(order: Pick<OrderRequest, 'orderId'>): Promise<Production | null> {
+  if (!order.orderId) return null;
+  const job = await getOrder(order.orderId);
+  return job ? { status: job.status, stageAt: job.stageAt } : null;
+}
+
+// ── Baskı önizlemesi ve kargo ────────────────────────────────────────────────
+
+/** Yeni önizleme gönderir; önceki tur geçmişe taşınır. */
+export async function sendProof(token: string, files: Blob[], message?: string): Promise<Proof> {
+  const open = (o: OrderRequest | null) => {
+    if (!o || o.status === 'yukleniyor') throw new OrderError('Sipariş bulunamadı.', 404);
+    if (o.status === 'tamamlandi' || o.status === 'iptal') throw new OrderError('Kapanmış siparişe önizleme gönderilemez.', 409);
+  };
+  open(await getOrderRequest(token));
+  if (!files.length || files.length > MAX_PROOF_IMAGES) throw new OrderError(`1–${MAX_PROOF_IMAGES} görsel seçin.`);
+
+  const images: string[] = [];
+  try {
+    for (const file of files) images.push(await storeImage(file));
+    return await adminDb.runTransaction(async (tx) => {
+      const snap = await tx.get(ref(token));
+      const order = snap.exists ? parse(token, snap.data()) : null;
+      open(order);
+      const previous = order!.proof;
+      const proof: Proof = {
+        round: (previous?.round ?? 0) + 1,
+        images,
+        sentAt: Date.now(),
+        state: 'bekliyor',
+        ...(message ? { message } : {}),
+      };
+      tx.update(ref(token), {
+        proof,
+        proofHistory: [...(order!.proofHistory ?? []), ...(previous ? [previous] : [])],
+        attention: false,
+        updatedAt: proof.sentAt,
+        ...(order!.status === 'yeni' ? { status: 'incelendi' } : {}),
+      });
+      return proof;
+    });
+  } catch (error) {
+    await deletePrivate(images);
+    throw error;
+  }
+}
+
+/** Müşterinin onayı ya da düzeltme isteği. Tur numarası eski bir önizlemenin onaylanmasını engeller. */
+export async function replyProof(
+  token: string,
+  round: number,
+  decision: 'onaylandi' | 'duzeltme',
+  reply?: string,
+): Promise<{ order: OrderRequest; proof: Proof }> {
+  if (!ORDER_TOKEN_RE.test(token)) throw new OrderError('Sipariş bulunamadı.', 404);
+  return adminDb.runTransaction(async (tx) => {
+    const snap = await tx.get(ref(token));
+    const order = snap.exists ? parse(token, snap.data()) : null;
+    if (!order) throw new OrderError('Sipariş bulunamadı.', 404);
+    if (!canReplyProof(order) || order.proof!.round !== round) {
+      throw new OrderError('Bu önizleme artık geçerli değil. Sayfayı yenileyin.', 409);
+    }
+    const proof: Proof = { ...order.proof!, state: decision, repliedAt: Date.now(), ...(reply ? { reply } : {}) };
+    tx.update(ref(token), { proof, attention: true, updatedAt: proof.repliedAt });
+    return { order, proof };
+  });
+}
+
+export async function markOrderSeen(token: string): Promise<void> {
+  await ref(token).update({ attention: false });
+}
+
+export async function setShipping(token: string, shipping: Shipping | null): Promise<void> {
+  await ref(token).update({ shipping: shipping ? compact(shipping) : FieldValue.delete(), updatedAt: Date.now() });
+}
+
+export async function countRepliedOrders(): Promise<number> {
+  const snap = await adminDb.collection(COL).where('attention', '==', true).count().get();
+  return snap.data().count;
+}
+
+/** Üretim hattında teslim/iptal edilen işlerin siparişi de kapanır (saklama süresi buradan başlar). */
+export async function syncClosedOrders(limit = 100): Promise<{ closed: number }> {
+  const snap = await adminDb.collection(COL).where('status', '==', 'siparis').limit(limit).get();
+  let closed = 0;
+  for (const d of snap.docs) {
+    const production = await getProduction({ orderId: d.data().orderId });
+    if (production?.status !== 'teslim' && production?.status !== 'iptal') continue;
+    await setOrderAdmin(d.id, { status: production.status === 'teslim' ? 'tamamlandi' : 'iptal' });
+    closed += 1;
+  }
+  return { closed };
 }
 
 const compactUpdate = (o: Record<string, unknown>) => Object.fromEntries(Object.entries(o).filter(([, v]) => v !== undefined));
@@ -212,14 +319,20 @@ export async function cleanupOrderRequests(limit = 20): Promise<{ abandoned: num
   for (const d of abandoned) await deleteOrderRequest(d.id);
 
   const stale = closed.docs
-    .filter((d) => !d.data().photosDeletedAt && d.data().updatedAt < now - PHOTO_TTL_MS)
+    .filter((d) => !d.data().photosDeletedAt && (d.data().closedAt ?? d.data().updatedAt) < now - PHOTO_TTL_MS)
     .slice(0, limit);
   for (const d of stale) {
     const order = parse(d.id, d.data());
     if (!order) continue;
     await deletePrivate(orderImageIds(order));
     const items = (d.data().items as Record<string, unknown>[]).map(({ preview: _p, ...i }) => ({ ...i, files: [] }));
-    await ref(d.id).update({ items, photosDeletedAt: now });
+    const blank = (p: Proof) => ({ ...p, images: [] });
+    await ref(d.id).update(compactUpdate({
+      items,
+      proof: order.proof ? blank(order.proof) : undefined,
+      proofHistory: order.proofHistory?.map(blank),
+      photosDeletedAt: now,
+    }));
   }
   return { abandoned: abandoned.length, purged: stale.length };
 }

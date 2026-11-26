@@ -49,4 +49,6 @@ Yeni koleksiyonların hepsi yalnızca Admin SDK ile erişilir; `firestore.rules`
 - Bağlantıya oturumu açık yönetici tıklarsa panele gider; müşteri görünümü için `?musteri=1`.
 - Görseller Cloudinary `karta-baski/siparisler` içinde kapalı (`authenticated`) tutulur, yalnız `/api/siparis/<anahtar>/gorsel` üzerinden açılır.
 - Cron (`orders` adımı): yarım yüklemeler 1 gün, tamamlanan/iptal siparişlerin fotoğrafları 30 gün sonra silinir.
+- Takip: müşteri sayfasındaki çizelge üretim hattındaki aşamadan gelir (aşama sipariş ayrıntısından da ilerletilir). Baskı önizlemesi "Onaya gönder" ile eklenir; müşteri onaylar ya da düzeltme ister, rozet çıkar. Kargo firması / takip no / isteğe bağlı https bağlantı.
+- Cron (`orderSync`): üretim hattında teslim/iptal olan siparişler kapanır; 30 günlük saklama süresi buradan başlar.
 - Kod: `lib/siparis*.ts`, `lib/actions-siparis.ts`, `lib/cloudinary-private.ts`, `app/api/siparis/**`. Tasarım: `docs/superpowers/specs/2026-11-26-tek-sepet-design.md`.
