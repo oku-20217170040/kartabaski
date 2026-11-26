@@ -33,7 +33,7 @@ describe('konfigüratör satırları', () => {
   it('sipariş girdisi bardak ve hazır tasarım kimliğini kabul eder', () => {
     const input = (readyId: string) => ({
       items: [{ productId: 'cfg_abc123', qty: 1, photoCount: 0, hasPreview: false, readyId }],
-      name: 'Ali Veli', phone: '0555 111 22 33', kvkk: true,
+      name: 'Ali Veli', phone: '0555 111 22 33', city: 'İzmir', district: 'Bornova', neighborhood: 'Kazımdirik Mahallesi', street: '372. Sokak', buildingNo: '12', postalCode: '35100', kvkk: true,
     });
     expect(OrderInputSchema.safeParse(input('des1')).success).toBe(true);
     expect(OrderInputSchema.safeParse(input('a/b')).success).toBe(false);

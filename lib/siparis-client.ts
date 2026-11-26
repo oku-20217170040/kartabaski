@@ -1,6 +1,6 @@
 /** Tarayıcı tarafı: fotoğraf hazırlığı ve siparişin gönderilmesi. */
 import type { CartItem } from './cart-types';
-import type { Proof } from './siparis-types';
+import type { ContactInput, Proof } from './siparis-types';
 import { loadFile } from './cart-files';
 import { looksLikeImage } from './image-sniff';
 
@@ -52,16 +52,7 @@ async function request(url: string, init: RequestInit) {
   return data;
 }
 
-export interface Contact {
-  name: string;
-  phone: string;
-  city?: string;
-  district?: string;
-  address?: string;
-  note?: string;
-  kvkk: boolean;
-  website?: string;
-}
+export type Contact = ContactInput & { kvkk: boolean; website?: string };
 
 /** Siparişi açar, cihazdaki fotoğrafları yükler ve tamamlar. Sipariş anahtarını döner. */
 export async function submitOrder(

@@ -1,5 +1,6 @@
 // Müşterinin gördüğü sipariş çizelgesi: sipariş kaydı + üretim hattındaki iş (saf, testli).
-import type { OrderStatus } from './orders-utils';
+import { ORDER_STATUS_LABELS, OrderStatus, nextStatus } from './orders-utils';
+import { searchKey } from './address';
 import { OrderRequest, orderNo } from './siparis-types';
 
 export const TRACK_STEPS = ['Sipariş alındı', 'Tasarım ve onay', 'Baskı', 'Paketleme', 'Kargoda', 'Teslim edildi'] as const;
@@ -59,3 +60,38 @@ export function publicOrder(order: OrderRequest, tracking: Tracking) {
     items: order.items.map((i) => ({ title: i.title, qty: i.qty, color: i.color, twoSided: Boolean(i.back) })),
   };
 }
+
+export type NextAction = 'machine' | 'advance' | 'proof' | 'remind' | 'shipping' | 'none';
+export interface NextStep { title: string; hint: string; action: NextAction; label?: string }
+
+/** Yöneticinin bu siparişte şimdi yapması gereken iş. */
+export function nextStep(order: Pick<OrderRequest, 'status' | 'proof' | 'shipping' | 'orderId'>, production: Production | null): NextStep {
+  const done = (title: string, hint: string): NextStep => ({ title, hint, action: 'none' });
+  if (order.status === 'iptal' || production?.status === 'iptal') return done('İptal edildi', 'Bu siparişte yapılacak iş yok.');
+  if (order.status === 'tamamlandi' || production?.status === 'teslim') return done('Tamamlandı', 'Sipariş teslim edildi.');
+  if (order.proof?.state === 'duzeltme') return { title: 'Müşteri düzeltme istedi', hint: 'İstenen değişikliği yapıp yeni önizleme gönderin.', action: 'proof', label: 'Yeni önizleme gönder' };
+  if (order.proof?.state === 'bekliyor') return { title: 'Müşteri onayı bekleniyor', hint: 'Önizleme gönderildi. Cevap gelmediyse hatırlatın.', action: 'remind', label: 'Müşteriye hatırlat' };
+  if (!order.orderId) {
+    return {
+      title: order.proof ? 'Müşteri onayladı' : 'Yeni sipariş',
+      hint: order.proof ? 'Siparişi üretim hattına alın.' : 'Baskı bilgilerini kontrol edin; isterseniz önce önizleme gönderin.',
+      action: 'machine', label: 'Üretime aktar',
+    };
+  }
+  if (!production) return done('Üretim işi bulunamadı', 'Bağlı iş üretim hattından silinmiş olabilir.');
+  const stage = production.status;
+  if (!order.shipping && (stage === 'paketleme' || stage === 'kargoda')) {
+    return { title: ORDER_STATUS_LABELS[stage], hint: 'Kargo firmasını ve takip numarasını girin.', action: 'shipping', label: 'Kargo bilgisi gir' };
+  }
+  const next = nextStatus(stage);
+  return next
+    ? { title: ORDER_STATUS_LABELS[stage], hint: 'İş bittiğinde sonraki aşamaya geçirin; müşteri takip sayfasında görür.', action: 'advance', label: `Sonraki aşama: ${ORDER_STATUS_LABELS[next]}` }
+    : done(ORDER_STATUS_LABELS[stage], 'Yapılacak iş yok.');
+}
+
+/** İndirilen baskı dosyasının adı: kod, kalem sırası, ürün ve yüz. */
+export function printFileName(code: string, index: number, title: string, side: string, mirrored: boolean): string {
+  const slug = (value: string) => searchKey(value).replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+  return `${[code, index + 1, slug(title), slug(side), mirrored ? 'aynali' : ''].filter(Boolean).join('-')}.png`;
+}
+

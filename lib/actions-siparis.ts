@@ -113,8 +113,16 @@ export async function sendOrderToMachineAction(token: string): Promise<string> {
       color: i.color,
       note: lineNote(i) || undefined,
     })),
-    note: [order.note, [order.district, order.city].filter(Boolean).join(' / '), order.address, orderUrl(token)]
-      .filter(Boolean).join(' · '),
+    note: [
+      order.note,
+      // Yeni siparişte il ve ilçe adres satırının içindedir.
+      order.neighborhood ? '' : [order.district, order.city].filter(Boolean).join(' / '),
+      order.address,
+      order.directions ? `Tarif: ${order.directions}` : '',
+      order.recipient ? `Alıcı: ${order.recipient.name} ${order.recipient.phone}` : '',
+      order.invoice ? `Fatura: ${order.invoice.company}, ${order.invoice.taxOffice} VD ${order.invoice.taxNo}` : '',
+      orderUrl(token),
+    ].filter(Boolean).join(' · '),
   });
   await setOrderAdmin(token, { status: 'siparis', orderId });
   return orderId;

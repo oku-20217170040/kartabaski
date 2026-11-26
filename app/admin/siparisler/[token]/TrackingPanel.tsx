@@ -2,15 +2,15 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { setOrderStatusAction } from '@/lib/actions-machine';
 import { setOrderShippingAction } from '@/lib/actions-siparis';
 import { ORDER_STATUS_LABELS, nextStatus } from '@/lib/orders-utils';
 import type { Production } from '@/lib/siparis-takip';
 import { sendProofRequest } from '@/lib/siparis-client';
 import {
-  MAX_PROOF_IMAGES, MAX_PROOF_TEXT, OrderRequest, PROOF_LABELS, ShippingSchema, orderImageUrl, orderUrl,
+  MAX_PROOF_IMAGES, MAX_PROOF_TEXT, OrderRequest, PROOF_LABELS, ShippingSchema, orderImageUrl,
 } from '@/lib/siparis-types';
-import { waNumber } from '@/lib/cart';
+import { notifyLink } from '../takip-linki';
+import { useAdvance } from './useAdvance';
 import { useToast, errorMessage } from '@/components/admin/Toast';
 import { useConfirm } from '@/components/admin/ConfirmDialog';
 import { IconWhatsApp } from '@/components/admin/icons';
@@ -22,10 +22,6 @@ interface Props {
 }
 
 const when = (ts: number) => new Date(ts).toLocaleString('tr-TR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
-
-/** Müşteriye durum haberi: mesaja yalnız sipariş bağlantısı girer. */
-const notifyLink = (order: OrderRequest, text: string) =>
-  `https://wa.me/${waNumber(order.phone)}?text=${encodeURIComponent(`Merhaba, ${text} ${orderUrl(order.token)}`)}`;
 
 export default function TrackingPanel({ order, production, onChange }: Props) {
   const toast = useToast();
@@ -48,21 +44,7 @@ export default function TrackingPanel({ order, production, onChange }: Props) {
     try { await job(); toast.success(done); } catch (e) { toast.error(errorMessage(e)); } finally { setBusy(false); }
   };
 
-  const advance = async () => {
-    if (!next || !order.orderId) return;
-    if (next === 'teslim') {
-      const ok = await confirm({
-        title: 'Teslim edildi olarak işaretlensin mi?',
-        message: 'İş muhasebeye işlenir ve sipariş fotoğrafları için 30 günlük saklama süresi başlar.',
-        confirmLabel: 'Teslim edildi',
-      });
-      if (!ok) return;
-    }
-    await run(async () => {
-      const job = await setOrderStatusAction(order.orderId!, next);
-      onChange(order, { status: job.status, stageAt: job.stageAt });
-    }, `Aşama: ${ORDER_STATUS_LABELS[next]}`);
-  };
+  const advance = useAdvance(order, production, confirm, (p) => onChange(order, p), setBusy);
 
   const submitProof = () =>
     run(async () => {

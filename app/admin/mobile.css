@@ -2,7 +2,7 @@
    seçiciler `.admin-layout` ile güçlendirilir. */
 
 /* Alt sekme çubuğu ve yapışkan eylem çubukları yalnız dar ekranda görünür. */
-.adm-tabbar, .sip-jump, .sip-bar { display: none; }
+.adm-tabbar, .sip-bar { display: none; }
 .adm-lbl { display: inline; }
 
 @media (max-width: 860px) {
@@ -78,21 +78,26 @@
   .admin-layout .sip-badges { grid-column: 2; justify-content: flex-start; }
   .admin-layout .sip-quick { display: grid; }
   .admin-layout .sip-detail { gap: 12px; }
+  /* Sekmeler: bir seferde tek bölüm. */
+  .admin-layout .sip-tabs { position: sticky; top: 61px; z-index: 40; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); margin: 0 -16px 12px; padding: 8px 16px; background: var(--paper); border-bottom: 1px solid var(--line); }
+  .admin-layout .sip-tabs button { min-height: 48px; padding: 0 6px; border: 2px solid var(--ink); border-right-width: 0; background: var(--paper); color: var(--ink); font: inherit; font-size: 15px; font-weight: 700; cursor: pointer; }
+  .admin-layout .sip-tabs button:first-child { border-radius: var(--radius) 0 0 var(--radius); }
+  .admin-layout .sip-tabs button:last-child { border-right-width: 2px; border-radius: 0 var(--radius) var(--radius) 0; }
+  .admin-layout .sip-tabs button[aria-selected="true"] { background: var(--ink); color: var(--paper); }
   .admin-layout .sip-detail > .sip-lines:first-child { display: contents; }
-  .admin-layout .sip-info { order: 1; }
-  .admin-layout .sip-detail > .sip-items { order: 2; }
-  .admin-layout .sip-track { order: 3; }
-  .admin-layout .sip-card { padding: 14px; scroll-margin-top: 128px; }
-  .admin-layout .sip-items { scroll-margin-top: 128px; gap: 12px; }
+  .admin-layout .sip-detail.tab-baski .sip-panel-musteri, .admin-layout .sip-detail.tab-baski .sip-panel-surec,
+  .admin-layout .sip-detail.tab-surec .sip-panel-musteri, .admin-layout .sip-detail.tab-surec .sip-panel-baski,
+  .admin-layout .sip-detail.tab-musteri .sip-panel-surec, .admin-layout .sip-detail.tab-musteri .sip-panel-baski { display: none; }
+  .admin-layout .sip-card { padding: 14px; scroll-margin-top: 136px; }
+  .admin-layout .sip-detail :is(a, button, input, select, textarea) { scroll-margin-block: 136px 160px; }
+  .admin-layout .sip-panel-baski { gap: 12px; }
+  .admin-layout .sip-next { margin-bottom: 4px; }
+  .admin-layout .sip-next-button { display: none; }
+  .admin-layout .sip-detail .prn-download, .admin-layout .sip-detail .prn > .btn { justify-self: stretch; }
   .admin-layout .sip-facts { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .admin-layout .sip-facts > .is-wide { grid-column: 1 / -1; }
   .admin-layout .sip-files { grid-template-columns: repeat(auto-fill, minmax(112px, 1fr)); gap: 10px; }
-  .admin-layout .sip-files .btn { padding-inline: 8px; font-size: 13px; }
-  .admin-layout .sip-preview img { width: 100%; max-height: 340px; object-fit: contain; }
   .admin-layout .sip-actions .btn { flex: 1 1 140px; }
-  .admin-layout .sip-wide-wa { display: none; }
-  .admin-layout .sip-jump { position: sticky; top: 61px; z-index: 40; display: flex; gap: 4px; overflow-x: auto; margin: 0 -16px 12px; padding: 8px 16px; background: var(--paper); border-bottom: 1px solid var(--line); scrollbar-width: none; }
-  .admin-layout .sip-jump a { flex: 1 0 auto; display: inline-flex; align-items: center; justify-content: center; min-height: 44px; padding: 0 7px; border: 1px solid var(--line-strong); border-radius: var(--radius); background: var(--surface); font-size: 14px; font-weight: 650; }
   .admin-layout .sip-bar { position: fixed; left: 0; right: 0; bottom: var(--tabbar); z-index: 80; display: grid; grid-template-columns: auto auto minmax(0, 1fr); gap: 8px; padding: 8px 16px; background: var(--paper); border-top: 1px solid var(--line-strong); box-shadow: 0 -4px 14px rgb(0 0 0 / .08); }
   .admin-layout .sip-bar .btn { justify-content: center; padding-inline: 14px; }
 
@@ -110,7 +115,7 @@
   .admin-layout .mak-job-side { align-items: stretch; width: 100%; }
   .admin-layout .mak-job-actions { display: flex; flex-wrap: wrap; justify-content: stretch; }
   .admin-layout .mak-job-actions > * { flex: 1 1 52px; justify-content: center; }
-  .admin-layout .mak-job-actions > .btn-primary { flex-basis: 100%; }
+  .admin-layout .mak-job-actions > .btn-primary, .admin-layout .mak-job-actions > .mak-print { flex-basis: 100%; }
 
   /* ── Muhasebe ── */
   .admin-layout .fin-ledger-actions { margin-left: auto; }

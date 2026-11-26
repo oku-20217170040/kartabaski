@@ -7,6 +7,8 @@ import { lineFiles, OrderRequest, PROOF_LABELS, orderImageUrl, orderNo } from '@
 import { TALEP_LABELS, TALEP_STATUSES, type TalepStatus } from '@/lib/talep-status';
 import { useToast, errorMessage } from '@/components/admin/Toast';
 import { cartImageSrc } from '@/lib/cart-products';
+import { searchKey } from '@/lib/address';
+import { displayTitle } from '@/lib/format';
 import { IconCart, IconRefresh, IconWhatsApp } from '@/components/admin/icons';
 import { customerWhatsappLink } from '@/lib/cart';
 import { trackingLink } from './takip-linki';
@@ -23,6 +25,7 @@ export default function SiparislerPage() {
   const [rows, setRows] = useState<OrderRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<Filter>('tumu');
+  const [query, setQuery] = useState('');
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -37,7 +40,16 @@ export default function SiparislerPage() {
   }, []);
   useEffect(() => { load(); }, [load]);
 
-  const shown = useMemo(() => (filter === 'tumu' ? rows : rows.filter((o) => o.status === filter)), [rows, filter]);
+  const shown = useMemo(() => {
+    const q = searchKey(query);
+    const digits = query.replace(/\D/g, '');
+    return rows.filter((o) => {
+      if (filter !== 'tumu' && o.status !== filter) return false;
+      if (!q) return true;
+      const text = searchKey([o.name, orderNo(o), o.city, o.district, o.recipient?.name, ...o.items.map((i) => i.title)].filter(Boolean).join(' '));
+      return text.includes(q) || (digits.length >= 4 && o.phone.replace(/\D/g, '').includes(digits));
+    });
+  }, [rows, filter, query]);
   const fresh = rows.filter((o) => o.status === 'yeni').length;
 
   return (
@@ -51,6 +63,16 @@ export default function SiparislerPage() {
           <IconRefresh size={16} /> Yenile
         </button>
       </div>
+
+      <input
+        type="search"
+        className="form-input sip-search"
+        value={query}
+        onChange={(e) => setQuery(e.target.value)}
+        placeholder="Ad, telefon, sipariş kodu ya da ürün ara"
+        aria-label="Sipariş ara"
+        autoComplete="off"
+      />
 
       <div className="sip-filters" role="tablist" aria-label="Durum filtresi">
         {(['tumu', ...TALEP_STATUSES] as Filter[]).map((s) => (
@@ -74,7 +96,7 @@ export default function SiparislerPage() {
         <div className="empty-state">
           <div className="empty-state-icon"><IconCart size={36} /></div>
           <div className="empty-state-title">Sipariş bulunamadı</div>
-          <div className="empty-state-sub">Müşteriler sepetten sipariş oluşturduğunda burada görünür.</div>
+          <div className="empty-state-sub">{query || filter !== 'tumu' ? 'Aramayı ya da süzgeci değiştirin.' : 'Müşteriler sepetten sipariş oluşturduğunda burada görünür.'}</div>
         </div>
       ) : (
         <ul className="sip-list">
@@ -95,8 +117,9 @@ export default function SiparislerPage() {
                   <span className="sip-main">
                     <b>{o.name}</b>
                     <small className="sip-code">{orderNo(o)}</small>
+                    <small className="sip-items-line">{o.items.map((i) => `${i.qty}× ${displayTitle(i.title)}${i.color ? ` (${i.color})` : ''}${i.back ? ', iki yüz' : ''}`).join(' · ')}</small>
                     <small>
-                      {formatDate(o.createdAt)} · {o.items.length} tasarım, {o.items.reduce((s, i) => s + i.qty, 0)} adet
+                      {formatDate(o.createdAt)}{o.district ? ` · ${o.district} / ${o.city}` : ''}
                       {photos ? ` · ${photos} fotoğraf` : ''}{o.total ? ` · ≈ ${fmt(o.total)}₺` : ''}
                     </small>
                   </span>

@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import './makine.css';
 import BarList from '@/components/admin/finance/BarList';
@@ -277,6 +278,9 @@ export default function MachinePage() {
                       {' '}<strong>{fmtTL(orderTotal(o))}</strong> <span className="mak-muted">· {orderUnits(o)} adet</span>
                     </div>
                     <div className="mak-job-actions">
+                      {o.sepetTalebiId && /^[a-f0-9]{32}$/.test(o.sepetTalebiId) && (
+                        <Link className="btn btn-secondary btn-sm mak-print" href={`/admin/siparisler/${o.sepetTalebiId}`}>Baskı bilgileri</Link>
+                      )}
                       {next && open && (
                         <button className="btn btn-primary btn-sm" disabled={busyId === o.id} onClick={() => advance(o, next)}>{ORDER_STATUS_LABELS[next]}&apos;a geçir</button>
                       )}
