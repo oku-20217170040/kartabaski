@@ -77,7 +77,7 @@ export default function SeoSettingsPage() {
           <h1 className="adm-page-title">SEO Ayarları</h1>
           <p className="adm-page-sub">Varsayılan başlık, açıklama ve doğrulama kodları. Kayıttan sonra site meta bilgileri yenilenir (en geç 1 saat).</p>
         </div>
-        <button type="button" className="btn btn-primary adm-btn-icon-label" onClick={save} disabled={saving}>
+        <button type="button" className="btn btn-primary adm-btn-icon-label seo-top" onClick={save} disabled={saving}>
           <IconCheck size={16} /> {saving ? 'Kaydediliyor…' : 'Kaydet'}
         </button>
       </div>
@@ -194,7 +194,7 @@ export default function SeoSettingsPage() {
           <textarea className="form-textarea" aria-label="Ek açıklama" rows={4} value={s.extraDescription} maxLength={SEO_LIMITS.extra} onChange={(e) => set('extraDescription', e.target.value)} placeholder="ör: Tek adetten toplu siparişe kişiye özel kupa baskı…" />
         </section>
 
-        <div className="seo-bar">
+        <div className="seo-bar adm-savebar is-solo">
           <button type="button" className="btn btn-primary adm-btn-icon-label" onClick={save} disabled={saving}>
             <IconCheck size={16} /> {saving ? 'Kaydediliyor…' : 'Kaydet'}
           </button>

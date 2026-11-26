@@ -262,7 +262,7 @@ export default function PostEditor({ initial, onSaved }: Props) {
 
       {error && <div className="blg-error" role="alert">{error}</div>}
 
-      <div className="blg-actions">
+      <div className="blg-actions adm-savebar is-pair">
         {isPublished ? (
           <>
             <button type="button" className="btn btn-secondary" disabled={busy} onClick={() => save(false)}>Taslağa al</button>

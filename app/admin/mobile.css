@@ -1,0 +1,134 @@
+/* Yönetim panelinin telefon düzeni. Modül stilleri sonradan yüklendiği için
+   seçiciler `.admin-layout` ile güçlendirilir. */
+
+/* Alt sekme çubuğu ve yapışkan eylem çubukları yalnız dar ekranda görünür. */
+.adm-tabbar, .sip-jump, .sip-bar { display: none; }
+.adm-lbl { display: inline; }
+
+@media (max-width: 860px) {
+  .admin-layout { --tabbar: calc(60px + env(safe-area-inset-bottom)); }
+  .admin-layout .admin-content { padding-bottom: calc(var(--tabbar) + 20px); }
+
+  /* ── Alt sekme çubuğu ── */
+  .admin-layout .adm-tabbar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 90; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); height: var(--tabbar); padding-bottom: env(safe-area-inset-bottom); background: var(--paper); border-top: 2px solid var(--ink); }
+  .admin-layout .adm-tabbar > * { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; min-width: 0; padding: 0 2px; border: 0; background: none; color: var(--ink-3); font: inherit; font-size: 11.5px; font-weight: 650; cursor: pointer; }
+  .admin-layout .adm-tabbar > .on { color: var(--ink); font-weight: 800; box-shadow: inset 0 3px 0 var(--brand); }
+  .admin-layout .adm-tabbar .adm-badge { position: absolute; top: 5px; left: calc(50% + 6px); margin: 0; min-width: 18px; height: 18px; }
+  .adm-toast-region { top: calc(8px + env(safe-area-inset-top)); bottom: auto; left: 16px; right: 16px; width: auto; }
+  .admin-layout .admin-sidebar-mobile { padding-bottom: calc(24px + env(safe-area-inset-bottom)); }
+  .admin-layout .admin-sidebar-link, .admin-layout .adm-nav-sublink { min-height: 44px; }
+
+  /* ── Sayfa başlığı: düğmeler iki sütun ── */
+  .admin-layout .admin-header { gap: 12px; margin-bottom: 18px; }
+  .admin-layout .admin-header > div:first-child { flex: 1 1 100%; }
+  .admin-layout .mak-head-actions, .admin-layout .fin-head-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); width: 100%; }
+  .admin-layout .mak-head-actions > *, .admin-layout .fin-head-actions > * { width: 100%; justify-content: center; }
+  .admin-layout .mak-head-actions > :first-child:nth-last-child(3), .admin-layout .fin-head-actions > .fin-tabs { grid-column: 1 / -1; }
+  .admin-layout .fin-tabs button { flex: 1; }
+
+  /* ── Yapışkan kaydet çubuğu (uzun formlar) ── */
+  .admin-layout .adm-savebar { position: fixed; top: auto; left: 0; right: 0; bottom: var(--tabbar); z-index: 80; display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 8px; margin: 0; padding: 8px 16px; border: 0; border-top: 1px solid var(--line-strong); border-radius: 0; background: var(--paper); box-shadow: 0 -4px 14px rgb(0 0 0 / .08); }
+  .admin-layout .adm-savebar > * { margin: 0 !important; }
+  .admin-layout .adm-savebar .adm-alert, .admin-layout .adm-savebar .blg-error { grid-column: 1 / -1; max-height: 30vh; overflow-y: auto; }
+  .admin-layout .adm-savebar .btn { flex: none; width: auto; justify-content: center; }
+  .admin-layout .adm-savebar .btn-primary { width: 100%; grid-column: auto; }
+  .admin-layout .adm-savebar.is-solo { grid-template-columns: minmax(0, 1fr); }
+  .admin-layout .adm-savebar.is-pair { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .admin-layout .adm-savebar.is-pair .btn { width: 100%; }
+  .admin-layout .has-savebar { padding-bottom: 84px; }
+
+  /* ── Pencereler: alttan açılan sayfa ── */
+  .adm-modal-backdrop { align-items: flex-end; padding: 0; }
+  .admin-layout .adm-modal, .adm-modal { width: 100%; max-width: none; max-height: 92dvh; overflow-y: auto; overscroll-behavior: contain; padding: 20px 16px calc(16px + env(safe-area-inset-bottom)); border-width: 2px 0 0; border-radius: 14px 14px 0 0; }
+  .adm-modal-actions { position: sticky; bottom: calc(-16px - env(safe-area-inset-bottom)); margin: 0 -16px calc(-16px - env(safe-area-inset-bottom)); padding: 12px 16px calc(12px + env(safe-area-inset-bottom)); background: var(--surface); border-top: 1px solid var(--line); z-index: 2; }
+  .adm-modal-actions .btn { flex: 1 1 0; justify-content: center; }
+
+  /* ── Küçük dokunma hedefleri ── */
+  .admin-layout .ov-more { min-height: 44px; padding-left: 12px; }
+  .admin-layout .ov-pill { min-height: 44px; border-radius: 22px; }
+  .admin-layout button.fin-pill { min-height: 44px; padding: 0 14px; }
+  .admin-layout .adm-link-danger { min-width: 44px; }
+  .admin-layout .tags-input, .admin-layout .tag-chip button { min-height: 44px; }
+  .admin-layout .tag-chip { padding-block: 0; }
+  .admin-layout .tag-chip button { min-width: 36px; }
+  .admin-layout .adm-thumb-remove { width: 40px; height: 40px; }
+  .admin-layout .adm-thumb-remove-lg { width: 44px; height: 44px; }
+  .admin-layout .adm-thumb-remove::after { content: ''; position: absolute; inset: -4px; }
+  .admin-layout .soc-card-id { min-height: 44px; }
+  .admin-layout .seo-tag button { width: 44px; height: 44px; }
+  .admin-layout .seo-top { display: none; }
+
+  /* ── Sekme ve süzgeç şeritleri tek satırda kayar ── */
+  .admin-layout .mak-steps, .admin-layout .sip-filters { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+  .admin-layout .mak-steps > *, .admin-layout .sip-filters > * { flex: none; }
+  .admin-layout .yor-tabs { flex-wrap: wrap; overflow: visible; }
+  .admin-layout .adm-socialnav { margin-inline: -16px; padding-inline: 16px; scrollbar-width: none; }
+  .admin-layout .adm-socialnav a { min-height: 44px; }
+
+  /* ── Genel Bakış ── */
+  .admin-layout .ov-quick { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .admin-layout .ov-quick > * { justify-content: center; }
+  .admin-layout .adm-stat { padding: 14px; min-width: 0; }
+  .admin-layout .adm-stat-value { font-size: clamp(1.35rem, 7vw, 2.2rem); overflow-wrap: anywhere; }
+  .admin-layout .adm-section { padding: 16px; }
+
+  /* ── Siparişler ── */
+  .admin-layout .sip-row { display: grid; grid-template-columns: 64px minmax(0, 1fr); gap: 4px 12px; padding: 12px; align-items: start; }
+  .admin-layout .sip-thumb { grid-row: span 2; }
+  .admin-layout .sip-badges { grid-column: 2; justify-content: flex-start; }
+  .admin-layout .sip-quick { display: grid; }
+  .admin-layout .sip-detail { gap: 12px; }
+  .admin-layout .sip-detail > .sip-lines:first-child { display: contents; }
+  .admin-layout .sip-info { order: 1; }
+  .admin-layout .sip-detail > .sip-items { order: 2; }
+  .admin-layout .sip-track { order: 3; }
+  .admin-layout .sip-card { padding: 14px; scroll-margin-top: 128px; }
+  .admin-layout .sip-items { scroll-margin-top: 128px; gap: 12px; }
+  .admin-layout .sip-facts { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .admin-layout .sip-facts > .is-wide { grid-column: 1 / -1; }
+  .admin-layout .sip-files { grid-template-columns: repeat(auto-fill, minmax(112px, 1fr)); gap: 10px; }
+  .admin-layout .sip-files .btn { padding-inline: 8px; font-size: 13px; }
+  .admin-layout .sip-preview img { width: 100%; max-height: 340px; object-fit: contain; }
+  .admin-layout .sip-actions .btn { flex: 1 1 140px; }
+  .admin-layout .sip-wide-wa { display: none; }
+  .admin-layout .sip-jump { position: sticky; top: 61px; z-index: 40; display: flex; gap: 4px; overflow-x: auto; margin: 0 -16px 12px; padding: 8px 16px; background: var(--paper); border-bottom: 1px solid var(--line); scrollbar-width: none; }
+  .admin-layout .sip-jump a { flex: 1 0 auto; display: inline-flex; align-items: center; justify-content: center; min-height: 44px; padding: 0 7px; border: 1px solid var(--line-strong); border-radius: var(--radius); background: var(--surface); font-size: 14px; font-weight: 650; }
+  .admin-layout .sip-bar { position: fixed; left: 0; right: 0; bottom: var(--tabbar); z-index: 80; display: grid; grid-template-columns: auto auto minmax(0, 1fr); gap: 8px; padding: 8px 16px; background: var(--paper); border-top: 1px solid var(--line-strong); box-shadow: 0 -4px 14px rgb(0 0 0 / .08); }
+  .admin-layout .sip-bar .btn { justify-content: center; padding-inline: 14px; }
+
+  /* ── Ürün listesi ── */
+  .admin-layout .adm-toolbar .form-select { flex: 1 1 100%; }
+  .admin-layout .adm-toolbar .form-select:nth-of-type(2), .admin-layout .adm-toolbar .form-select:nth-of-type(4) { flex-basis: calc(50% - 5px); order: 1; padding-inline: 10px; }
+  .admin-layout .adm-toolbar .form-select:nth-of-type(3) { order: 2; }
+  .admin-layout .adm-toolbar-count { order: 3; }
+  .admin-layout .adm-row-slug > span:first-child { flex: 1 1 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .admin-layout .adm-row-title > span:last-child { white-space: normal; }
+  .admin-layout .adm-row-actions { flex-wrap: nowrap; gap: 4px; padding-top: 4px; border-top: 1px solid var(--line); }
+  .admin-layout .adm-row-buttons { flex-wrap: nowrap; gap: 2px; }
+
+  /* ── Üretim hattı ── */
+  .admin-layout .mak-job-side { align-items: stretch; width: 100%; }
+  .admin-layout .mak-job-actions { display: flex; flex-wrap: wrap; justify-content: stretch; }
+  .admin-layout .mak-job-actions > * { flex: 1 1 52px; justify-content: center; }
+  .admin-layout .mak-job-actions > .btn-primary { flex-basis: 100%; }
+
+  /* ── Muhasebe ── */
+  .admin-layout .fin-ledger-actions { margin-left: auto; }
+
+  /* ── İstatistik: tablolar kart olur ── */
+  .admin-layout .st-list { grid-template-columns: minmax(0, 1fr); }
+  .admin-layout .st-table-wrap.st-days { max-height: none; overflow: visible; }
+  .admin-layout .st-table thead { display: none; }
+  .admin-layout .st-table, .admin-layout .st-table tbody { display: block; }
+  .admin-layout .st-table tr { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; padding: 12px 0; border-bottom: 1px solid var(--line); }
+  .admin-layout .st-table td { display: block; padding: 0; border: 0; text-align: left; min-width: 0; overflow-wrap: anywhere; }
+  .admin-layout .st-table td:first-child, .admin-layout .st-table td[colspan] { grid-column: 1 / -1; }
+  .admin-layout .st-table td[data-label]::before { content: attr(data-label); display: block; font-size: 11px; font-weight: 500; color: var(--ink-3); }
+  .admin-layout .st-daydetail { display: block !important; }
+}
+
+@media (max-width: 560px) {
+  .admin-layout .adm-lbl { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  .admin-layout .adm-row-buttons .btn { width: 44px; padding: 0; justify-content: center; }
+  .admin-layout .adm-status { padding: 0 10px; }
+}

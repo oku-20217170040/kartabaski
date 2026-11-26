@@ -84,29 +84,39 @@ export default function SiparisDetayPage({ params }: { params: { token: string }
 
   const place = [order.district, order.city].filter(Boolean).join(' / ');
 
+  const waHref = customerWhatsappLink({ name: order.name, phone: order.phone, id: order.token });
+
   return (
-    <div>
+    <div className="has-savebar">
       <div className="admin-header">
         <div>
+          <Link href="/admin/siparisler" className="adm-back-link">← Tüm siparişler</Link>
           <h1 className="adm-page-title">Sipariş {orderNo(order.token)}</h1>
           <p className="adm-page-sub">{new Date(order.createdAt).toLocaleString('tr-TR')}</p>
         </div>
-        <Link href="/admin/siparisler" className="btn btn-secondary btn-sm">Tüm siparişler</Link>
       </div>
+
+      <nav className="sip-jump" aria-label="Sipariş bölümleri">
+        <a href="#sip-musteri">Müşteri</a>
+        <a href="#sip-tasarim">Tasarım</a>
+        <a href="#sip-uretim">Üretim</a>
+        <a href="#sip-onizleme">Onay</a>
+        <a href="#sip-kargo">Kargo</a>
+      </nav>
 
       <div className="sip-detail">
         <div className="sip-lines">
-        <section className="card sip-card">
+        <section className="card sip-card sip-info" id="sip-musteri">
           <dl className="sip-facts">
             <div><dt>Müşteri</dt><dd>{order.name}</dd></div>
             <div><dt>Telefon</dt><dd><a href={`tel:${order.phone}`}>{order.phone}</a></dd></div>
             {place && <div><dt>İl / ilçe</dt><dd>{place}</dd></div>}
-            {order.address && <div><dt>Adres</dt><dd>{order.address}</dd></div>}
+            {order.address && <div className="is-wide"><dt>Adres</dt><dd>{order.address}</dd></div>}
             {order.total > 0 && <div><dt>Tahmini toplam</dt><dd>{fmt(order.total)}₺</dd></div>}
           </dl>
           {order.note && <p className="sip-note"><b>Müşteri notu:</b> {order.note}</p>}
 
-          <a className="btn btn-primary sip-wa" href={customerWhatsappLink({ name: order.name, phone: order.phone, id: order.token })} target="_blank" rel="noopener noreferrer">
+          <a className="btn btn-primary sip-wa sip-wide-wa" href={waHref} target="_blank" rel="noopener noreferrer">
             <IconWhatsApp size={16} /> Müşteriye yaz
           </a>
 
@@ -139,7 +149,7 @@ export default function SiparisDetayPage({ params }: { params: { token: string }
         <TrackingPanel order={order} production={production} onChange={(o, p) => { setOrder(o); setProduction(p); }} />
         </div>
 
-        <section className="sip-lines">
+        <section className="sip-lines sip-items" id="sip-tasarim">
           {order.photosDeletedAt && <p className="adm-page-sub">Saklama süresi dolduğu için fotoğraflar silindi.</p>}
           {order.items.map((item, n) => (
             <article className="card sip-card" key={`${item.productId}-${n}`}>
@@ -196,6 +206,13 @@ export default function SiparisDetayPage({ params }: { params: { token: string }
             </article>
           ))}
         </section>
+      </div>
+      <div className="sip-bar" role="group" aria-label="Hızlı işlemler">
+        <a className="btn btn-secondary" href={`tel:${order.phone}`}>Ara</a>
+        <a className="btn btn-secondary" href={waHref} target="_blank" rel="noopener noreferrer" aria-label="Müşteriye WhatsApp’tan yaz"><IconWhatsApp size={18} /></a>
+        {order.orderId
+          ? <a className="btn btn-primary" href="#sip-uretim">Aşamayı güncelle</a>
+          : <button type="button" className="btn btn-primary" onClick={toMachine} disabled={busy}>Üretime aktar</button>}
       </div>
       {dialog}
     </div>

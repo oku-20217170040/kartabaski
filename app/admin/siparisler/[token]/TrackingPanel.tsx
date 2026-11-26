@@ -97,8 +97,8 @@ export default function TrackingPanel({ order, production, onChange }: Props) {
 
   return (
     <>
-      <section className="card sip-card" aria-labelledby="sip-uretim">
-        <h2 id="sip-uretim" className="sip-h2">Üretim aşaması</h2>
+      <section className="card sip-card sip-track" id="sip-uretim" aria-labelledby="sip-uretim-baslik">
+        <h2 id="sip-uretim-baslik" className="sip-h2">Üretim aşaması</h2>
         {production ? (
           <>
             <p className="sip-stage">{ORDER_STATUS_LABELS[production.status]}</p>
@@ -118,8 +118,8 @@ export default function TrackingPanel({ order, production, onChange }: Props) {
         )}
       </section>
 
-      <section className="card sip-card" aria-labelledby="sip-onizleme">
-        <h2 id="sip-onizleme" className="sip-h2">Baskı önizlemesi</h2>
+      <section className="card sip-card sip-track" id="sip-onizleme" aria-labelledby="sip-onizleme-baslik">
+        <h2 id="sip-onizleme-baslik" className="sip-h2">Baskı önizlemesi</h2>
         {proof && (
           <>
             <p className={`sip-proof-state is-${proof.state}`}>
@@ -164,8 +164,8 @@ export default function TrackingPanel({ order, production, onChange }: Props) {
         )}
       </section>
 
-      <section className="card sip-card" aria-labelledby="sip-kargo">
-        <h2 id="sip-kargo" className="sip-h2">Kargo</h2>
+      <section className="card sip-card sip-track" id="sip-kargo" aria-labelledby="sip-kargo-baslik">
+        <h2 id="sip-kargo-baslik" className="sip-h2">Kargo</h2>
         <label className="form-label" htmlFor="sip-firma">Firma</label>
         <input id="sip-firma" className="form-input" value={ship.carrier} maxLength={60} onChange={(e) => setShip({ ...ship, carrier: e.target.value })} />
         <label className="form-label" htmlFor="sip-takip">Takip numarası</label>

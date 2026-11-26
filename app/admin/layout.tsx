@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState, type ReactNode } from 'react';
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { AuthProvider, useAuth } from '@/lib/auth-context';
@@ -18,6 +18,7 @@ import {
   IconTelegram, IconPinterest, IconTikTok, IconSearch, IconExternal, IconMenu,
 } from '@/components/admin/icons';
 import './admin.css';
+import './mobile.css';
 
 const ICONS: Record<AdminIconKey, (p: { size?: number }) => JSX.Element> = {
   dashboard: IconDashboard, chart: IconChart, wallet: IconWallet, box: IconBox, palette: IconPalette, cog: IconCog,
@@ -27,6 +28,14 @@ const ICONS: Record<AdminIconKey, (p: { size?: number }) => JSX.Element> = {
 };
 
 const SOCIAL_SUB_LINKS = SOCIAL_LINKS.filter((l) => l.href !== '/admin/sosyal-medya');
+
+/** Telefonda alt çubukta duran sık kullanılan sayfalar. */
+const TABS = [
+  { href: '/admin', label: 'Özet', Icon: IconDashboard, exact: true },
+  { href: '/admin/siparisler', label: 'Sipariş', Icon: IconCart },
+  { href: '/admin/products', label: 'Ürünler', Icon: IconBox },
+  { href: '/admin/makine', label: 'Üretim', Icon: IconCog },
+];
 
 // Firebase istemci SDK'sı yalnızca admin tarafında yüklensin diye AuthProvider burada.
 export default function AdminLayout({ children }: { children: ReactNode }) {
@@ -72,6 +81,14 @@ function AdminShell({ children }: { children: ReactNode }) {
   }, [newOrderCount, pathname]);
 
   const filteredLinks = useMemo(() => filterAdminLinks(navQuery), [navQuery]);
+  const socialNav = useRef<HTMLElement>(null);
+
+  // Dar ekranda sosyal medya şeridi etkin sayfayı gösterecek kadar kayar.
+  useEffect(() => {
+    const nav = socialNav.current;
+    const on = nav?.querySelector<HTMLElement>('a.on');
+    if (nav && on) nav.scrollLeft = on.offsetLeft - nav.offsetLeft - 16;
+  }, [pathname, loading]);
 
   if (loading) {
     return <div className="adm-fullscreen-center"><div className="spinner" /></div>;
@@ -196,7 +213,7 @@ function AdminShell({ children }: { children: ReactNode }) {
           </div>
 
           {inSocial && (
-            <nav className="adm-socialnav" aria-label="Sosyal medya">
+            <nav ref={socialNav} className="adm-socialnav" aria-label="Sosyal medya">
               {SOCIAL_LINKS.map((l) => {
                 const Icon = ICONS[l.icon];
                 const on = isLinkActive(pathname, l);
@@ -211,6 +228,23 @@ function AdminShell({ children }: { children: ReactNode }) {
 
           {children}
         </div>
+
+        <nav className="adm-tabbar" aria-label="Hızlı erişim">
+          {TABS.map(({ href, label, Icon, exact }) => {
+            const on = isLinkActive(pathname, { href, exact });
+            return (
+              <Link key={href} href={href} className={on ? 'on' : ''} aria-current={on ? 'page' : undefined}>
+                <Icon size={21} />
+                <span>{label}</span>
+                {href === '/admin/siparisler' && newOrderCount > 0 && <span className="adm-badge" aria-label={`${newOrderCount} yeni sipariş`}>{newOrderCount}</span>}
+              </Link>
+            );
+          })}
+          <button type="button" onClick={() => setSidebarOpen(true)} aria-expanded={sidebarOpen}>
+            <IconMenu size={21} />
+            <span>Menü</span>
+          </button>
+        </nav>
       </div>
     </ToastProvider>
   );

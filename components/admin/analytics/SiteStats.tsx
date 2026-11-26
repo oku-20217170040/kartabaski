@@ -153,14 +153,14 @@ export default function SiteStats() {
                     return [
                       <tr key={r.day} className={`st-dayrow ${open ? 'open' : ''}`} onClick={() => setOpenDay(open ? null : r.day)}>
                         <td><b>{fmtDay(r.day)}</b> <small className="st-muted">{r.weekday}</small></td>
-                        <td className="num">{fmtInt(r.uv)}</td>
-                        <td className="num">{fmtInt(r.newV)}</td>
-                        <td className="num">{fmtInt(r.pv)}</td>
-                        <td className="num">{r.avgSec ? formatDuration(r.avgSec) : '—'}</td>
-                        <td className="num">{r.sess ? fmtShare(r.bounce) : '—'}</td>
-                        <td className="num">{r.wa || '—'}</td>
-                        <td className="num">{r.cart || '—'}</td>
-                        <td>{r.topSource ?? '—'}</td>
+                        <td className="num" data-label="Ziyaretçi">{fmtInt(r.uv)}</td>
+                        <td className="num" data-label="Yeni">{fmtInt(r.newV)}</td>
+                        <td className="num" data-label="Görüntüleme">{fmtInt(r.pv)}</td>
+                        <td className="num" data-label="Ort. süre">{r.avgSec ? formatDuration(r.avgSec) : '—'}</td>
+                        <td className="num" data-label="Hemen çıkma">{r.sess ? fmtShare(r.bounce) : '—'}</td>
+                        <td className="num" data-label="WhatsApp">{r.wa || '—'}</td>
+                        <td className="num" data-label="Sepet">{r.cart || '—'}</td>
+                        <td data-label="En çok kaynak">{r.topSource ?? '—'}</td>
                       </tr>,
                       open && (
                         <tr key={`${r.day}-d`} className="st-daydetail">
@@ -192,12 +192,12 @@ export default function SiteStats() {
                   {prods.map((p) => (
                     <tr key={p.slug}>
                       <td><a href={`/urun/${p.slug}`} target="_blank" rel="noreferrer"><b>{title(p.slug)}</b></a></td>
-                      <td className="num">{fmtInt(p.views)}</td>
-                      {hasUnique && <td className="num">{p.unique ? fmtInt(p.unique) : '—'}</td>}
-                      <td className="num">{p.avgSec ? formatDuration(p.avgSec) : '—'}</td>
-                      <td className="num">{p.wa || '—'}</td>
-                      <td className="num">{p.cart || '—'}</td>
-                      <td className="num">{p.rate ? fmtShare(p.rate) : '—'}</td>
+                      <td className="num" data-label="Görüntüleme">{fmtInt(p.views)}</td>
+                      {hasUnique && <td className="num" data-label="Tekil">{p.unique ? fmtInt(p.unique) : '—'}</td>}
+                      <td className="num" data-label="Ort. süre">{p.avgSec ? formatDuration(p.avgSec) : '—'}</td>
+                      <td className="num" data-label="WhatsApp">{p.wa || '—'}</td>
+                      <td className="num" data-label="Sepet">{p.cart || '—'}</td>
+                      <td className="num" data-label="İlgi oranı">{p.rate ? fmtShare(p.rate) : '—'}</td>
                     </tr>
                   ))}
                   {prods.length === 0 && <tr><td colSpan={7} className="st-muted">Henüz ürün sayfası görüntülenmedi.</td></tr>}
