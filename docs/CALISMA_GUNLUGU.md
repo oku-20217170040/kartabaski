@@ -19,6 +19,13 @@ Her iş bitiminde (kod, sunucu, dış hizmet ya da yalnız araştırma) bu dosya
 
 ---
 
+## 27.11.2026 — Google Search Console kuruldu, site haritası gönderildi
+- Neden: arama motorları ve onlardan beslenen yapay zekâ aramaları siteyi daha hızlı ve eksiksiz tanısın (kullanıcı isteği).
+- Ne: `https://www.kartabaski.com/` URL ön eki mülkü eklendi, sahiplik doğrulandı, `sitemap.xml` gönderildi.
+- Nasıl: HTML etiketi yöntemi; kod admin panelinde **SEO Ayarları → Doğrulama kodları → Google** alanına kaydedildi (kod ya da dağıtım gerekmedi). **Bu alan silinirse doğrulama düşer.** Mülk, sitenin sahibinin Google hesabındadır.
+- Doğrulama: etiket canlı ana sayfada görüldü; Google sahipliği ve site haritasını kabul etti. Dizine ekleme sonuçları birkaç gün sonra görülür.
+- Açık: Bing Webmaster Tools henüz yok (tek oturum açma izni için kullanıcı onayı bekleniyor). Google İşletme Profili açılmadı: Google yalnız online hizmet veren markalara profil vermiyor. Pazaryeri ve sosyal profiller, firma rehberleri ve haber siteleri sırada; her yerde aynı ad, telefon ve web adresi kullanılacak, uydurma adres yazılmayacak.
+
 ## 27.11.2026 — Çalışma günlüğü kuruldu
 - Neden: kullanıcı, yapılan her işin diğer asistan ve modellerin anlayacağı biçimde not edilmesini istedi.
 - Ne: bu dosya; `CLAUDE.md` ve `AGENTS.md` içine kayıt kuralı; `docs/DEVAM_NOTLARI.md` başına güncel durum.
