@@ -29,11 +29,12 @@ export async function getProductBySlugServer(slug: string): Promise<Product | nu
     const snap = await adminDb
       .collection(COL)
       .where('slug', '==', slug)
-      .limit(1)
+      .limit(5)
       .get();
 
     if (snap.empty) return null;
-    const d = snap.docs[0];
+    // Aynı slug iki kayıtta kalmışsa sitede görünen (aktif) olan seçilir.
+    const d = snap.docs.find((x) => x.data().active !== false) ?? snap.docs[0];
     return parseProduct(d.id, d.data() as Record<string, unknown>, 'products-server');
   } catch (err) {
     console.error('[products-server] getProductBySlugServer failed:', err);
