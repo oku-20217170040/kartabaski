@@ -10,6 +10,8 @@ import {
 import { OrderRequest, orderImageUrl, orderNo } from '@/lib/siparis-types';
 import { TALEP_LABELS, TALEP_STATUSES, type TalepStatus } from '@/lib/talep-status';
 import { customerWhatsappLink } from '@/lib/cart';
+import { lineHref } from '@/lib/configurator-lines';
+import { cartImageSrc } from '@/lib/cart-products';
 import { useToast, errorMessage } from '@/components/admin/Toast';
 import { useConfirm } from '@/components/admin/ConfirmDialog';
 import { IconTrash, IconWhatsApp } from '@/components/admin/icons';
@@ -142,10 +144,11 @@ export default function SiparisDetayPage({ params }: { params: { token: string }
           {order.items.map((item, n) => (
             <article className="card sip-card" key={`${item.productId}-${n}`}>
               <h2 className="sip-h2">
-                {n + 1}) <Link href={`/urun/${item.slug}`}>{item.title}</Link> · {item.qty} adet
+                {n + 1}) <Link href={lineHref(item.slug)}>{item.title}</Link> · {item.qty} adet
               </h2>
               <dl className="sip-facts">
                 {item.color && <div><dt>Renk</dt><dd>{item.color}</dd></div>}
+                {item.ready && <div><dt>Hazır tasarım</dt><dd>{item.ready.name}</dd></div>}
                 {item.text && <div><dt>Yazı ({item.font === 'el' ? 'el yazısı' : 'düz yazı'})</dt><dd>{item.text}</dd></div>}
                 {item.removeBg && <div><dt>Arka plan</dt><dd>Silinsin</dd></div>}
                 {item.needsDesign && <div><dt>Tasarım</dt><dd>Biz hazırlayacağız</dd></div>}
@@ -157,6 +160,13 @@ export default function SiparisDetayPage({ params }: { params: { token: string }
                 )}
               </dl>
               {item.note && <p className="sip-note">{item.note}</p>}
+              {item.ready?.image && (
+                <figure className="sip-preview">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={cartImageSrc(item.ready.image) ?? ''} alt={item.ready.name} style={{ width: 160 }} />
+                  <figcaption>Seçilen hazır tasarım</figcaption>
+                </figure>
+              )}
               {item.preview && (
                 <figure className="sip-preview">
                   {/* eslint-disable-next-line @next/next/no-img-element */}

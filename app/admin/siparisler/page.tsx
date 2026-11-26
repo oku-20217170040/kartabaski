@@ -6,6 +6,7 @@ import { listOrderRequestsAction } from '@/lib/actions-siparis';
 import { OrderRequest, PROOF_LABELS, orderImageUrl, orderNo } from '@/lib/siparis-types';
 import { TALEP_LABELS, TALEP_STATUSES, type TalepStatus } from '@/lib/talep-status';
 import { useToast, errorMessage } from '@/components/admin/Toast';
+import { cartImageSrc } from '@/lib/cart-products';
 import { IconCart, IconRefresh } from '@/components/admin/icons';
 import './siparisler.css';
 
@@ -75,7 +76,8 @@ export default function SiparislerPage() {
       ) : (
         <ul className="sip-list">
           {shown.map((o) => {
-            const image = o.items.map((i) => i.preview ?? i.files[0]).find(Boolean);
+            const own = o.items.map((i) => i.preview ?? i.files[0]).find(Boolean);
+            const image = own ? orderImageUrl(o.token, own, 240) : cartImageSrc(o.items.find((i) => i.ready?.image)?.ready?.image);
             const photos = o.items.reduce((s, i) => s + i.files.length, 0);
             return (
               <li key={o.token}>
@@ -83,7 +85,7 @@ export default function SiparislerPage() {
                   <span className="sip-thumb">
                     {image && (
                       // eslint-disable-next-line @next/next/no-img-element
-                      <img src={orderImageUrl(o.token, image, 240)} alt="" loading="lazy" />
+                      <img src={image} alt="" loading="lazy" />
                     )}
                   </span>
                   <span className="sip-main">

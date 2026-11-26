@@ -28,5 +28,8 @@ Tek menü `/admin/siparisler`: liste, ayrıntı, orijinal indirme, müşteriye W
 - Onay yetkisi sipariş bağlantısını bilen kişidedir; ek telefon doğrulaması yoktur.
 - Üretimde teslim/iptal olan sipariş cron ile kapanır; fotoğraf saklama süresi `closedAt`'ten sayılır.
 
-## Sonraki aşama
-3: konfigüratör aynı sepete.
+## Aşama 3 (uygulandı)
+- Konfigüratör bardağı sepete `cfg_<kimlik>` ürünü olarak girer (`lib/configurator-lines.ts`); fiyat ve ad sunucuda `configurator_cups`'tan okunur.
+- Hazır tasarım doğrudan sepete eklenir (`ready`), adı ve görseli `configurator_designs`'tan doğrulanır.
+- "Kendi Tasarımım" aynı tasarım ekranını `/tasarla/konfig-<kimlik>` açar.
+- Üretime aktarımda konfigüratör satırı ürün kimliği taşımaz.

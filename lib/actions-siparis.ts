@@ -8,6 +8,7 @@ import {
   getProduction, listOrderRequests, markOrderSeen, setOrderAdmin, setShipping,
 } from './siparis';
 import { createOrderFromCart } from './orders';
+import { isCupId } from './configurator-lines';
 import { ORDER_TOKEN_RE, OrderRequest, ShippingSchema, orderUrl } from './siparis-types';
 import type { Production } from './siparis-takip';
 import { isTalepStatus } from './talep-status';
@@ -104,12 +105,13 @@ export async function sendOrderToMachineAction(token: string): Promise<string> {
     customerName: order.name || undefined,
     phone: order.phone || undefined,
     items: order.items.map((i) => ({
-      productId: i.productId,
+      // Konfigüratör bardağı ürün kataloğunda yok.
+      productId: isCupId(i.productId) ? undefined : i.productId,
       title: i.title,
       qty: i.qty,
       unitPrice: i.unitPrice,
       color: i.color,
-      note: [i.text ? `Yazı: ${i.text}` : '', i.needsDesign ? 'Tasarım hazırlanacak' : '', i.note].filter(Boolean).join(' · ') || undefined,
+      note: [i.ready ? `Hazır tasarım: ${i.ready.name}` : '', i.text ? `Yazı: ${i.text}` : '', i.needsDesign ? 'Tasarım hazırlanacak' : '', i.note].filter(Boolean).join(' · ') || undefined,
     })),
     note: [order.note, [order.district, order.city].filter(Boolean).join(' / '), order.address, orderUrl(token)]
       .filter(Boolean).join(' · '),

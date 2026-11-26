@@ -74,7 +74,7 @@ export async function submitOrder(
         return {
           productId: item.productId, qty: item.qty, color: item.color, note: item.note,
           text: d?.text, font: d?.font, placement: d?.placement, removeBg: d?.removeBg, needsDesign: d?.needsDesign,
-          photoCount: photos.length, hasPreview: Boolean(preview),
+          photoCount: photos.length, hasPreview: Boolean(preview), readyId: d?.ready?.id,
         };
       }),
     }),

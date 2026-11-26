@@ -105,8 +105,13 @@ function parseDesign(x: unknown): CartDesign | undefined {
   const placement = p && ['x', 'y', 'scale', 'rotate'].every((k) => typeof p[k] === 'number')
     ? { x: p.x as number, y: p.y as number, scale: p.scale as number, rotate: p.rotate as number }
     : undefined;
+  const r = d.ready as Record<string, unknown> | undefined;
+  const ready = r && typeof r.id === 'string' && /^[A-Za-z0-9_-]{1,60}$/.test(r.id) && typeof r.name === 'string'
+    ? { id: r.id, name: r.name.slice(0, 120), ...(typeof r.image === 'string' ? { image: r.image } : {}) }
+    : undefined;
   return {
     photos: photos.slice(0, 8),
+    ...(ready ? { ready } : {}),
     ...(typeof d.preview === 'string' && FILE_ID.test(d.preview) ? { preview: d.preview } : {}),
     ...(typeof d.text === 'string' && d.text.trim() ? { text: d.text.slice(0, 40) } : {}),
     ...(d.font === 'el' || d.font === 'duz' ? { font: d.font } : {}),

@@ -19,6 +19,8 @@ import { usePrintPhoto } from '@/lib/use-print-photo';
 import { VITRIN_MUGS, VITRIN_PRODUCT_SLUG } from '@/lib/vitrin';
 import { displayTitle, formatPriceRange } from '@/lib/format';
 import { getPriceMin, getSlug, getTitle } from '@/lib/product-utils';
+import { lineHref } from '@/lib/configurator-lines';
+import type { ReadyDesign } from '@/lib/cart-types';
 import { trackEvent } from '@/lib/analytics-client';
 import '@/components/cart/cart.css';
 
@@ -54,6 +56,7 @@ export default function DesignEditor({ product, initialColor, lineKey }: Props) 
   const [font, setFont] = useState<PrintFont>('duz');
   const [photos, setPhotos] = useState<Picked[]>([]);
   const [needsDesign, setNeedsDesign] = useState(false);
+  const [ready, setReady] = useState<ReadyDesign>();
   const [note, setNote] = useState('');
   const [initial, setInitial] = useState<Parameters<typeof usePrintPhoto>[1]>();
   const [saving, setSaving] = useState(false);
@@ -81,6 +84,7 @@ export default function DesignEditor({ product, initialColor, lineKey }: Props) 
     setText(d?.text ?? '');
     setFont(d?.font ?? 'duz');
     setNeedsDesign(Boolean(d?.needsDesign));
+    setReady(d?.ready);
     Promise.all((d?.photos ?? []).map(async (fileId) => {
       const blob = await loadFile(fileId).catch(() => null);
       return blob ? { uid: fileId, fileId, blob, url: URL.createObjectURL(blob) } : null;
@@ -112,7 +116,7 @@ export default function DesignEditor({ product, initialColor, lineKey }: Props) 
 
   const submit = async () => {
     setError('');
-    if (!text.trim() && !photos.length && !needsDesign && !note.trim()) {
+    if (!text.trim() && !photos.length && !needsDesign && !note.trim() && !ready) {
       setError('Bir yazı ya da fotoğraf ekleyin, ya da “Tasarımım yok” seçin.');
       return;
     }
@@ -130,6 +134,7 @@ export default function DesignEditor({ product, initialColor, lineKey }: Props) 
         design: {
           photos: ids,
           preview: previewId,
+          ready,
           text: text.trim() || undefined,
           font: text.trim() ? font : undefined,
           placement: mug && ids.length ? print.placement : undefined,
@@ -150,7 +155,7 @@ export default function DesignEditor({ product, initialColor, lineKey }: Props) 
       <header className="tsr-head">
         <nav aria-label="Konum">
           <ol className="breadcrumb">
-            <li><Link href={`/urun/${slug}`}>{title}</Link></li>
+            <li><Link href={lineHref(slug)}>{title}</Link></li>
             <li aria-current="page">Tasarım</li>
           </ol>
         </nav>
@@ -211,6 +216,17 @@ export default function DesignEditor({ product, initialColor, lineKey }: Props) 
                 ))}
               </div>
             </fieldset>
+          )}
+
+          {ready && (
+            <div className="tsr-ready">
+              {ready.image && (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={cartImageSrc(ready.image) ?? ''} alt="" />
+              )}
+              <p>Hazır tasarım: <b>{ready.name}</b></p>
+              <button type="button" className="tsr-chip" onClick={() => setReady(undefined)}>Kaldır</button>
+            </div>
           )}
 
           <div className="tsr-field">

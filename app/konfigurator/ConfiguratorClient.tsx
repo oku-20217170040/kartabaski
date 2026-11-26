@@ -2,14 +2,22 @@
 
 import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { collection, getDocs, orderBy, query } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { ConfiguratorCup, ConfiguratorDesign } from '@/types';
+import { useCart } from '@/lib/cart-context';
+import { productToCartItem } from '@/lib/cart-products';
+import { cupToProduct } from '@/lib/configurator-lines';
+import { MAX_QTY, clampQty } from '@/lib/cart';
+import { trackEvent } from '@/lib/analytics-client';
+import { CartIcon } from '@/components/cart/CartLink';
+import { WHATSAPP_BASE } from '@/lib/constants';
+import '@/components/cart/cart.css';
 
 type Cup    = ConfiguratorCup;
 type Design = ConfiguratorDesign;
 
-const WA_NUMBER = '905458266508';
 const CF_CLOUD  = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || 'dwulzfmlu';
 
 function cfImg(publicId: string, w = 400) {
@@ -27,14 +35,6 @@ const CUSTOM_DESIGN: Design = {
   createdAt: 0,
   updatedAt: 0,
 };
-
-function buildWaUrl(cup: Cup, design: Design, colorName?: string | null): string {
-  const cupLabel = colorName ? `${cup.name} (${colorName})` : cup.name;
-  const msg = design.id === '__custom__'
-    ? `Merhaba, ${cupLabel} bardağına kendi tasarımımı bastırmak istiyorum. Bilgi alabilir miyim?`
-    : `Merhaba, ${cupLabel} bardağına "${design.name}" tasarımını bastırmak istiyorum. Bilgi alabilir miyim?`;
-  return `https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(msg)}`;
-}
 
 /* ─── CAROUSEL ───────────────────────────────────────────────── */
 const CARD_W   = 148; // px — kart genişliği
@@ -140,6 +140,9 @@ function arrowStyle(side: 'left' | 'right'): React.CSSProperties {
 
 /* ─── MAIN COMPONENT ─────────────────────────────────────────── */
 export default function ConfiguratorClient() {
+  const router = useRouter();
+  const cart = useCart();
+  const [qty, setQty] = useState(1);
   const [cups,           setCups]           = useState<Cup[]>([]);
   const [designs,        setDesigns]        = useState<Design[]>([]);
   const [dataLoading,    setDataLoading]    = useState(true);
@@ -220,6 +223,29 @@ export default function ConfiguratorClient() {
     ? cfImg(selectedColor.images[0], 200)
     : selectedCup?.imagePublicId ? cfImg(selectedCup.imagePublicId, 200) : null;
 
+  const isCustom = selectedDesign?.id === '__custom__';
+
+  /** Kendi tasarımı: tasarım ekranına; hazır tasarım: doğrudan sepete. */
+  function order() {
+    if (!selectedCup || !selectedDesign) { showToast('Lütfen hem bardak hem tasarım seçiniz.'); return; }
+    const product = cupToProduct(selectedCup);
+    const color = selectedColor?.name;
+    if (isCustom) {
+      router.push(`/tasarla/${product.slug}${color ? `?renk=${encodeURIComponent(color)}` : ''}`);
+      return;
+    }
+    cart.save(productToCartItem(product, {
+      qty,
+      color,
+      design: {
+        photos: [],
+        ready: { id: selectedDesign.id, name: selectedDesign.name, image: selectedDesign.imagePublicId },
+      },
+    }));
+    trackEvent('cart_add', { slug: product.slug ?? product.id, qty });
+    router.push('/sepet');
+  }
+
   if (dataLoading) return (
     <div style={{ minHeight: '60vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
       <div className="spinner" />
@@ -241,13 +267,14 @@ export default function ConfiguratorClient() {
         position: 'sticky', top: 0, zIndex: 100,
       }}>
         <div style={{ maxWidth: 1100, margin: '0 auto' }}>
-          <Link href="/" style={{
-            display: 'inline-flex', alignItems: 'center', gap: 5,
-            fontSize: 13, color: '#6B7280', textDecoration: 'none',
-            marginBottom: 10,
-          }}>
-            ← Ürünlere Dön
-          </Link>
+          <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12 }}>
+            <Link href="/" style={{ display: 'inline-flex', alignItems: 'center', gap: 5, minHeight: 44, fontSize: 14, color: 'var(--ink-3)', textDecoration: 'none' }}>
+              ← Ürünlere Dön
+            </Link>
+            <Link href="/sepet" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, minHeight: 44, fontSize: 14, fontWeight: 700 }}>
+              <CartIcon size={18} /> Sepet{cart.count > 0 ? ` (${cart.count})` : ''}
+            </Link>
+          </div>
           <h1 style={{ fontSize: 'clamp(1.4rem,4vw,2rem)', fontWeight: 800, letterSpacing: '-0.02em', lineHeight: 1.15 }}>
             Kendi kombinasyonunu oluştur
           </h1>
@@ -524,25 +551,20 @@ export default function ConfiguratorClient() {
               </div>
             )}
 
-            {/* WhatsApp butonu */}
-            <a
-              href={bothSelected ? buildWaUrl(selectedCup!, selectedDesign!, selectedColor?.name) : '#'}
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={(e) => { if (!bothSelected) { e.preventDefault(); showToast('Lütfen hem bardak hem tasarım seçiniz.'); } }}
-              style={{
-                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
-                width: '100%', padding: '16px 24px',
-                background: '#25D366', color: '#fff',
-                border: 'none', borderRadius: 12,
-                fontSize: 16, fontWeight: 800,
-                cursor: 'pointer', textDecoration: 'none',
-                letterSpacing: '0.01em',
-              }}
-            >
-              <WaIcon />
-              {selectedDesign?.id === '__custom__' ? 'Kendi Tasarımım İçin WhatsApp\'a Yaz' : 'WhatsApp\'tan Sipariş Ver'}
-            </a>
+            {!isCustom && (
+              <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 12, marginBottom: 16 }}>
+                <span style={{ fontWeight: 700 }}>Adet</span>
+                <div className="cart-qty" role="group" aria-label="Adet">
+                  <button type="button" onClick={() => setQty(clampQty(qty - 1))} disabled={qty <= 1} aria-label="Adedi azalt">−</button>
+                  <input type="text" inputMode="numeric" aria-label="Adet" value={qty} onChange={(e) => setQty(clampQty(Number(e.target.value.replace(/\D/g, '').slice(0, 3)) || 1))} />
+                  <button type="button" onClick={() => setQty(clampQty(qty + 1))} disabled={qty >= MAX_QTY} aria-label="Adedi artır">+</button>
+                </div>
+              </div>
+            )}
+
+            <button type="button" className="btn btn-primary btn-block" style={{ minHeight: 56 }} onClick={order}>
+              <CartIcon size={20} /> {isCustom ? 'Fotoğrafınızı ekleyin' : 'Sepete ekle'}
+            </button>
           </div>
         </section>
 
@@ -552,11 +574,11 @@ export default function ConfiguratorClient() {
           padding: '16px 20px', display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap',
         }}>
           <p style={{ fontSize: 14, color: '#6B7280', flex: 1, minWidth: 220 }}>
-            💡 <strong style={{ color: '#1A1A1A' }}>Kendi fotoğrafını veya logonu bastırmak ister misin?</strong>{' '}
-            WhatsApp&apos;tan bize ulaş, sana özel çözüm üretelim.
+            <strong style={{ color: '#1A1A1A' }}>Kendi fotoğrafınızı veya logonuzu bastırmak ister misiniz?</strong>{' '}
+            Bardağı seçip “Kendi Tasarımım”a basın; fotoğrafınızı ekleyip sepete atın. Sorunuz varsa WhatsApp&apos;tan yazın.
           </p>
           <a
-            href={`https://wa.me/${WA_NUMBER}?text=${encodeURIComponent('Merhaba, özel tasarım bastırmak istiyorum.')}`}
+            href={`${WHATSAPP_BASE}?text=${encodeURIComponent('Merhaba, özel tasarım bastırmak istiyorum.')}`}
             target="_blank"
             rel="noopener noreferrer"
             style={{
