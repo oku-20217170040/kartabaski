@@ -1,6 +1,6 @@
 // Müşterinin gördüğü sipariş çizelgesi: sipariş kaydı + üretim hattındaki iş (saf, testli).
 import type { OrderStatus } from './orders-utils';
-import type { OrderRequest } from './siparis-types';
+import { OrderRequest, orderNo } from './siparis-types';
 
 export const TRACK_STEPS = ['Sipariş alındı', 'Tasarım ve onay', 'Baskı', 'Paketleme', 'Kargoda', 'Teslim edildi'] as const;
 
@@ -48,4 +48,14 @@ export function buildTracking(order: Input, production?: Production | null): Tra
   else if (current === 1 && order.proof?.state === 'onaylandi') headline = 'Onayınız alındı';
 
   return { cancelled: false, headline, steps };
+}
+
+/** Yalnız kodu giren herkese açık görünüm: ad, telefon, adres, yazı ve fotoğraf içermez. */
+export function publicOrder(order: OrderRequest, tracking: Tracking) {
+  return {
+    code: orderNo(order),
+    tracking,
+    shipping: order.shipping,
+    items: order.items.map((i) => ({ title: i.title, qty: i.qty, color: i.color, twoSided: Boolean(i.back) })),
+  };
 }

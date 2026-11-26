@@ -7,8 +7,7 @@ import { Timeline, Shipment, ProofReview } from './OrderTracking';
 import type { Tracking } from '@/lib/siparis-takip';
 import { WhatsAppIcon } from '@/components/icons';
 import { WHATSAPP_BASE } from '@/lib/constants';
-import { CustomerOrder, canCustomerDelete, lineFiles, lineSides, orderImageUrl, orderMessage, orderNo } from '@/lib/siparis-types';
-import { deleteOrderByCustomer } from '@/lib/siparis-client';
+import { CustomerOrder, lineFiles, lineSides, orderImageUrl, orderMessage, orderNo } from '@/lib/siparis-types';
 import { lineHref } from '@/lib/configurator-lines';
 import { cartImageSrc } from '@/lib/cart-products';
 import { trackEvent } from '@/lib/analytics-client';
@@ -18,10 +17,6 @@ const fmt = (n: number) => new Intl.NumberFormat('tr-TR').format(n);
 export default function OrderClient({ order, tracking }: { order: CustomerOrder; tracking: Tracking }) {
   const router = useRouter();
   const [proof, setProof] = useState(order.proof);
-  const [asking, setAsking] = useState(false);
-  const [busy, setBusy] = useState(false);
-  const [deleted, setDeleted] = useState(false);
-  const [error, setError] = useState('');
   const waHref = `${WHATSAPP_BASE}?text=${encodeURIComponent(orderMessage(order.token))}`;
   const place = [order.district, order.city].filter(Boolean).join(' / ');
   // Cevap verilince başlık sayfa yenilenmeden de doğru kalsın.
@@ -38,34 +33,11 @@ export default function OrderClient({ order, tracking }: { order: CustomerOrder;
     />
   );
 
-  const remove = async () => {
-    setBusy(true);
-    setError('');
-    try {
-      await deleteOrderByCustomer(order.token);
-      setDeleted(true);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Silinemedi.');
-    } finally {
-      setBusy(false);
-    }
-  };
-
-  if (deleted) {
-    return (
-      <div className="wrap ord">
-        <h1 className="h2">Siparişiniz silindi</h1>
-        <p>Bilgileriniz ve fotoğraflarınız kaldırıldı.</p>
-        <Link href="/" className="btn btn-primary">Ana sayfaya dönün</Link>
-      </div>
-    );
-  }
-
   return (
     <div className="wrap ord">
       <header className="ord-head">
         <p className="ord-status" role="status">{headline}</p>
-        <h1 className="h2">Sipariş {orderNo(order.token)}</h1>
+        <h1 className="h2 ord-title">Sipariş {orderNo(order)}</h1>
         <p>
           {order.status === 'yeni'
             ? 'Son adım: aşağıdaki düğmeyle bize WhatsApp’tan haber verin. Mesaja yalnızca bu sayfanın bağlantısı eklenir.'
@@ -80,6 +52,9 @@ export default function OrderClient({ order, tracking }: { order: CustomerOrder;
         >
           <WhatsAppIcon /> {order.status === 'yeni' ? 'WhatsApp’tan gönderin' : 'WhatsApp’tan yazın'}
         </a>
+        <p className="ord-code">
+          Sipariş kodunuz <b>{orderNo(order)}</b>. Durumu <Link href={`/siparis-takip?kod=${orderNo(order)}`}>sipariş takibi</Link> sayfasından bu kodla da görebilirsiniz.
+        </p>
       </header>
 
       {order.proof?.state === 'bekliyor' && review}
@@ -142,22 +117,6 @@ export default function OrderClient({ order, tracking }: { order: CustomerOrder;
         {order.note && <p>Sipariş notu: {order.note}</p>}
         {order.photosDeletedAt && <p>Saklama süresi dolduğu için fotoğraflar silindi.</p>}
 
-        {canCustomerDelete(order.status) && (
-          asking ? (
-            <div className="ord-confirm" role="group" aria-label="Silme onayı">
-              <p>Sipariş ve fotoğraflar kalıcı olarak silinsin mi?</p>
-              <button type="button" className="btn btn-outline" onClick={remove} disabled={busy}>
-                {busy ? 'Siliniyor…' : 'Evet, sil'}
-              </button>
-              <button type="button" className="btn btn-outline" onClick={() => setAsking(false)} disabled={busy}>Vazgeç</button>
-            </div>
-          ) : (
-            <button type="button" className="ord-delete" onClick={() => setAsking(true)}>
-              Siparişimi ve fotoğraflarımı sil
-            </button>
-          )
-        )}
-        <p className="ord-error" role="alert">{error}</p>
         <p className="ord-privacy">
           Fotoğraflarınız yalnız siparişiniz için saklanır. <Link href="/gizlilik">Aydınlatma metni</Link>
         </p>

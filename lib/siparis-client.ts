@@ -130,8 +130,6 @@ export async function submitOrder(
   return token;
 }
 
-export const deleteOrderByCustomer = (token: string) => request(`/api/siparis/${token}`, { method: 'DELETE' });
-
 export const replyProofRequest = async (
   token: string,
   body: { round: number; decision: 'onaylandi' | 'duzeltme'; reply?: string },

@@ -42,6 +42,7 @@ export default function Footer() {
           <div>
             <h2>Bilgi</h2>
             <ul>
+              <li><Link href="/siparis-takip">Sipariş takibi</Link></li>
               <li><Link href="/nasil-siparis-verilir">Nasıl sipariş verilir</Link></li>
               <li><Link href="/kurumsal">Kurumsal siparişler</Link></li>
               <li><Link href="/blog">Blog</Link></li>
