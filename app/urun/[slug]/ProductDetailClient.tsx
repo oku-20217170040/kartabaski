@@ -3,14 +3,12 @@
 import { useEffect, useMemo, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import ProductGallery from '@/components/ProductGallery';
-import { createDesignRequest } from '@/lib/design-client';
 import type { Product } from '@/types';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import ProductCard from '@/components/ProductCard';
-import AddToCart from '@/components/cart/AddToCart';
+import { CartIcon } from '@/components/cart/CartLink';
 import { CheckIcon, LinkIcon, ShareIcon, TruckIcon, WhatsAppIcon } from '@/components/icons';
 import { cloudinaryUrl, displayTitle, formatPriceRange, whatsappLink, colorSwatch } from '@/lib/format';
 import { SITE_URL } from '@/lib/site';
@@ -78,10 +76,6 @@ export default function ProductDetailClient({ slug, product, similar }: Props) {
     return () => document.body.classList.remove('has-sticky-buy');
   }, []);
 
-  const router = useRouter();
-  const [preparing, setPreparing] = useState(false);
-  const [designError, setDesignError] = useState('');
-
   if (!product) return null;
 
   const rawTitle = getTitle(product);
@@ -96,6 +90,7 @@ export default function ProductDetailClient({ slug, product, similar }: Props) {
   const productSlug = getSlug(product) || slug;
   const colorName = colorIdx !== null ? colors[colorIdx]?.name : undefined;
   const waHref = whatsappLink(rawTitle, productSlug, colorName);
+  const designHref = `/tasarla/${productSlug}${colorName ? `?renk=${encodeURIComponent(colorName)}` : ''}`;
   const categoryHref = `/?kategori=${encodeURIComponent(category)}#urunler`;
   const productUrl = `${SITE_URL}/urun/${productSlug}`;
 
@@ -107,19 +102,6 @@ export default function ProductDetailClient({ slug, product, similar }: Props) {
   );
 
   const selectColor = (i: number) => setColorIdx(i);
-
-  /** Bu kupa ve renk için sipariş sayfası açar; müşteri fotoğraflarını orada ekler. */
-  const startDesign = async () => {
-    setPreparing(true);
-    setDesignError('');
-    try {
-      const token = await createDesignRequest({ productSlug, color: colorName });
-      router.push(`/tasarim/${token}?musteri=1`);
-    } catch (e) {
-      setDesignError(e instanceof Error ? e.message : 'Sayfa açılamadı. WhatsApp’tan yazabilirsiniz.');
-      setPreparing(false);
-    }
-  };
 
   const share = async () => {
     try {
@@ -193,17 +175,14 @@ export default function ProductDetailClient({ slug, product, similar }: Props) {
                 </div>
               )}
 
-              <AddToCart product={product} color={colorName} />
-
               <div className="pdp-actions">
-                <a href={waHref} target="_blank" rel="noopener noreferrer" className="btn btn-primary btn-block">
-                  <WhatsAppIcon /> WhatsApp&apos;tan sipariş verin
+                <Link href={designHref} className="btn btn-primary btn-block">
+                  <CartIcon size={18} /> Tasarla ve sepete ekle
+                </Link>
+                <a href={waHref} target="_blank" rel="noopener noreferrer" className="pdp-ask">
+                  <WhatsAppIcon size={18} /> Sorunuz mu var? WhatsApp’tan yazın
                 </a>
-                <button type="button" className="btn btn-outline btn-block" onClick={startDesign} disabled={preparing}>
-                  {preparing ? 'Hazırlanıyor…' : 'Fotoğraf ve tasarım gönderin'}
-                </button>
               </div>
-              <p className="pdp-error" role="alert">{designError}</p>
 
               <div className="pdp-meta">
                 <div>
@@ -273,9 +252,9 @@ export default function ProductDetailClient({ slug, product, similar }: Props) {
 
       <div className="sticky-buy">
         <span className="price">{priceNode}</span>
-        <a href={waHref} target="_blank" rel="noopener noreferrer" className="btn btn-primary">
-          <WhatsAppIcon /> WhatsApp&apos;tan sipariş
-        </a>
+        <Link href={designHref} className="btn btn-primary">
+          <CartIcon size={18} /> Tasarla ve sepete ekle
+        </Link>
       </div>
 
       <Footer />

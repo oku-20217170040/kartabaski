@@ -66,6 +66,7 @@ export default function Footer() {
         <div className="footer-legal">
           <span>© {year} KAR-TA BASKI</span>
           <span>Türkiye geneline kargo</span>
+          <Link href="/gizlilik">Bilgileriniz ve gizlilik</Link>
         </div>
       </div>
     </footer>

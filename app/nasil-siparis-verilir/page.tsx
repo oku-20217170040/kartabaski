@@ -7,15 +7,15 @@ import { WHATSAPP_BASE, DEFAULT_WA_TEXT } from '@/lib/constants';
 
 export const metadata: Metadata = {
   title: 'Nasıl Sipariş Verilir?',
-  description: 'Kupa baskı siparişi dört adımda: ürünü seçin, tasarımı WhatsApp’tan gönderin, önizlemeyi onaylayın, 3 iş günü içinde kargoya verelim.',
+  description: 'Kupa baskı siparişi dört adımda: kupayı tasarlayıp sepete ekleyin, siparişi WhatsApp’tan gönderin, önizlemeyi onaylayın, 3 iş günü içinde kargoya verelim.',
   alternates: { canonical: '/nasil-siparis-verilir' },
 };
 
 const WA_HREF = `${WHATSAPP_BASE}?text=${encodeURIComponent(DEFAULT_WA_TEXT)}`;
 
 const STEPS = [
-  { title: 'Ürününüzü seçin', text: 'Ürünler sayfasından kupa ya da fincanı seçin. Ürün sayfasındaki WhatsApp düğmesi, seçtiğiniz ürünün adıyla hazır bir mesaj açar.' },
-  { title: 'Tasarımınızı gönderin', text: 'Fotoğraf, logo ya da metninizi WhatsApp’tan iletin; JPG, PNG veya PDF olabilir. Hazır tasarımınız yoksa ücretsiz hazırlıyoruz.' },
+  { title: 'Tasarlayıp sepete ekleyin', text: 'Kupayı seçin; yazınızı ve fotoğraflarınızı ekleyin. Hazır tasarımınız yoksa işaretleyin, ücretsiz hazırlayalım. Farklı kupaları aynı sepette toplayabilirsiniz.' },
+  { title: 'Siparişi gönderin', text: 'Sepette adınızı ve telefonunuzu yazıp siparişi oluşturun. WhatsApp’a yalnızca sipariş bağlantınız gider; ayrıntılar o sayfadadır.' },
   { title: 'Önizlemeyi onaylayın', text: 'Baskıdan önce size dijital önizleme gönderiyoruz. Değişiklik isterseniz düzeltiriz; onayınız olmadan baskı yapılmaz.' },
   { title: 'Baskı ve kargo', text: 'Onaydan sonra baskıya alınır ve 3 iş günü içinde kargoya verilir. Türkiye’nin her yerine gönderim yapıyoruz.' },
 ];
@@ -42,7 +42,7 @@ export default function NasilSiparisVerilirPage() {
               </ol>
             </nav>
             <h1 className="display">Dört adımda siparişiniz hazır.</h1>
-            <p className="lead">Sepet ya da ödeme formu yok. Her şey WhatsApp üzerinden, sizinle birlikte ilerliyor.</p>
+            <p className="lead">Sitede ödeme alınmıyor. Siparişinizi hazırlayın, fiyatı ve son hâlini WhatsApp’tan birlikte netleştirelim.</p>
           </header>
         </div>
 

@@ -1,8 +1,22 @@
-// Sepet / sepet talebi tipleri — istemci ve sunucu ortak kullanır (server-only içermez).
+// Sepet tipleri — istemci ve sunucu ortak kullanır (server-only içermez).
+import type { Placement } from './photo-layout';
+
+/** Bir sepet satırının tasarımı. Fotoğraflar sipariş oluşturulana kadar cihazda (IndexedDB) durur. */
+export interface CartDesign {
+  text?: string;
+  font?: 'duz' | 'el';
+  placement?: Placement;
+  removeBg?: boolean;
+  /** Müşterinin tasarımı yok; atölye hazırlayacak. */
+  needsDesign?: boolean;
+  /** lib/cart-files kimlikleri. */
+  photos: string[];
+  preview?: string;
+}
 
 /** Tarayıcıda (localStorage) tutulan sepet satırı. Aynı ürün + renk tek satırdır; adet artar. */
 export interface CartItem {
-  key: string; // productId::renk — satır kimliği
+  key: string; // tasarımlı satır: d:<kimlik>; tasarımsız: productId::renk
   productId: string;
   slug: string;
   title: string;
@@ -12,36 +26,7 @@ export interface CartItem {
   qty: number; // 1–500
   color?: string;
   note?: string; // kişiselleştirme notu (isim / yazı)
-}
-
-/** Talep kaydındaki satır anlık görüntüsü: fiyat sunucuda Firestore'dan okunur, istemciye güvenilmez. */
-export interface SepetTalebiItem {
-  productId: string;
-  slug: string;
-  title: string;
-  unitPrice: number;
-  qty: number;
-  color?: string;
-  note?: string;
-  image?: string | null;
-}
-
-export type SepetTalebiStatus = 'yeni' | 'incelendi' | 'siparis' | 'tamamlandi' | 'iptal';
-
-export interface SepetTalebi {
-  id?: string;
-  items: SepetTalebiItem[];
-  total: number; // tahmini (priceMin × adet)
-  name: string;
-  phone: string;
-  city: string;
-  district: string;
-  address?: string;
-  note?: string;
-  adminNote?: string;
-  orderId?: string;
-  createdAt: number;
-  status: SepetTalebiStatus;
+  design?: CartDesign;
 }
 
 /** /sepet sayfasının sunucudan aldığı güncel ürün bilgisi. */
@@ -56,6 +41,7 @@ export interface CartProductInfo {
   colors: string[];
 }
 
+/** Yönetim özetindeki sipariş sayıları. */
 export interface CartOverview {
   newCount: number;
   last30: number;

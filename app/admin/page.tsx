@@ -8,7 +8,7 @@ import { getActive, getCategory } from '@/lib/product-utils';
 import { getFinanceSummaryAction } from '@/lib/actions-finance';
 import { getMachineOverviewAction } from '@/lib/actions-machine';
 import { getOverviewStatsAction } from '@/lib/actions-analytics';
-import { getCartOverviewAction } from '@/lib/actions-cart';
+import { getOrderRequestOverviewAction } from '@/lib/actions-siparis';
 import { getReviewStatsAction } from '@/lib/actions-reviews';
 import { getSocialStatusAction } from '@/lib/actions-social';
 import type { PlatformStatus } from '@/lib/social-types';
@@ -21,7 +21,7 @@ type Awaited2<T> = T extends Promise<infer U> ? U : T;
 type Finance = Awaited2<ReturnType<typeof getFinanceSummaryAction>>;
 type Machine = Awaited2<ReturnType<typeof getMachineOverviewAction>>;
 type Stats = Awaited2<ReturnType<typeof getOverviewStatsAction>>;
-type Cart = Awaited2<ReturnType<typeof getCartOverviewAction>>;
+type Cart = Awaited2<ReturnType<typeof getOrderRequestOverviewAction>>;
 type Reviews = Awaited2<ReturnType<typeof getReviewStatsAction>>;
 
 const tl = (n: number) => `₺${new Intl.NumberFormat('tr-TR', { maximumFractionDigits: 0 }).format(Math.round(n || 0))}`;
@@ -65,7 +65,7 @@ export default function AdminDashboard() {
     // Her modül bağımsız yüklenir: biri hata verse de diğerleri görünür
     Promise.allSettled([
       getProducts(), getFinanceSummaryAction(), getMachineOverviewAction(), getOverviewStatsAction(),
-      getCartOverviewAction(), getReviewStatsAction(), getSocialStatusAction(),
+      getOrderRequestOverviewAction(), getReviewStatsAction(), getSocialStatusAction(),
     ]).then(([p, f, m, s, c, r, so]) => {
       setProducts(val(p) ?? []);
       setFinance(val(f));
@@ -102,7 +102,7 @@ export default function AdminDashboard() {
   );
 
   const actions: { label: string; href: string; count: number | null }[] = [
-    { label: 'Yeni sepet talebi', href: '/admin/sepet-talepleri', count: cart?.newCount ?? null },
+    { label: 'Yeni sipariş', href: '/admin/siparisler', count: cart?.newCount ?? null },
     { label: 'Geciken iş', href: '/admin/makine', count: machine?.late ?? null },
     { label: 'Bugün teslim edilecek iş', href: '/admin/makine', count: machine?.dueToday ?? null },
     { label: 'Onay bekleyen yorum', href: '/admin/yorumlar', count: reviews?.pending ?? null },
@@ -122,8 +122,8 @@ export default function AdminDashboard() {
       </div>
 
       <nav className="ov-quick" aria-label="Hızlı işlemler">
-        <Link href="/admin/sepet-talepleri" className="btn btn-secondary btn-sm adm-btn-icon-label">
-          <IconCart size={15} /> Sepet Talepleri {cart && cart.newCount > 0 && <span className="adm-badge">{cart.newCount}</span>}
+        <Link href="/admin/siparisler" className="btn btn-secondary btn-sm adm-btn-icon-label">
+          <IconCart size={15} /> Siparişler {cart && cart.newCount > 0 && <span className="adm-badge">{cart.newCount}</span>}
         </Link>
         <Link href="/admin/makine" className="btn btn-secondary btn-sm adm-btn-icon-label"><IconCog size={15} /> Makine</Link>
         <Link href="/admin/muhasebe" className="btn btn-secondary btn-sm adm-btn-icon-label"><IconWallet size={15} /> Muhasebe</Link>
@@ -202,11 +202,11 @@ export default function AdminDashboard() {
 
         <section className="card adm-section">
           <h2 className="adm-section-title ov-title-row">
-            <span>Son sepet talepleri</span>
-            <Link href="/admin/sepet-talepleri" className="ov-more">Tümü</Link>
+            <span>Son siparişler</span>
+            <Link href="/admin/siparisler" className="ov-more">Tümü</Link>
           </h2>
           {!cart || cart.recent.length === 0 ? (
-            <p className="adm-empty">{loading ? 'Yükleniyor…' : 'Henüz sepet talebi yok.'}</p>
+            <p className="adm-empty">{loading ? 'Yükleniyor…' : 'Henüz sipariş yok.'}</p>
           ) : (
             <ul className="ov-mini-list">
               {cart.recent.slice(0, 5).map((r) => (

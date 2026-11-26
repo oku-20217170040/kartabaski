@@ -6,8 +6,7 @@ import Link from 'next/link';
 import { AuthProvider, useAuth } from '@/lib/auth-context';
 import LogoSVG from '@/components/LogoSVG';
 import { ToastProvider } from '@/components/admin/Toast';
-import { countNewCartRequestsAction } from '@/lib/actions-cart';
-import { countNewDesignsAction } from '@/lib/actions-designs';
+import { countNewOrderRequestsAction } from '@/lib/actions-siparis';
 import { setNoTrack } from '@/lib/analytics-client';
 import {
   ADMIN_GROUPS, SOCIAL_LINKS, adminPageTitle, filterAdminLinks, inSocial as isSocialPath, isLinkActive,
@@ -44,8 +43,7 @@ function AdminShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [navQuery, setNavQuery] = useState('');
-  const [newCartCount, setNewCartCount] = useState(0);
-  const [newDesignCount, setNewDesignCount] = useState(0);
+  const [newOrderCount, setNewOrderCount] = useState(0);
 
   useEffect(() => {
     if (!loading && !isAdmin && pathname !== '/admin/login') router.replace('/admin/login');
@@ -56,13 +54,12 @@ function AdminShell({ children }: { children: ReactNode }) {
   // Admin girişi yapılmış cihaz kendi ziyaretlerini istatistiğe katmasın
   useEffect(() => { if (isAdmin) setNoTrack(true); }, [isAdmin]);
 
-  // Yeni sepet talebi ve tasarım siparişi rozeti: dakikada bir; sekme başlığına da yansır
+  // Yeni sipariş rozeti: dakikada bir; sekme başlığına da yansır
   useEffect(() => {
     if (!isAdmin) return;
     let alive = true;
     const tick = () => {
-      countNewCartRequestsAction().then((n) => { if (alive) setNewCartCount(n); }).catch(() => {});
-      countNewDesignsAction().then((n) => { if (alive) setNewDesignCount(n); }).catch(() => {});
+      countNewOrderRequestsAction().then((n) => { if (alive) setNewOrderCount(n); }).catch(() => {});
     };
     tick();
     const t = window.setInterval(tick, 60000);
@@ -71,9 +68,8 @@ function AdminShell({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const base = document.title.replace(/^\(\d+\)\s/, '');
-    const waiting = newCartCount + newDesignCount;
-    document.title = waiting > 0 ? `(${waiting}) ${base}` : base;
-  }, [newCartCount, newDesignCount, pathname]);
+    document.title = newOrderCount > 0 ? `(${newOrderCount}) ${base}` : base;
+  }, [newOrderCount, pathname]);
 
   const filteredLinks = useMemo(() => filterAdminLinks(navQuery), [navQuery]);
 
@@ -103,11 +99,8 @@ function AdminShell({ children }: { children: ReactNode }) {
           <span>{l.label}</span>
           {showDesc && l.desc && <span className="adm-nav-desc">{l.desc}</span>}
         </span>
-        {l.href === '/admin/tasarimlar' && newDesignCount > 0 && (
-          <span className="adm-badge" aria-label={`${newDesignCount} yeni tasarım siparişi`}>{newDesignCount}</span>
-        )}
-        {l.href === '/admin/sepet-talepleri' && newCartCount > 0 && (
-          <span className="adm-badge" aria-label={`${newCartCount} yeni sepet talebi`}>{newCartCount}</span>
+        {l.href === '/admin/siparisler' && newOrderCount > 0 && (
+          <span className="adm-badge" aria-label={`${newOrderCount} yeni sipariş`}>{newOrderCount}</span>
         )}
       </Link>
     );
@@ -196,7 +189,7 @@ function AdminShell({ children }: { children: ReactNode }) {
           <div className="admin-mobile-topbar">
             <button type="button" className="admin-hamburger-btn" onClick={() => setSidebarOpen(true)} aria-label="Menüyü aç">
               <IconMenu size={22} />
-              {newCartCount > 0 && <span className="adm-badge adm-badge-dot" aria-hidden="true" />}
+              {newOrderCount > 0 && <span className="adm-badge adm-badge-dot" aria-hidden="true" />}
             </button>
             <div className="adm-mtop-title">{adminPageTitle(pathname)}</div>
             <Link href="/admin" className="adm-mtop-logo" aria-label="Genel Bakış"><LogoSVG height={28} /></Link>

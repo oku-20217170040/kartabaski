@@ -4,14 +4,17 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import '@fontsource-variable/shantell-sans';
 import { useEffect, useRef, useState } from 'react';
-import { WhatsAppIcon } from '@/components/icons';
+import type { Product } from '@/types';
 import MugPreview, { MugPreviewHandle, PrintFont } from '@/components/MugPreview';
 import PhotoControls from '@/components/PhotoControls';
-import { VITRIN_MUGS, VITRIN_PRODUCT_SLUG, vitrinOrderText } from '@/lib/vitrin';
-import { DEFAULT_PLACEMENT, Placement } from '@/lib/photo-layout';
-import { removeBackground } from '@/lib/remove-background';
-import { createDesignRequest } from '@/lib/design-client';
-import { WHATSAPP_BASE } from '@/lib/constants';
+import { CartIcon } from '@/components/cart/CartLink';
+import { VITRIN_MUGS } from '@/lib/vitrin';
+import { useCart } from '@/lib/cart-context';
+import { saveFile } from '@/lib/cart-files';
+import { productToCartItem } from '@/lib/cart-products';
+import { prepareUpload } from '@/lib/siparis-client';
+import { usePrintPhoto } from '@/lib/use-print-photo';
+import { trackEvent } from '@/lib/analytics-client';
 
 const MAX_LEN = 40;
 const SAMPLE = 'Önce kahve';
@@ -19,38 +22,20 @@ const SAMPLE = 'Önce kahve';
 interface Props {
   lowestPrice?: number | null;
   /** Fotoğraftaki kupanın katalog kaydı (varsa). */
-  mugProduct?: { href: string; title: string; price: string } | null;
+  mugProduct?: { slug: string; title: string; price: string; product: Product } | null;
 }
-
-interface Photo {
-  file: File;
-  original: HTMLImageElement;
-  cutout?: HTMLImageElement;
-}
-
-const release = (p: Photo | null) => {
-  if (!p) return;
-  URL.revokeObjectURL(p.original.src);
-  if (p.cutout) URL.revokeObjectURL(p.cutout.src);
-};
 
 export default function HeroSection({ lowestPrice, mugProduct }: Props) {
   const router = useRouter();
+  const cart = useCart();
   const preview = useRef<MugPreviewHandle>(null);
   const [text, setText] = useState('');
   const [colorIndex, setColorIndex] = useState(0);
   const [font, setFont] = useState<PrintFont>('duz');
-  const [photo, setPhoto] = useState<Photo | null>(null);
-  const [placement, setPlacement] = useState<Placement>(DEFAULT_PLACEMENT);
-  const [removeBg, setRemoveBg] = useState(false);
-  const [removing, setRemoving] = useState(false);
-  const [sending, setSending] = useState(false);
+  const [file, setFile] = useState<File | null>(null);
+  const [adding, setAdding] = useState(false);
   const [error, setError] = useState('');
-  const photoRef = useRef<Photo | null>(null);
-  photoRef.current = photo;
-
-  // Fotoğraf, sipariş hazırlanana kadar yalnızca tarayıcıda durur.
-  useEffect(() => () => release(photoRef.current), []);
+  const print = usePrintPhoto(file);
 
   // Diğer renkler tıklanınca beklemesin.
   useEffect(() => {
@@ -60,75 +45,39 @@ export default function HeroSection({ lowestPrice, mugProduct }: Props) {
     return () => clearTimeout(timer);
   }, []);
 
-  const setNewPhoto = (next: Photo | null) => {
-    release(photo);
-    setPhoto(next);
-    setPlacement(DEFAULT_PLACEMENT);
-    setRemoveBg(false);
-    setError('');
-  };
-
   const pickPhoto = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
+    const picked = e.target.files?.[0];
     e.target.value = '';
-    if (!file) return;
-    const img = new window.Image();
-    img.onload = () => setNewPhoto({ file, original: img });
-    img.onerror = () => {
-      URL.revokeObjectURL(img.src);
-      setError('Bu dosya açılamadı. JPG veya PNG bir fotoğraf deneyin.');
-    };
-    img.src = URL.createObjectURL(file);
-  };
-
-  const toggleBackground = async () => {
-    if (!photo) return;
-    setError('');
-    if (removeBg) { setRemoveBg(false); return; }
-    if (photo.cutout) { setRemoveBg(true); return; }
-    setRemoving(true);
-    try {
-      const cutout = await removeBackground(photo.original);
-      // İşlem sürerken fotoğraf değiştirildiyse sonucu at.
-      if (photoRef.current?.original !== photo.original) { URL.revokeObjectURL(cutout.src); return; }
-      setPhoto({ ...photo, cutout });
-      setRemoveBg(true);
-    } catch {
-      setError('Arka plan silinemedi. Siparişte belirtirseniz biz sileriz.');
-    } finally {
-      setRemoving(false);
-    }
+    if (picked) { setError(''); setFile(picked); }
   };
 
   const mug = VITRIN_MUGS[colorIndex];
-  const printed = text || (photo ? '' : SAMPLE);
-  const shown = photo ? (removeBg && photo.cutout ? photo.cutout : photo.original) : null;
-  const orderText = vitrinOrderText({ text, color: mug.color, handwriting: font === 'el', hasPhoto: Boolean(photo) });
-  const waHref = `${WHATSAPP_BASE}?text=${encodeURIComponent(orderText)}`;
+  const printed = text || (file ? '' : SAMPLE);
+  const personalised = Boolean(text.trim() || file);
 
-  const prepareOrder = async () => {
-    setSending(true);
+  const addToCart = async () => {
+    if (!mugProduct) return;
+    setAdding(true);
     setError('');
     try {
-      // Örnek yazı siparişe girmez: kullanıcı bir şey yazmadıysa önizleme gönderilmez.
-      const personalised = Boolean(text.trim() || photo);
-      const snapshot = personalised ? await preview.current?.snapshot(mug.field) : null;
-      const token = await createDesignRequest(
-        {
-          productSlug: VITRIN_PRODUCT_SLUG,
-          color: mug.color,
+      const photos = file ? [await saveFile(await prepareUpload(file))] : [];
+      const shot = await preview.current?.snapshot(mug.field);
+      cart.save(productToCartItem(mugProduct.product, {
+        color: mug.color,
+        design: {
+          photos,
+          preview: shot ? await saveFile(shot) : undefined,
           text: text.trim() || undefined,
           font: text.trim() ? font : undefined,
-          placement: photo ? placement : undefined,
-          removeBg: photo ? removeBg : undefined,
+          placement: file ? print.placement : undefined,
+          removeBg: file && print.removeBg ? true : undefined,
         },
-        snapshot,
-        photo?.file,
-      );
-      router.push(`/tasarim/${token}?musteri=1`);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Sipariş hazırlanamadı.');
-      setSending(false);
+      }));
+      trackEvent('cart_add', { slug: mugProduct.slug, qty: 1 });
+      router.push('/sepet');
+    } catch {
+      setError('Sepete eklenemedi. Tarayıcınız gizli moddaysa fotoğraf saklanamayabilir.');
+      setAdding(false);
     }
   };
 
@@ -149,23 +98,23 @@ export default function HeroSection({ lowestPrice, mugProduct }: Props) {
             mug={mug}
             text={printed}
             font={font}
-            photo={shown}
-            placement={placement}
-            onPlacementChange={setPlacement}
+            photo={print.image}
+            placement={print.placement}
+            onPlacementChange={print.setPlacement}
           />
-          {!photo && mugProduct && (
+          {!file && mugProduct && (
             <p className="vitrin-caption">
-              <Link href={mugProduct.href}>{mugProduct.title}, {mugProduct.price}</Link>
+              <Link href={`/urun/${mugProduct.slug}`}>{mugProduct.title}, {mugProduct.price}</Link>
             </p>
           )}
-          {photo && (
+          {file && (
             <PhotoControls
-              placement={placement}
-              onChange={setPlacement}
-              removeBg={removeBg}
-              removing={removing}
-              onToggleBg={toggleBackground}
-              onRemove={() => setNewPhoto(null)}
+              placement={print.placement}
+              onChange={print.setPlacement}
+              removeBg={print.removeBg}
+              removing={print.removing}
+              onToggleBg={print.toggleBackground}
+              onRemove={() => setFile(null)}
             />
           )}
         </div>
@@ -194,7 +143,7 @@ export default function HeroSection({ lowestPrice, mugProduct }: Props) {
               El yazısı
             </button>
             <label className="vitrin-tool vitrin-file">
-              {photo ? 'Fotoğrafı değiştir' : 'Fotoğraf ekleyin'}
+              {file ? 'Fotoğrafı değiştir' : 'Fotoğraf ekleyin'}
               <input type="file" accept="image/*" className="sr-only" onChange={pickPhoto} />
             </label>
           </div>
@@ -219,26 +168,20 @@ export default function HeroSection({ lowestPrice, mugProduct }: Props) {
             </div>
           </div>
 
-          <p className="vitrin-error" role="alert">{error}</p>
+          <p className="vitrin-error" role="alert">{error || print.error}</p>
 
           <div className="vitrin-ctas">
-            {mugProduct ? (
-              <button type="button" className="btn vitrin-order" onClick={prepareOrder} disabled={sending || removing}>
-                <WhatsAppIcon /> {sending ? 'Hazırlanıyor…' : 'Siparişi hazırlayın'}
+            {mugProduct && personalised ? (
+              <button type="button" className="btn vitrin-order" onClick={addToCart} disabled={adding || print.removing}>
+                <CartIcon size={18} /> {adding ? 'Ekleniyor…' : 'Sepete ekle'}
               </button>
             ) : (
-              <a className="btn vitrin-order" href={waHref} target="_blank" rel="noopener noreferrer">
-                <WhatsAppIcon /> WhatsApp&apos;tan sipariş edin
-              </a>
+              <Link className="btn vitrin-order" href={mugProduct ? `/tasarla/${mugProduct.slug}?renk=${encodeURIComponent(mug.color)}` : '#urunler'}>
+                <CartIcon size={18} /> Tasarlamaya başlayın
+              </Link>
             )}
             <Link className="text-link" href="#urunler">Bütün kupalar</Link>
           </div>
-
-          {mugProduct && (
-            <p className="vitrin-note">
-              Sonraki adımda başka fotoğraflar ve not ekleyip WhatsApp&apos;tan gönderirsiniz. Fotoğrafınız bu düğmeye basana kadar cihazınızda kalır.
-            </p>
-          )}
 
           <p className="vitrin-facts">
             Tek adet de basıyoruz. Basmadan önce nasıl duracağını gönderiyoruz, onayınızdan sonra 3 iş gününde kargoda.

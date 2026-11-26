@@ -1,6 +1,5 @@
-import type { CartItem, SepetTalebiItem, CartProductInfo } from './cart-types';
+import type { CartDesign, CartItem, CartProductInfo } from './cart-types';
 import { MAX_CART_ITEMS, MAX_QTY } from './cart-schemas';
-import { SITE_URL } from './site';
 
 // Saf sepet mantığı: Firebase / ürün bağımlılığı yok (istemci ve sunucu ortak).
 
@@ -30,6 +29,17 @@ export function addToCart(items: CartItem[], item: CartItem): CartItem[] {
   }
   if (items.length >= MAX_CART_ITEMS) return items;
   return [...items, { ...item, qty: clampQty(item.qty) }];
+}
+
+/** Düzenlenen satırı yerinde değiştirir; yeni satırsa ekler. */
+export function upsertLine(items: CartItem[], item: CartItem): CartItem[] {
+  if (items.some((i) => i.key === item.key)) return items.map((i) => (i.key === item.key ? { ...item, qty: clampQty(item.qty) } : i));
+  return addToCart(items, item);
+}
+
+/** Satırların cihazda tuttuğu dosya kimlikleri. */
+export function designFileIds(items: CartItem[]): string[] {
+  return items.flatMap((i) => (i.design ? [...i.design.photos, ...(i.design.preview ? [i.design.preview] : [])] : []));
 }
 
 export function removeFromCart(items: CartItem[], key: string): CartItem[] {
@@ -71,7 +81,8 @@ export function reconcileCart(
     const p = map.get(item.productId);
     if (!p) { available.push(item); continue; }
     if (!p.active) { unavailable.push(item); continue; }
-    const color = item.color && p.colors.includes(item.color) ? item.color : undefined;
+    // Tasarımlı satırda müşterinin seçtiği renk korunur (vitrin renkleri katalogda olmayabilir).
+    const color = item.color && (item.design || p.colors.includes(item.color)) ? item.color : undefined;
     available.push({
       ...item,
       title: p.title || item.title,
@@ -82,6 +93,27 @@ export function reconcileCart(
     });
   }
   return { available, unavailable };
+}
+
+const FILE_ID = /^[A-Za-z0-9-]{1,64}$/;
+
+function parseDesign(x: unknown): CartDesign | undefined {
+  if (!x || typeof x !== 'object') return undefined;
+  const d = x as Record<string, unknown>;
+  const photos = Array.isArray(d.photos) ? d.photos.filter((p): p is string => typeof p === 'string' && FILE_ID.test(p)) : [];
+  const p = d.placement as Record<string, unknown> | undefined;
+  const placement = p && ['x', 'y', 'scale', 'rotate'].every((k) => typeof p[k] === 'number')
+    ? { x: p.x as number, y: p.y as number, scale: p.scale as number, rotate: p.rotate as number }
+    : undefined;
+  return {
+    photos: photos.slice(0, 8),
+    ...(typeof d.preview === 'string' && FILE_ID.test(d.preview) ? { preview: d.preview } : {}),
+    ...(typeof d.text === 'string' && d.text.trim() ? { text: d.text.slice(0, 40) } : {}),
+    ...(d.font === 'el' || d.font === 'duz' ? { font: d.font } : {}),
+    ...(placement ? { placement } : {}),
+    ...(d.removeBg === true ? { removeBg: true } : {}),
+    ...(d.needsDesign === true ? { needsDesign: true } : {}),
+  };
 }
 
 /** localStorage'dan okunan ham metni güvenle sepete çevirir (bozuk/eski veri çökertmez). */
@@ -96,7 +128,8 @@ export function parseStoredCart(raw: string | null): CartItem[] {
       const r = x as Record<string, unknown>;
       if (typeof r.productId !== 'string' || !r.productId || typeof r.title !== 'string') continue;
       const color = typeof r.color === 'string' && r.color.trim() ? r.color.trim().slice(0, 60) : undefined;
-      const key = lineKey(r.productId, color);
+      const design = parseDesign(r.design);
+      const key = design && typeof r.key === 'string' && r.key.startsWith('d:') ? r.key.slice(0, 80) : lineKey(r.productId, color);
       if (out.some((o) => o.key === key)) continue;
       out.push({
         key,
@@ -109,6 +142,7 @@ export function parseStoredCart(raw: string | null): CartItem[] {
         qty: clampQty(r.qty),
         color,
         note: typeof r.note === 'string' && r.note.trim() ? r.note.slice(0, NOTE_MAX) : undefined,
+        design,
       });
     }
     return out.slice(0, MAX_CART_ITEMS);
@@ -119,45 +153,9 @@ export function parseStoredCart(raw: string | null): CartItem[] {
 
 const fmt = (n: number) => new Intl.NumberFormat('tr-TR').format(n);
 
-/** Talep No: kayıt id'sinin ilk 6 karakteri (admin panelinde eşleştirmek için). */
+/** Sipariş no: kayıt id'sinin ilk 6 karakteri. */
 export function requestNo(id?: string): string {
   return id ? id.slice(0, 6).toUpperCase() : '';
-}
-
-export interface CartMessageInput {
-  ref?: string;
-  items: SepetTalebiItem[];
-  total: number;
-  name?: string;
-  phone?: string;
-  city?: string;
-  district?: string;
-  address?: string;
-  note?: string;
-}
-
-export function buildCartWhatsAppMessage(i: CartMessageInput): string {
-  const no = requestNo(i.ref);
-  const lines: string[] = [no ? `*SEPET TALEBİ* (No: ${no})` : '*SEPET TALEBİ*', '', `*Ürünler (${i.items.length})*`];
-  i.items.forEach((p, n) => {
-    const price = p.unitPrice > 0 ? `${fmt(p.unitPrice)}₺'den başlayan` : 'fiyat sorunuz';
-    lines.push(`${n + 1}) ${p.title} — ${p.qty} adet (${price})`);
-    if (p.color) lines.push(`   Renk: ${p.color}`);
-    if (p.note?.trim()) lines.push(`   Kişiselleştirme: ${p.note.trim()}`);
-    lines.push(`   ${SITE_URL}/urun/${p.slug}`);
-  });
-  if (i.total > 0) lines.push('', `*Tahmini toplam:* ${fmt(i.total)}₺ (kesin fiyat WhatsApp'ta onaylanır)`);
-
-  const contact: string[] = [];
-  if (i.name?.trim()) contact.push(`Ad: ${i.name.trim()}`);
-  if (i.phone?.trim()) contact.push(`Tel: ${i.phone.trim()}`);
-  const place = [i.district?.trim(), i.city?.trim()].filter(Boolean).join(' / ');
-  if (place) contact.push(`İl/İlçe: ${place}`);
-  if (i.address?.trim()) contact.push(`Adres: ${i.address.trim()}`);
-  if (contact.length) lines.push('', '*İletişim*', ...contact);
-  if (i.note?.trim()) lines.push('', `*Not:* ${i.note.trim()}`);
-  lines.push('', 'Kişiselleştirme fotoğrafını/tasarımını bu sohbetten göndereceğim.');
-  return lines.join('\n');
 }
 
 /** Türkiye numarasını wa.me biçimine çevirir. */
@@ -171,6 +169,6 @@ export function waNumber(phone: string): string {
 
 export function customerWhatsappLink(t: { name?: string; phone?: string; id?: string }): string {
   const no = requestNo(t.id);
-  const text = `Merhaba${t.name ? ` ${t.name}` : ''}, KAR-TA BASKI'dan yazıyoruz.${no ? ` ${no} numaralı` : ''} sepet talebiniz için bilgi vermek istiyoruz.`;
+  const text = `Merhaba${t.name ? ` ${t.name}` : ''}, KAR-TA BASKI'dan yazıyoruz.${no ? ` ${no} numaralı` : ''} siparişiniz için bilgi vermek istiyoruz.`;
   return `https://wa.me/${waNumber(t.phone ?? '')}?text=${encodeURIComponent(text)}`;
 }

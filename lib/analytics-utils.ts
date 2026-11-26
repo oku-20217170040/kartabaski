@@ -186,7 +186,7 @@ export interface PatchContext {
 /** Sayfa yolunu sınıflar: ürün / kategori / genel sayfa / yok sayılacak. */
 export function classifyPath(path: string): { kind: 'prod' | 'cat' | 'blog' | 'page' | 'skip'; key: string } {
   const p = path.split(/[?#]/)[0].replace(/\/+$/, '') || '/';
-  if (!p.startsWith('/') || p.startsWith('/admin') || p.startsWith('/api') || p.startsWith('/tasarim')) return { kind: 'skip', key: '' };
+  if (!p.startsWith('/') || p.startsWith('/admin') || p.startsWith('/api') || p.startsWith('/siparis')) return { kind: 'skip', key: '' };
   const prod = p.match(/^\/urun\/([^/]+)$/);
   if (prod && SLUG_RE.test(prod[1])) return { kind: 'prod', key: prod[1] };
   const cat = p.match(/^\/kategori\/([^/]+)$/);

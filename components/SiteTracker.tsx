@@ -46,7 +46,7 @@ export default function SiteTracker() {
     if (!pathname) return;
 
     flush(); // önceki sayfanın süresini gönder
-    if (pathname.startsWith('/admin') || pathname.startsWith('/tasarim') || !trackingEnabled()) { page.current.path = ''; return; }
+    if (pathname.startsWith('/admin') || pathname.startsWith('/siparis') || !trackingEnabled()) { page.current.path = ''; return; }
     const p = page.current;
     p.path = pathname;
     p.visibleMs = 0;
