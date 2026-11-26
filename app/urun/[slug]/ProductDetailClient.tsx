@@ -1,17 +1,17 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import ProductGallery from '@/components/ProductGallery';
+import { createDesignRequest } from '@/lib/design-client';
 import type { Product } from '@/types';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import ProductCard from '@/components/ProductCard';
 import AddToCart from '@/components/cart/AddToCart';
-import {
-  ChevronLeftIcon, ChevronRightIcon, CheckIcon, CloseIcon, LinkIcon,
-  ShareIcon, TruckIcon, WhatsAppIcon, ZoomIcon,
-} from '@/components/icons';
+import { CheckIcon, LinkIcon, ShareIcon, TruckIcon, WhatsAppIcon } from '@/components/icons';
 import { cloudinaryUrl, displayTitle, formatPriceRange, whatsappLink, colorSwatch } from '@/lib/format';
 import { SITE_URL } from '@/lib/site';
 import {
@@ -24,9 +24,7 @@ interface Props {
   similar: Product[];
 }
 
-const MAIN_TRANSFORM = 'f_auto,q_auto,w_1200,c_limit';
 const THUMB_TRANSFORM = 'f_auto,q_auto,w_160,h_160,c_fill';
-const SWIPE_MIN = 40;
 
 const toSrc = (id: string, opts: string) => (id.startsWith('http') ? id : cloudinaryUrl(id, opts));
 
@@ -63,27 +61,13 @@ function parseDescription(raw: string): Block[] {
 export default function ProductDetailClient({ slug, product, similar }: Props) {
   const colors = useMemo(() => product?.colors ?? [], [product]);
   const [colorIdx, setColorIdx] = useState<number | null>(colors.length > 0 ? 0 : null);
-  const [active, setActive] = useState(0);
-  const [lightbox, setLightbox] = useState<number | null>(null);
   const [copied, setCopied] = useState(false);
   const [canShare, setCanShare] = useState(false);
-  const touchStart = useRef<{ x: number; y: number } | null>(null);
-  const closeRef = useRef<HTMLButtonElement>(null);
-  const lastFocus = useRef<HTMLElement | null>(null);
-
   const imageIds: string[] = useMemo(() => {
     if (!product) return [];
     const own = colorIdx !== null ? colors[colorIdx]?.images : undefined;
     return own && own.length ? own : product.images ?? [];
   }, [product, colors, colorIdx]);
-
-  const count = imageIds.length;
-  const safeActive = count ? Math.min(active, count - 1) : 0;
-
-  const go = useCallback(
-    (dir: 1 | -1) => setActive((i) => (count ? (i + dir + count) % count : 0)),
-    [count],
-  );
 
   useEffect(() => {
     setCanShare(typeof navigator.share === 'function');
@@ -94,24 +78,9 @@ export default function ProductDetailClient({ slug, product, similar }: Props) {
     return () => document.body.classList.remove('has-sticky-buy');
   }, []);
 
-  useEffect(() => {
-    if (lightbox === null) return;
-    lastFocus.current = document.activeElement as HTMLElement | null;
-    const prevOverflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-    closeRef.current?.focus();
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setLightbox(null);
-      else if (e.key === 'ArrowRight') setLightbox((i) => (i === null || !count ? i : (i + 1) % count));
-      else if (e.key === 'ArrowLeft') setLightbox((i) => (i === null || !count ? i : (i - 1 + count) % count));
-    };
-    window.addEventListener('keydown', onKey);
-    return () => {
-      window.removeEventListener('keydown', onKey);
-      document.body.style.overflow = prevOverflow;
-      lastFocus.current?.focus?.();
-    };
-  }, [lightbox, count]);
+  const router = useRouter();
+  const [preparing, setPreparing] = useState(false);
+  const [designError, setDesignError] = useState('');
 
   if (!product) return null;
 
@@ -137,24 +106,19 @@ export default function ProductDetailClient({ slug, product, similar }: Props) {
     </>
   );
 
-  const onTouchStart = (e: React.TouchEvent) => {
-    const t = e.touches[0];
-    touchStart.current = { x: t.clientX, y: t.clientY };
-  };
-  const onTouchEnd = (e: React.TouchEvent) => {
-    const s = touchStart.current;
-    touchStart.current = null;
-    if (!s || count < 2) return;
-    const t = e.changedTouches[0];
-    const dx = t.clientX - s.x;
-    const dy = t.clientY - s.y;
-    if (Math.abs(dy) > Math.abs(dx) || Math.abs(dx) < SWIPE_MIN) return;
-    go(dx < 0 ? 1 : -1);
-  };
+  const selectColor = (i: number) => setColorIdx(i);
 
-  const selectColor = (i: number) => {
-    setColorIdx(i);
-    setActive(0);
+  /** Bu kupa ve renk için sipariş sayfası açar; müşteri fotoğraflarını orada ekler. */
+  const startDesign = async () => {
+    setPreparing(true);
+    setDesignError('');
+    try {
+      const token = await createDesignRequest({ productSlug, color: colorName });
+      router.push(`/tasarim/${token}?musteri=1`);
+    } catch (e) {
+      setDesignError(e instanceof Error ? e.message : 'Sayfa açılamadı. WhatsApp’tan yazabilirsiniz.');
+      setPreparing(false);
+    }
   };
 
   const share = async () => {
@@ -189,56 +153,8 @@ export default function ProductDetailClient({ slug, product, similar }: Props) {
           </nav>
 
           <div className="pdp-grid">
-            <div className="pdp-gallery">
-              <div
-                className="pdp-main"
-                onTouchStart={onTouchStart}
-                onTouchEnd={onTouchEnd}
-              >
-                {count > 0 ? (
-                  <Image
-                    key={imageIds[safeActive]}
-                    src={toSrc(imageIds[safeActive], MAIN_TRANSFORM)}
-                    alt={title}
-                    fill
-                    sizes="(max-width: 960px) 100vw, 55vw"
-                    priority
-                  />
-                ) : null}
-                {count > 1 && (
-                  <>
-                    <button type="button" className="icon-btn nav-arrow prev" onClick={() => go(-1)} aria-label="Önceki görsel">
-                      <ChevronLeftIcon />
-                    </button>
-                    <button type="button" className="icon-btn nav-arrow next" onClick={() => go(1)} aria-label="Sonraki görsel">
-                      <ChevronRightIcon />
-                    </button>
-                  </>
-                )}
-                {count > 0 && (
-                  <button type="button" className="icon-btn zoom" onClick={() => setLightbox(safeActive)} aria-label="Görseli büyüt">
-                    <ZoomIcon />
-                  </button>
-                )}
-              </div>
-
-              {count > 1 && (
-                <div className="pdp-thumbs">
-                  {imageIds.map((id, i) => (
-                    <button
-                      key={`${id}-${i}`}
-                      type="button"
-                      className="pdp-thumb"
-                      aria-current={i === safeActive}
-                      aria-label={`Görsel ${i + 1}`}
-                      onClick={() => setActive(i)}
-                    >
-                      <Image src={toSrc(id, THUMB_TRANSFORM)} alt="" width={160} height={160} />
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
+            {/* Renk değişince galeri başa döner. */}
+            <ProductGallery key={colorIdx ?? 'tek'} ids={imageIds} title={title} />
 
             <div className="pdp-info">
               {category && <p className="eyebrow">{category}</p>}
@@ -283,10 +199,11 @@ export default function ProductDetailClient({ slug, product, similar }: Props) {
                 <a href={waHref} target="_blank" rel="noopener noreferrer" className="btn btn-primary btn-block">
                   <WhatsAppIcon /> WhatsApp&apos;tan sipariş verin
                 </a>
-                <a href={waHref} target="_blank" rel="noopener noreferrer" className="btn btn-outline btn-block">
-                  Tasarımınızı gönderin
-                </a>
+                <button type="button" className="btn btn-outline btn-block" onClick={startDesign} disabled={preparing}>
+                  {preparing ? 'Hazırlanıyor…' : 'Fotoğraf ve tasarım gönderin'}
+                </button>
               </div>
+              <p className="pdp-error" role="alert">{designError}</p>
 
               <div className="pdp-meta">
                 <div>
@@ -360,49 +277,6 @@ export default function ProductDetailClient({ slug, product, similar }: Props) {
           <WhatsAppIcon /> WhatsApp&apos;tan sipariş
         </a>
       </div>
-
-      {lightbox !== null && count > 0 && (
-        <div
-          className="lightbox"
-          role="dialog"
-          aria-modal="true"
-          aria-label={`${title} görselleri`}
-          onClick={() => setLightbox(null)}
-        >
-          <button ref={closeRef} type="button" className="icon-btn lb-close" onClick={() => setLightbox(null)} aria-label="Kapat">
-            <CloseIcon />
-          </button>
-          {count > 1 && (
-            <button
-              type="button"
-              className="icon-btn lb-prev"
-              aria-label="Önceki görsel"
-              onClick={(e) => { e.stopPropagation(); setLightbox((lightbox - 1 + count) % count); }}
-            >
-              <ChevronLeftIcon />
-            </button>
-          )}
-          <Image
-            src={toSrc(imageIds[Math.min(lightbox, count - 1)], MAIN_TRANSFORM)}
-            alt={title}
-            width={1200}
-            height={1200}
-            sizes="92vw"
-            onClick={(e) => e.stopPropagation()}
-          />
-          {count > 1 && (
-            <button
-              type="button"
-              className="icon-btn lb-next"
-              aria-label="Sonraki görsel"
-              onClick={(e) => { e.stopPropagation(); setLightbox((lightbox + 1) % count); }}
-            >
-              <ChevronRightIcon />
-            </button>
-          )}
-          {count > 1 && <div className="lb-count" aria-live="polite">{lightbox + 1} / {count}</div>}
-        </div>
-      )}
 
       <Footer />
     </>

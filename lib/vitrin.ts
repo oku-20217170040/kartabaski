@@ -58,13 +58,13 @@ export interface PrintSample {
 
 /** Sıra, 4 sütunlu mozaikte boşluk kalmayacak şekilde seçildi. */
 export const PRINT_SAMPLES: readonly PrintSample[] = [
-  { file: 'b-aslan', label: 'Detaylı çizim', tone: 'sun', size: 'big' },
-  { file: 'b-creators', label: 'Slogan', tone: 'ink' },
+  { file: 'b-kuslar', label: 'Detaylı çizim', tone: 'sun', size: 'big' },
+  { file: 'b-fincan', label: 'Küçük çizim', tone: 'ink' },
   { file: 'b-geometrik', label: 'Geometrik desen', tone: 'red' },
   { file: 'b-dalga', label: 'Arma', tone: 'pink' },
   { file: 'b-kus', label: 'Çizgi çalışması', tone: 'brand' },
   { file: 'b-gunbatimi', label: 'Boydan boya görsel', tone: 'navy', size: 'wide' },
-  { file: 'b-cicek', label: 'Desen', tone: 'green' },
+  { file: 'b-sekil', label: 'Desen', tone: 'green' },
   { file: 'b-cekirdek', label: 'Tek renk simge', tone: 'orange' },
 ];
 

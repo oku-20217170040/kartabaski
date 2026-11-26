@@ -80,6 +80,7 @@ No cart or checkout — all sales happen via WhatsApp.
 |---|---|
 | `products` | All product listings |
 | `users` | Admin role assignments (`role: 'admin'`) |
+| `tasarim_talepleri` | Design orders (Admin SDK only, `lib/designs.ts`; unsent drafts are deleted after 7 days by cron) |
 
 ### Firestore Security Rules
 
@@ -91,7 +92,7 @@ These rules must be deployed via Firebase Console (Firestore → Rules tab).
 - Storefront design system ("Tabela") lives in `app/site.css` (plain CSS, loaded from `app/layout.tsx`): white background, near-black ink, flat colours taken from mug handles (`--brand` cobalt, `--sun`, `--red`, `--navy`, …). No gradients, paper textures, cream backgrounds, pill badges, mono "eyebrow" labels, 01/02/03 index numbers or italic accent words. Reuse its classes (`.btn`, `.section`, `.page-head`, `.product-grid`, `.pdp-*`, …) instead of inline styles; never add hardcoded hex colours in components (the hero palette lives in `lib/vitrin.ts`)
 - One font family via fontsource: Archivo variable (`--sans`; `--serif` is a legacy alias). Hierarchy comes from the width axis: headings expanded (`font-stretch` 112–125%), prices and the phone number condensed (62–72%). Shantell Sans (`--hand`) only for the handwriting option in the hero
 - Copy is plain, concrete Turkish addressing the visitor as "siz"; no invented workshop jargon ("kalıp", "atölye seçkisi", "prova")
-- Homepage hero: real cut-out mug photos in `public/vitrin/` + canvas print preview (`components/MugPreview.tsx`); handle colour changes the whole hero colour. The user's trial photo never leaves the browser. The print-sample mosaic (`components/PrintWall.tsx`) uses the `b-*` images there
+- Homepage hero: real cut-out mug photos in `public/vitrin/` + canvas print preview (`components/MugPreview.tsx`); handle colour changes the whole hero colour. The visitor can drag / scale / rotate their photo (`lib/photo-layout.ts`) and remove its background in the browser (`lib/remove-background.ts`, U-2-Net `public/models/u2netp.onnx`; `public/ort/` is copied by `tools/copy-ort.mjs` before dev/build). The photo leaves the browser only when they press the order button. The print-sample mosaic (`components/PrintWall.tsx`) uses the `b-*` images there
 - Admin styles live in `app/admin/admin.css`, scoped under `.admin-layout` / `.adm-login`
 - Icons: inline SVG components in `components/icons.tsx` (storefront) and `components/admin/icons.tsx` — no emoji in UI
 - Product names are shown through `displayTitle()` (`lib/format.ts`), which strips the "— Kişiye Özel Baskı" suffix and fixes ALL-CAPS titles
@@ -158,6 +159,7 @@ Copy `.env.local.example` to `.env.local` and fill in:
 | `/sepet` | Cart → WhatsApp order request |
 | `/blog`, `/blog/[slug]` | Blog |
 | `/yorum/[token]` | Customer review form (invite link) |
+| `/tasarim/[token]` | Design order page; WhatsApp message carries only this link. A logged-in admin is redirected to `/admin/tasarimlar/[token]` (`?musteri=1` shows the customer view) |
 
 `app/sitemap.ts` and `app/robots.ts` auto-generate SEO sitemap and robots.txt.
 

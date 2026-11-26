@@ -7,6 +7,7 @@ import { AuthProvider, useAuth } from '@/lib/auth-context';
 import LogoSVG from '@/components/LogoSVG';
 import { ToastProvider } from '@/components/admin/Toast';
 import { countNewCartRequestsAction } from '@/lib/actions-cart';
+import { countNewDesignsAction } from '@/lib/actions-designs';
 import { setNoTrack } from '@/lib/analytics-client';
 import {
   ADMIN_GROUPS, SOCIAL_LINKS, adminPageTitle, filterAdminLinks, inSocial as isSocialPath, isLinkActive,
@@ -44,6 +45,7 @@ function AdminShell({ children }: { children: ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [navQuery, setNavQuery] = useState('');
   const [newCartCount, setNewCartCount] = useState(0);
+  const [newDesignCount, setNewDesignCount] = useState(0);
 
   useEffect(() => {
     if (!loading && !isAdmin && pathname !== '/admin/login') router.replace('/admin/login');
@@ -54,11 +56,14 @@ function AdminShell({ children }: { children: ReactNode }) {
   // Admin girişi yapılmış cihaz kendi ziyaretlerini istatistiğe katmasın
   useEffect(() => { if (isAdmin) setNoTrack(true); }, [isAdmin]);
 
-  // Yeni sepet talebi rozeti: dakikada bir; sekme başlığına da yansır
+  // Yeni sepet talebi ve tasarım siparişi rozeti: dakikada bir; sekme başlığına da yansır
   useEffect(() => {
     if (!isAdmin) return;
     let alive = true;
-    const tick = () => { countNewCartRequestsAction().then((n) => { if (alive) setNewCartCount(n); }).catch(() => {}); };
+    const tick = () => {
+      countNewCartRequestsAction().then((n) => { if (alive) setNewCartCount(n); }).catch(() => {});
+      countNewDesignsAction().then((n) => { if (alive) setNewDesignCount(n); }).catch(() => {});
+    };
     tick();
     const t = window.setInterval(tick, 60000);
     return () => { alive = false; window.clearInterval(t); };
@@ -66,8 +71,9 @@ function AdminShell({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const base = document.title.replace(/^\(\d+\)\s/, '');
-    document.title = newCartCount > 0 ? `(${newCartCount}) ${base}` : base;
-  }, [newCartCount, pathname]);
+    const waiting = newCartCount + newDesignCount;
+    document.title = waiting > 0 ? `(${waiting}) ${base}` : base;
+  }, [newCartCount, newDesignCount, pathname]);
 
   const filteredLinks = useMemo(() => filterAdminLinks(navQuery), [navQuery]);
 
@@ -97,6 +103,9 @@ function AdminShell({ children }: { children: ReactNode }) {
           <span>{l.label}</span>
           {showDesc && l.desc && <span className="adm-nav-desc">{l.desc}</span>}
         </span>
+        {l.href === '/admin/tasarimlar' && newDesignCount > 0 && (
+          <span className="adm-badge" aria-label={`${newDesignCount} yeni tasarım siparişi`}>{newDesignCount}</span>
+        )}
         {l.href === '/admin/sepet-talepleri' && newCartCount > 0 && (
           <span className="adm-badge" aria-label={`${newCartCount} yeni sepet talebi`}>{newCartCount}</span>
         )}

@@ -41,3 +41,11 @@ Kurulum ayrıntıları: `docs/SOSYAL_MEDYA_KURULUM.md` (Meta), `docs/SOSYAL_MEDY
 
 ## Firestore
 Yeni koleksiyonların hepsi yalnızca Admin SDK ile erişilir; `firestore.rules` varsayılan "deny" ile kapalı kalır, kural eklemeye gerek yok.
+
+## Tasarım Siparişleri (`/admin/tasarimlar`)
+
+- Akış: müşteri ana sayfada veya ürün sayfasında "Siparişi hazırlayın" / "Fotoğraf ve tasarım gönderin" der → `/tasarim/<anahtar>` açılır (kupa, renk, en fazla 8 fotoğraf, not) → "WhatsApp'tan gönderin" ile mesaja yalnız bu bağlantı eklenir.
+- Gönderince durum `taslak` → `yeni` olur, panelde rozet çıkar, Telegram yapılandırılmışsa bildirim gider.
+- Bağlantıya panelde oturumu açık yönetici tıklarsa doğrudan sipariş detayına gider; müşteri görünümü için `?musteri=1`.
+- Kod: `lib/designs.ts`, `lib/design-types.ts`, `lib/actions-designs.ts`, `app/api/tasarim/**`. Fotoğraflar Cloudinary `karta-baski/tasarimlar`.
+- Gönderilmeyen taslaklar 7 gün sonra `/api/cron/main` (`designs` adımı) ile silinir.
