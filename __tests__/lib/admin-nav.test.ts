@@ -6,7 +6,7 @@ describe('admin-nav', () => {
   it('istenen tüm modüller menüde, kaldırılanlar yok', () => {
     const hrefs = ADMIN_GROUPS.flatMap((g) => g.items).map((l) => l.href);
     for (const h of ['/admin', '/admin/istatistik', '/admin/muhasebe', '/admin/products', '/admin/makine', '/admin/studio',
-      '/admin/sepet-talepleri', '/admin/yorumlar', '/admin/sosyal-medya', '/admin/blog', '/admin/seo']) {
+      '/admin/tasarimlar', '/admin/sepet-talepleri', '/admin/yorumlar', '/admin/sosyal-medya', '/admin/blog', '/admin/seo']) {
       expect(hrefs).toContain(h);
     }
     for (const h of ['/admin/sanal-depo', '/admin/satis-talepleri', '/admin/etiketler', '/admin/yonlendirme']) {

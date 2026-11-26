@@ -41,6 +41,7 @@ export const ADMIN_GROUPS: AdminGroup[] = [
     id: 'customers',
     title: 'Müşteri',
     items: [
+      { href: '/admin/tasarimlar', label: 'Tasarım Siparişleri', icon: 'palette', desc: 'Sitede hazırlanıp bağlantısı gönderilen siparişler' },
       { href: '/admin/sepet-talepleri', label: 'Sepet Talepleri', icon: 'cart', desc: 'Sepetten WhatsApp’a gelen sipariş talepleri' },
       { href: '/admin/yorumlar', label: 'Yorumlar', icon: 'message', desc: 'Müşteri yorumları ve davet bağlantıları' },
     ],

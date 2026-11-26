@@ -105,7 +105,7 @@ export default async function HomePage() {
             <p>45 adet ve üzerinde adet fiyatı düşer. Logonuzu gönderin; önce kupanın üstünde gösterelim, onaylarsanız basıp Türkiye’nin her yerine gönderelim.</p>
             <Link href="/kurumsal" className="btn btn-light">Teklif isteyin</Link>
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/vitrin/b-logo.webp" alt="Logo baskılı beyaz kupa" loading="lazy" />
+            <img src="/vitrin/b-simge.webp" alt="Küçük logo baskılı yeşil kulplu kupa" loading="lazy" />
           </section>
           <section className="ikili-blok is-red" aria-labelledby="konfigurator-baslik">
             <h2 id="konfigurator-baslik" className="h2">Tasarımınız yoksa hazırlardan seçin.</h2>

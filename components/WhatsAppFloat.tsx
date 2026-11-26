@@ -18,8 +18,8 @@ export default function WhatsAppFloat() {
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
-  // Product pages have their own sticky buy bar; admin has no use for it.
-  if (pathname.startsWith('/urun/') || pathname.startsWith('/admin') || !visible) return null;
+  // Product and design pages have their own send button; admin has no use for it.
+  if (pathname.startsWith('/urun/') || pathname.startsWith('/admin') || pathname.startsWith('/tasarim') || !visible) return null;
 
   return (
     <a className="wa-float" href={WA_HREF} target="_blank" rel="noopener noreferrer" aria-label="WhatsApp üzerinden yazın">

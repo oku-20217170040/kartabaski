@@ -11,3 +11,4 @@ docs
 *.md
 tsconfig.tsbuildinfo
 .env.local
+public/ort

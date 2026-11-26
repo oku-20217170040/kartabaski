@@ -1,11 +1,16 @@
 'use client';
 
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import '@fontsource-variable/shantell-sans';
-import { useEffect, useState } from 'react';
-import { WhatsAppIcon, CloseIcon } from '@/components/icons';
-import MugPreview, { PrintFont } from '@/components/MugPreview';
-import { VITRIN_MUGS, vitrinOrderText } from '@/lib/vitrin';
+import { useEffect, useRef, useState } from 'react';
+import { WhatsAppIcon } from '@/components/icons';
+import MugPreview, { MugPreviewHandle, PrintFont } from '@/components/MugPreview';
+import PhotoControls from '@/components/PhotoControls';
+import { VITRIN_MUGS, VITRIN_PRODUCT_SLUG, vitrinOrderText } from '@/lib/vitrin';
+import { DEFAULT_PLACEMENT, Placement } from '@/lib/photo-layout';
+import { removeBackground } from '@/lib/remove-background';
+import { createDesignRequest } from '@/lib/design-client';
 import { WHATSAPP_BASE } from '@/lib/constants';
 
 const MAX_LEN = 40;
@@ -17,14 +22,35 @@ interface Props {
   mugProduct?: { href: string; title: string; price: string } | null;
 }
 
+interface Photo {
+  file: File;
+  original: HTMLImageElement;
+  cutout?: HTMLImageElement;
+}
+
+const release = (p: Photo | null) => {
+  if (!p) return;
+  URL.revokeObjectURL(p.original.src);
+  if (p.cutout) URL.revokeObjectURL(p.cutout.src);
+};
+
 export default function HeroSection({ lowestPrice, mugProduct }: Props) {
+  const router = useRouter();
+  const preview = useRef<MugPreviewHandle>(null);
   const [text, setText] = useState('');
   const [colorIndex, setColorIndex] = useState(0);
   const [font, setFont] = useState<PrintFont>('duz');
-  const [photo, setPhoto] = useState<HTMLImageElement | null>(null);
+  const [photo, setPhoto] = useState<Photo | null>(null);
+  const [placement, setPlacement] = useState<Placement>(DEFAULT_PLACEMENT);
+  const [removeBg, setRemoveBg] = useState(false);
+  const [removing, setRemoving] = useState(false);
+  const [sending, setSending] = useState(false);
+  const [error, setError] = useState('');
+  const photoRef = useRef<Photo | null>(null);
+  photoRef.current = photo;
 
-  // Seçilen fotoğraf yalnızca tarayıcıda gösterilir, hiçbir yere yüklenmez.
-  useEffect(() => () => { if (photo) URL.revokeObjectURL(photo.src); }, [photo]);
+  // Fotoğraf, sipariş hazırlanana kadar yalnızca tarayıcıda durur.
+  useEffect(() => () => release(photoRef.current), []);
 
   // Diğer renkler tıklanınca beklemesin.
   useEffect(() => {
@@ -34,20 +60,77 @@ export default function HeroSection({ lowestPrice, mugProduct }: Props) {
     return () => clearTimeout(timer);
   }, []);
 
+  const setNewPhoto = (next: Photo | null) => {
+    release(photo);
+    setPhoto(next);
+    setPlacement(DEFAULT_PLACEMENT);
+    setRemoveBg(false);
+    setError('');
+  };
+
   const pickPhoto = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     e.target.value = '';
     if (!file) return;
     const img = new window.Image();
-    img.onload = () => setPhoto(img);
-    img.onerror = () => URL.revokeObjectURL(img.src);
+    img.onload = () => setNewPhoto({ file, original: img });
+    img.onerror = () => {
+      URL.revokeObjectURL(img.src);
+      setError('Bu dosya açılamadı. JPG veya PNG bir fotoğraf deneyin.');
+    };
     img.src = URL.createObjectURL(file);
+  };
+
+  const toggleBackground = async () => {
+    if (!photo) return;
+    setError('');
+    if (removeBg) { setRemoveBg(false); return; }
+    if (photo.cutout) { setRemoveBg(true); return; }
+    setRemoving(true);
+    try {
+      const cutout = await removeBackground(photo.original);
+      // İşlem sürerken fotoğraf değiştirildiyse sonucu at.
+      if (photoRef.current?.original !== photo.original) { URL.revokeObjectURL(cutout.src); return; }
+      setPhoto({ ...photo, cutout });
+      setRemoveBg(true);
+    } catch {
+      setError('Arka plan silinemedi. Siparişte belirtirseniz biz sileriz.');
+    } finally {
+      setRemoving(false);
+    }
   };
 
   const mug = VITRIN_MUGS[colorIndex];
   const printed = text || (photo ? '' : SAMPLE);
+  const shown = photo ? (removeBg && photo.cutout ? photo.cutout : photo.original) : null;
   const orderText = vitrinOrderText({ text, color: mug.color, handwriting: font === 'el', hasPhoto: Boolean(photo) });
   const waHref = `${WHATSAPP_BASE}?text=${encodeURIComponent(orderText)}`;
+
+  const prepareOrder = async () => {
+    setSending(true);
+    setError('');
+    try {
+      // Örnek yazı siparişe girmez: kullanıcı bir şey yazmadıysa önizleme gönderilmez.
+      const personalised = Boolean(text.trim() || photo);
+      const snapshot = personalised ? await preview.current?.snapshot(mug.field) : null;
+      const token = await createDesignRequest(
+        {
+          productSlug: VITRIN_PRODUCT_SLUG,
+          color: mug.color,
+          text: text.trim() || undefined,
+          font: text.trim() ? font : undefined,
+          placement: photo ? placement : undefined,
+          removeBg: photo ? removeBg : undefined,
+        },
+        snapshot,
+        photo?.file,
+      );
+      router.push(`/tasarim/${token}?musteri=1`);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Sipariş hazırlanamadı.');
+      setSending(false);
+    }
+  };
 
   return (
     <section
@@ -61,11 +144,29 @@ export default function HeroSection({ lowestPrice, mugProduct }: Props) {
         </h1>
 
         <div className="vitrin-stage">
-          <MugPreview mug={mug} text={printed} font={font} photo={photo} />
-          {mugProduct && (
+          <MugPreview
+            ref={preview}
+            mug={mug}
+            text={printed}
+            font={font}
+            photo={shown}
+            placement={placement}
+            onPlacementChange={setPlacement}
+          />
+          {!photo && mugProduct && (
             <p className="vitrin-caption">
               <Link href={mugProduct.href}>{mugProduct.title}, {mugProduct.price}</Link>
             </p>
+          )}
+          {photo && (
+            <PhotoControls
+              placement={placement}
+              onChange={setPlacement}
+              removeBg={removeBg}
+              removing={removing}
+              onToggleBg={toggleBackground}
+              onRemove={() => setNewPhoto(null)}
+            />
           )}
         </div>
 
@@ -92,20 +193,11 @@ export default function HeroSection({ lowestPrice, mugProduct }: Props) {
             <button type="button" className="vitrin-tool is-hand" aria-pressed={font === 'el'} onClick={() => setFont('el')}>
               El yazısı
             </button>
-            {photo ? (
-              <button type="button" className="vitrin-tool" onClick={() => setPhoto(null)}>
-                <CloseIcon size={16} /> Fotoğrafı kaldır
-              </button>
-            ) : (
-              <label className="vitrin-tool vitrin-file">
-                Fotoğraf deneyin
-                <input type="file" accept="image/*" className="sr-only" onChange={pickPhoto} />
-              </label>
-            )}
+            <label className="vitrin-tool vitrin-file">
+              {photo ? 'Fotoğrafı değiştir' : 'Fotoğraf ekleyin'}
+              <input type="file" accept="image/*" className="sr-only" onChange={pickPhoto} />
+            </label>
           </div>
-          {photo && (
-            <p className="vitrin-note">Fotoğraf cihazınızda kalır. Sipariş verirken WhatsApp&apos;tan ayrıca gönderin.</p>
-          )}
 
           <div className="vitrin-colors">
             <p id="vitrin-renk">Kulp rengi: <b>{mug.color}</b></p>
@@ -127,12 +219,26 @@ export default function HeroSection({ lowestPrice, mugProduct }: Props) {
             </div>
           </div>
 
+          <p className="vitrin-error" role="alert">{error}</p>
+
           <div className="vitrin-ctas">
-            <a className="btn vitrin-order" href={waHref} target="_blank" rel="noopener noreferrer">
-              <WhatsAppIcon /> {text.trim() || photo ? 'Bunu sipariş edin' : "WhatsApp'tan sipariş edin"}
-            </a>
+            {mugProduct ? (
+              <button type="button" className="btn vitrin-order" onClick={prepareOrder} disabled={sending || removing}>
+                <WhatsAppIcon /> {sending ? 'Hazırlanıyor…' : 'Siparişi hazırlayın'}
+              </button>
+            ) : (
+              <a className="btn vitrin-order" href={waHref} target="_blank" rel="noopener noreferrer">
+                <WhatsAppIcon /> WhatsApp&apos;tan sipariş edin
+              </a>
+            )}
             <Link className="text-link" href="#urunler">Bütün kupalar</Link>
           </div>
+
+          {mugProduct && (
+            <p className="vitrin-note">
+              Sonraki adımda başka fotoğraflar ve not ekleyip WhatsApp&apos;tan gönderirsiniz. Fotoğrafınız bu düğmeye basana kadar cihazınızda kalır.
+            </p>
+          )}
 
           <p className="vitrin-facts">
             Tek adet de basıyoruz. Basmadan önce nasıl duracağını gönderiyoruz, onayınızdan sonra 3 iş gününde kargoda.
