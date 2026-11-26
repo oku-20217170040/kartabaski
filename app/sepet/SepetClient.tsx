@@ -16,6 +16,7 @@ import { getCartProductInfoAction } from '@/lib/actions-siparis';
 import { submitOrder } from '@/lib/siparis-client';
 import { trackEvent } from '@/lib/analytics-client';
 import { formatPriceRange } from '@/lib/format';
+import { lineHref } from '@/lib/configurator-lines';
 import '@/components/cart/cart.css';
 import './sepet.css';
 
@@ -36,7 +37,7 @@ function Thumb({ item }: { item: CartItem }) {
     }).catch(() => {});
     return () => { alive = false; if (made) URL.revokeObjectURL(made); };
   }, [fileId]);
-  const src = url ?? cartImageSrc(item.image);
+  const src = url ?? cartImageSrc(item.design?.ready?.image ?? item.image);
   // eslint-disable-next-line @next/next/no-img-element
   return src ? <img src={src} alt="" /> : null;
 }
@@ -45,6 +46,7 @@ function designSummary(item: CartItem): string[] {
   const d = item.design;
   if (!d) return ['Tasarım eklenmedi'];
   const parts = [
+    d.ready ? `Hazır tasarım: ${d.ready.name}` : '',
     d.text ? `Yazı: ${d.text}` : '',
     d.photos.length ? `${d.photos.length} fotoğraf` : '',
     d.removeBg ? 'Arka plan silinecek' : '',
@@ -159,11 +161,11 @@ export default function SepetClient() {
 
   const row = (item: CartItem, off: boolean) => (
     <li key={item.key} className={`cart-row${off ? ' is-off' : ''}`}>
-      <Link href={`/urun/${item.slug}`} className="cart-thumb" aria-label={item.title}>
+      <Link href={lineHref(item.slug)} className="cart-thumb" aria-label={item.title}>
         <Thumb item={item} />
       </Link>
       <div className="cart-row-main">
-        <Link href={`/urun/${item.slug}`} className="cart-row-title">{item.title}</Link>
+        <Link href={lineHref(item.slug)} className="cart-row-title">{item.title}</Link>
         <div className="cart-row-meta">
           {item.category}{item.color ? ` · Renk: ${item.color}` : ''}
         </div>

@@ -9,6 +9,8 @@ import { WhatsAppIcon } from '@/components/icons';
 import { WHATSAPP_BASE } from '@/lib/constants';
 import { CustomerOrder, canCustomerDelete, orderImageUrl, orderMessage, orderNo } from '@/lib/siparis-types';
 import { deleteOrderByCustomer } from '@/lib/siparis-client';
+import { lineHref } from '@/lib/configurator-lines';
+import { cartImageSrc } from '@/lib/cart-products';
 import { trackEvent } from '@/lib/analytics-client';
 
 const fmt = (n: number) => new Intl.NumberFormat('tr-TR').format(n);
@@ -87,21 +89,23 @@ export default function OrderClient({ order, tracking }: { order: CustomerOrder;
 
       <ul className="ord-lines">
         {order.items.map((item, n) => {
-          const cover = item.preview ?? item.files[0];
+          const own = item.preview ?? item.files[0];
+          const cover = own ? orderImageUrl(order.token, own, 900) : cartImageSrc(item.ready?.image);
           return (
             <li key={`${item.productId}-${n}`}>
               <div className="ord-cover">
                 {cover && (
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img src={orderImageUrl(order.token, cover, 900)} alt={`${item.title} tasarımı`} loading="lazy" />
+                  <img src={cover} alt={`${item.title} tasarımı`} loading="lazy" />
                 )}
               </div>
               <div className="ord-info">
-                <h2 className="h3"><Link href={`/urun/${item.slug}`}>{item.title}</Link></h2>
+                <h2 className="h3"><Link href={lineHref(item.slug)}>{item.title}</Link></h2>
                 <p>
                   {item.qty} adet{item.color ? ` · ${item.color}` : ''}
                   {item.unitPrice > 0 ? ` · ${fmt(item.unitPrice)}₺’den başlayan` : ''}
                 </p>
+                {item.ready && <p>Hazır tasarım: <b>{item.ready.name}</b></p>}
                 {item.text && <p>Yazı: <b>{item.text}</b> ({item.font === 'el' ? 'el yazısı' : 'düz yazı'})</p>}
                 {item.needsDesign && <p>Tasarımı biz hazırlayacağız.</p>}
                 {item.removeBg && <p>Fotoğrafın arka planı silinecek.</p>}

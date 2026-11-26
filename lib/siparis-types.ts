@@ -46,6 +46,7 @@ export const OrderInputSchema = z.object({
         note: trimmed(200).optional(),
         photoCount: z.number().int().min(0).max(MAX_LINE_PHOTOS),
         hasPreview: z.boolean(),
+        readyId: z.string().regex(/^[A-Za-z0-9_-]{1,60}$/).optional(),
         ...LineDesign,
       }),
     )
@@ -75,6 +76,8 @@ export const OrderLineSchema = z.object({
   hasPreview: z.boolean().catch(false),
   files: z.array(z.string()).catch([]),
   preview: z.string().optional(),
+  /** Konfigüratördeki hazır tasarım (herkese açık görsel). */
+  ready: z.object({ id: z.string(), name: z.string(), image: z.string().optional() }).optional(),
 });
 export type OrderLine = z.infer<typeof OrderLineSchema>;
 

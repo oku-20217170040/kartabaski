@@ -11,7 +11,8 @@ import { displayTitle } from './format';
 import { cartTotal } from './cart';
 import { getActive, getPriceMin, getSlug, getTitle } from './product-utils';
 import { looksLikeImage } from './image-sniff';
-import type { Product } from '@/types';
+import type { ConfiguratorCup, ConfiguratorDesign, Product } from '@/types';
+import { CUP_ID_PREFIX, cupToProduct, isCupId } from './configurator-lines';
 import type { CartOverview, CartProductInfo } from './cart-types';
 import {
   MAX_PHOTO_BYTES, MAX_PROOF_IMAGES, ORDER_FOLDER, ORDER_TOKEN_RE, OrderInput, OrderLine, OrderRequest, OrderRequestSchema,
@@ -44,12 +45,27 @@ function parse(token: string, data: unknown): OrderRequest | null {
 async function readProducts(ids: string[]): Promise<Product[]> {
   const unique = Array.from(new Set(ids));
   if (!unique.length) return [];
-  const snaps = await adminDb.getAll(...unique.map((id) => adminDb.collection('products').doc(id)));
-  return snaps.flatMap((s) => {
+  const snaps = await adminDb.getAll(...unique.map((id) => (isCupId(id)
+    ? adminDb.collection('configurator_cups').doc(id.slice(CUP_ID_PREFIX.length) || '-')
+    : adminDb.collection('products').doc(id))));
+  return snaps.flatMap((s, i) => {
     if (!s.exists) return [];
+    if (isCupId(unique[i])) return [cupToProduct({ ...(s.data() as ConfiguratorCup), id: s.id })];
     const r = ProductSchema.safeParse({ id: s.id, ...s.data() });
     return r.success ? [r.data as unknown as Product] : [];
   });
+}
+
+/** Seçilen hazır tasarımlar; ad ve görsel istemciden değil Firestore'dan alınır. */
+async function readDesigns(ids: string[]): Promise<Map<string, { id: string; name: string; image?: string }>> {
+  const unique = Array.from(new Set(ids));
+  if (!unique.length) return new Map();
+  const snaps = await adminDb.getAll(...unique.map((id) => adminDb.collection('configurator_designs').doc(id)));
+  return new Map(snaps.flatMap((s) => {
+    const d = s.data() as ConfiguratorDesign | undefined;
+    if (!s.exists || !d?.active) return [];
+    return [[s.id, { id: s.id, name: d.name, ...(d.imagePublicId ? { image: d.imagePublicId } : {}) }] as const];
+  }));
 }
 
 /** /sepet sayfası için: yalnızca sepetteki ürünlerin güncel bilgisi (az okuma). */
@@ -69,14 +85,17 @@ export async function getCartProductInfo(ids: string[]): Promise<CartProductInfo
 /** Siparişi "yükleniyor" olarak açar. Ad ve fiyat Firestore'dan okunur. */
 export async function createOrder(input: OrderInput): Promise<{ token: string; accepted: number[] }> {
   const products = new Map((await readProducts(input.items.map((i) => i.productId))).map((p) => [p.id, p]));
+  const designs = await readDesigns(input.items.flatMap((i) => (i.readyId ? [i.readyId] : [])));
   const lines: Record<string, unknown>[] = [];
   const accepted: number[] = [];
-  input.items.forEach(({ productId, ...line }, index) => {
+  input.items.forEach(({ productId, readyId, ...line }, index) => {
     const p = products.get(productId);
     if (!p || !getActive(p)) return;
+    const ready = readyId ? designs.get(readyId) : undefined;
+    if (readyId && !ready) throw new OrderError(`“${displayTitle(getTitle(p))}” için seçtiğiniz hazır tasarım artık yok. Satırı sepetten çıkarıp yeniden seçin.`);
     accepted.push(index);
     lines.push(compact({
-      ...line, productId, slug: getSlug(p), title: displayTitle(getTitle(p)), unitPrice: getPriceMin(p) || 0, files: [],
+      ...line, ready, productId, slug: getSlug(p), title: displayTitle(getTitle(p)), unitPrice: getPriceMin(p) || 0, files: [],
     }));
   });
   if (!lines.length) throw new OrderError('Sepetteki ürünler artık satışta değil.');

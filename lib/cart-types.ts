@@ -1,12 +1,16 @@
 // Sepet tipleri — istemci ve sunucu ortak kullanır (server-only içermez).
 import type { Placement } from './photo-layout';
 
+export interface ReadyDesign { id: string; name: string; image?: string }
+
 /** Bir sepet satırının tasarımı. Fotoğraflar sipariş oluşturulana kadar cihazda (IndexedDB) durur. */
 export interface CartDesign {
   text?: string;
   font?: 'duz' | 'el';
   placement?: Placement;
   removeBg?: boolean;
+  /** Konfigüratörden seçilen hazır tasarım. */
+  ready?: ReadyDesign;
   /** Müşterinin tasarımı yok; atölye hazırlayacak. */
   needsDesign?: boolean;
   /** lib/cart-files kimlikleri. */
