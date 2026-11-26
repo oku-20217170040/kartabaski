@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { replyProof } from '@/lib/siparis';
-import { ProofReplySchema, orderNo, orderUrl } from '@/lib/siparis-types';
-import { notifyAdmin } from '@/lib/notify';
+import { ProofReplySchema } from '@/lib/siparis-types';
+import { notifyProofReply } from '@/lib/bot';
 import { failure, tooLarge, tooMany } from '../../respond';
 
 export const dynamic = 'force-dynamic';
@@ -14,10 +14,7 @@ export async function POST(req: NextRequest, { params }: { params: { token: stri
     const body = ProofReplySchema.safeParse(await req.json().catch(() => null));
     if (!body.success) return NextResponse.json({ error: body.error.issues[0]?.message || 'Geçersiz istek.' }, { status: 400 });
     const { order, proof } = await replyProof(params.token, body.data.round, body.data.decision, body.data.reply);
-    await notifyAdmin(
-      `${proof.state === 'onaylandi' ? 'Önizleme onaylandı' : 'Düzeltme istendi'} (No: ${orderNo(order)})`,
-      [order.name, proof.reply, orderUrl(order.token)].filter(Boolean).join('\n'),
-    ).catch(() => false);
+    await notifyProofReply(order, proof);
     return NextResponse.json({ proof });
   } catch (error) {
     return failure(error);

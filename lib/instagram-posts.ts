@@ -2,7 +2,7 @@ import 'server-only';
 import { adminDb } from './firebase-admin';
 import { getSocialRows } from './social-products';
 import { getSocialSettings, ensureSocialMeta, patchSocialMeta } from './social-settings';
-import { notifyAdmin, telegramConfigured } from './notify';
+import { notifyAdmin, telegramReady } from './notify';
 import { PHONE_DISPLAY, SITE_NAME } from './constants';
 import { SITE_URL } from './site';
 import { formatPriceRange } from './format';
@@ -122,7 +122,7 @@ export async function ensureDailyPlan(now = Date.now()): Promise<PlanResult> {
 }
 
 async function notifyPlan(day: string, posts: Omit<IgPost, 'id'>[], enabled: boolean) {
-  if (!telegramConfigured() || !posts.length) return;
+  if (!posts.length || !(await telegramReady())) return;
   const feeds = posts.filter((p) => p.kind !== 'story');
   const stories = posts.filter((p) => p.kind === 'story');
   const lines = [
@@ -238,7 +238,7 @@ export async function publishPost(p: IgPost, now = Date.now()): Promise<{ ok: bo
   } catch (e) {
     const error = errText(e);
     await patch(p.id, { status: 'hata', error, claimUntil: 0 });
-    if (telegramConfigured()) {
+    if (await telegramReady()) {
       await notifyAdmin('Instagram paylaşımı başarısız', `${p.kind === 'story' ? 'Hikâye' : 'Gönderi'}: ${p.items[0]?.title ?? ''}\n${error}`).catch(() => {});
     }
     return { ok: false, error };

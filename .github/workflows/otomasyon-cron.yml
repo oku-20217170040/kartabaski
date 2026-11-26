@@ -1,13 +1,9 @@
-name: Otomasyon (blog, makine, sosyal medya)
+name: Otomasyon (elle çalıştırma)
 
-# Yarım saatte bir /api/cron/main adresini çağırır: planlı blog yayını, makine özeti/haftalık rapor,
-# 6 sosyal medya platformunun otomasyon turu. Sunucu tarafı telafili ve kotalıdır; seyrek çağrı sorun değildir.
+# /api/cron/main adresini ELLE çağırmak içindir. Yarım saatlik zamanlama sunucudadır
+# (tools/sunucu/zamanlayici.sh): GitHub'ın zamanlanmış işleri çok seyrek çalışıyordu.
 # Gerekli GitHub secret: CRON_SECRET (sunucudaki .env içindeki CRON_SECRET ile aynı değer).
-# Secret tanımlı değilse iş KIRMIZI hata verir (sessizce atlanmaz).
 on:
-  schedule:
-    # UTC 04:00-21:30 = TSİ 07:00-00:30
-    - cron: '*/30 4-21 * * *'
   workflow_dispatch: {}
 
 concurrency:

@@ -152,6 +152,7 @@ export default function SiparisDetayPage({ params }: { params: { token: string }
           <section className="card sip-card sip-panel-musteri" id="sip-musteri" aria-label="Müşteri">
             <dl className="sip-facts">
               <div><dt>Müşteri</dt><dd>{order.name}</dd></div>
+              {order.claimedBy && <div><dt>İlgilenen</dt><dd>{order.claimedBy}</dd></div>}
               <div><dt>Telefon</dt><dd><a href={`tel:${order.phone}`}>{order.phone}</a></dd></div>
               {order.address
                 ? <div className="is-wide"><dt>Teslimat adresi</dt><dd>{order.address}</dd></div>

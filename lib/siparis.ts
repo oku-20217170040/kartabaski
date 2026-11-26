@@ -326,6 +326,25 @@ export async function replyProof(
   });
 }
 
+/** "Ben ilgileniyorum": ilk yazan sahiplenir; ilgilenen kişinin adı döner. */
+export async function claimOrder(token: string, name: string): Promise<string> {
+  return adminDb.runTransaction(async (tx) => {
+    const snap = await tx.get(ref(token));
+    if (!snap.exists) throw new OrderError('Sipariş bulunamadı.', 404);
+    const current = snap.data()?.claimedBy as string | undefined;
+    if (current) return current;
+    tx.update(ref(token), { claimedBy: name, updatedAt: Date.now() });
+    return name;
+  });
+}
+
+/** Henüz kapanmamış siparişler (bot listesi ve hatırlatmalar; yalnız açık kayıtlar okunur). */
+export async function listOpenOrderRequests(): Promise<OrderRequest[]> {
+  const snap = await adminDb.collection(COL).where('status', 'in', ['yeni', 'incelendi', 'siparis']).limit(100).get();
+  const orders = snap.docs.map((d) => parse(d.id, d.data())).filter((o): o is OrderRequest => o !== null);
+  return Promise.all(orders.map(ensureCode));
+}
+
 export async function markOrderSeen(token: string): Promise<void> {
   await ref(token).update({ attention: false });
 }
