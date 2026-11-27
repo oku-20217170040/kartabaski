@@ -19,6 +19,13 @@ Her iş bitiminde (kod, sunucu, dış hizmet ya da yalnız araştırma) bu dosya
 
 ---
 
+## 27.11.2026 — Pinterest geliştirici uygulaması oluşturuldu (yarım: anahtar ve bağlama)
+- Neden: Pinterest API ile otomatik pin paylaşımı için uygulama kaydı gerekiyordu.
+- Ne: "KartaBaski Paylasim" uygulaması oluşturuldu; durum "Trial erişimi bekliyor". Uygulama simgesi (logo) yüklendi.
+- Nasıl: developers.pinterest.com/apps/connect formu. Site ve gizlilik adresi (`/gizlilik`), amaç metni, kullanım "pin oluşturma", hedef kitle "işletmeler", veri erişimi "Evet, benim" (kendi pano ve pinlerini okumak için, panolar otomasyonda bulunmalı). reCAPTCHA kullanıcı tarafından işaretlendi.
+- Doğrulama: uygulamalar sayfasında uygulama listelendi, "Trial erişimi bekliyor" görüldü.
+- Açık: uygulama gizli anahtarı kullanıcıda, sunucuya kullanıcı girecek. Yönlendirme `/api/pinterest/callback` uygulama ayarlarına girilecek; `/admin/pinterest` üzerinden bağlama ve otomatik paylaşım onayı yapılacak. Trial onayı gelene kadar pinler yalnız hesap sahibine görünür.
+
 ## 27.11.2026 — Pinterest işletme hesabına geçildi (yarım: geliştirici uygulaması)
 - Neden: geliştirici uygulaması işletme hesabı istiyor; kullanıcı dönüştürmenin yapılmasını istedi.
 - Ne: hesap işletme hesabı oldu. İşletme adı "KAR-TA BASKI", ülke Türkiye, site adresi girildi; tür "çevrimiçi satıcı veya pazaryeri", hedefler çevrimiçi satış ve site trafiği, odak "kendin yap ve el işleri", reklam "planlamıyorum".
