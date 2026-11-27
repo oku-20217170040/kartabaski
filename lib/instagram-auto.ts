@@ -18,7 +18,7 @@ export async function runInstagramCycle(now = Date.now()): Promise<CycleResult> 
   const s = await getSocialSettings('instagram');
   if (!s.enabled) return { ...result, skipped: 'otomasyon kapalı' };
 
-  const token = await refreshTokenIfNeeded(now);
+  const token = await refreshTokenIfNeeded();
   if (token.error && token.error !== 'token yok') result.errors.push(`token: ${token.error.slice(0, 160)}`);
 
   try {

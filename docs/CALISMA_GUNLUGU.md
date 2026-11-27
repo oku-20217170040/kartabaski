@@ -19,6 +19,13 @@ Her iş bitiminde (kod, sunucu, dış hizmet ya da yalnız araştırma) bu dosya
 
 ---
 
+## 27.11.2026 — Instagram doğrulaması graph.facebook.com'a taşındı (yarım: belirteç yapıştırılıp doğrulanacak)
+- Neden: Meta'da kurulan Instagram bağlantısı bir sistem kullanıcısı belirteciyle yapıldı; uygulama ise Instagram Login uç noktası (graph.instagram.com) ile doğrulamaya çalıştığı için her denemede "Cannot parse access token (kod 190)" hatası alındı. Belirteç Meta'da geçerliydi (graph.facebook.com üzerinden hesap "kartabaskii" olarak döndü).
+- Ne: `lib/instagram.ts` API adresi graph.facebook.com/v26.0 oldu; hesap doğrulaması kullanıcı kimliğiyle yapılır (`/{id}?fields=id,username`); sistem kullanıcısı belirteci yenilenmediği için yenileme atlanır. Çağıran iki yerdeki argüman kaldırıldı.
+- Nasıl: belirteç sohbete ya da koda yazılmadı; panelde ve sunucu `.env` dosyasında kullanıcı tarafından girildi. Firestore'daki eski (geçersiz) belirteç panelden yeniden kaydedilerek üzerine yazılmalı; panel önce Firestore değerini kullanır.
+- Doğrulama: `npx jest` 720/720 geçti; `lib` için `tsc` ve eslint temiz (kalan tsc hataları eski `.next` çıktısı ve önceden var olan test tipleri). Canlıda `.env` ve konteyner belirteci görüyor (uzunluk kontrolü); Graph çağrısı 200 ve kartabaskii döndürdü.
+- Açık: panelde "Kaydet ve doğrula" ile yeni belirteç kaydedilmeli; sonra Instagram otomatik paylaşım açılabilir (şu an kapalı).
+
 ## 27.11.2026 — Telegram kanalı açıldı ve otomatik paylaşım başladı (yarım: Instagram sırada)
 - Neden: sosyal medya otomasyonları sırayla kurulacaktı; ilk adım Telegram kanalı.
 - Ne: herkese açık kanal "KAR-TA BASKI" (@kartabaski) açıldı, logo ve açıklama girildi. Yönetici botu yalnızca "Gönderi gönder" ve "Gönderileri düzenle" yetkileriyle kanal yöneticisi yapıldı. Test gönderisi (tabaklı kahve fincanı, "Satışta") kanala gitti. Otomatik paylaşım açıldı: günde 3 gönderi, 10:00–21:00.
