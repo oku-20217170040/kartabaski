@@ -2,7 +2,7 @@ import 'server-only';
 
 import { adminDb } from './firebase-admin';
 import { SITE_URL } from './site';
-import { changedUrls } from './indexnow-utils';
+import { pendingUrls } from './indexnow-utils';
 import sitemap from '@/app/sitemap';
 
 // IndexNow: yeni ya da değişen sayfalar Bing ve ortaklarına hemen bildirilir.
@@ -12,12 +12,12 @@ const ENDPOINT = 'https://api.indexnow.org/indexnow';
 
 const stateRef = () => adminDb.collection('seo_state').doc('indexnow');
 
-/** Zamanlanmış tur: son bildirimden beri değişen ürün ve yazı sayfalarını gönderir. */
+/** Zamanlanmış tur: henüz bildirilmemiş ya da değişmiş ürün ve yazı sayfalarını gönderir. */
 export async function runIndexNowStep(now = Date.now()): Promise<{ sent: number; skipped?: string }> {
   const host = new URL(SITE_URL).host;
   if (host.startsWith('localhost')) return { sent: 0, skipped: 'yerel ortam' };
-  const since = Number((await stateRef().get()).data()?.lastRun ?? 0);
-  const urls = changedUrls(await sitemap(), since, SITE_URL);
+  const previous = ((await stateRef().get()).data()?.sent ?? []) as string[];
+  const { urls, sent } = pendingUrls(await sitemap(), previous, SITE_URL);
   if (!urls.length) return { sent: 0 };
   const res = await fetch(ENDPOINT, {
     method: 'POST',
@@ -26,8 +26,8 @@ export async function runIndexNowStep(now = Date.now()): Promise<{ sent: number;
     cache: 'no-store',
     signal: AbortSignal.timeout(15_000),
   });
-  // Başarısızsa zaman ilerletilmez: bir sonraki turda yeniden denenir.
+  // Başarısızsa kayıt değişmez: bir sonraki turda yeniden denenir.
   if (res.status !== 200 && res.status !== 202) throw new Error(`IndexNow ${res.status}`);
-  await stateRef().set({ lastRun: now, lastCount: urls.length }, { merge: true });
+  await stateRef().set({ sent, lastRun: now, lastCount: urls.length }, { merge: true });
   return { sent: urls.length };
 }
