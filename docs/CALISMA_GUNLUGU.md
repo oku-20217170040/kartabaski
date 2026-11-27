@@ -19,6 +19,13 @@ Her iş bitiminde (kod, sunucu, dış hizmet ya da yalnız araştırma) bu dosya
 
 ---
 
+## 27.11.2026 — Facebook yayın hatası (#200 publish_actions) giderildi
+- Neden: ilk otomasyon turu "(#200) publish_actions" hatasıyla gönderi atamadı.
+- Ne: sayfaya yazmadan önce sayfanın kendi belirteci alınıyor; env'deki sistem kullanıcısı belirteci yeterli, yeni belirteç gerekmedi.
+- Nasıl: `lib/facebook-page.ts` içine `withPageToken` eklendi (`/{sayfa}?fields=access_token`); gönderi, bağlantı ve düzenleme çağrıları bunu kullanıyor. İzinler zaten tamdı (`pages_manage_posts` dahil); ilk "izin eksik" tahmini yanlıştı.
+- Doğrulama: jest 722/722, `lib` için tsc ve eslint temiz; canlıda salt okunur Graph kontrolünde sayfa belirteci alınabiliyor. Gerçek gönderi henüz atılmadı.
+- Açık: Facebook otomatik paylaşımı kullanıcı tarafından kapatıldı; açılmadan önce onaylı bir test gönderisi atılmalı. Hata almış kayıtlar panelden "Tekrar dene" ile yeniden denenebilir.
+
 ## 27.11.2026 — Facebook sayfası oluşturuldu ve sistem kullanıcısına bağlandı (yarım: gönderi testi ve otomatik paylaşım kapalı)
 - Neden: sosyal medya sırasında Facebook sayfası gerekiyordu; sayfa yoktu.
 - Ne: KAR-TA BASKI işletme portföyü altında "Kar-Ta BASKI" Facebook sayfası açıldı (kategori: Butik Mağaza; açıklamada adres ya da çalışma saati yok). Sayfa "KartaBaski Otomasyon" sistem kullanıcısına atandı (İçerik ve Topluluk hareketleri). Sayfa kimliği sunucu `.env` içinde `FACEBOOK_PAGE_ID` olarak tanımlandı; belirteç de `FACEBOOK_PAGE_ACCESS_TOKEN` olarak sunucuda.

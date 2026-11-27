@@ -1,4 +1,28 @@
-import { getFacebookConfig, buildPhotoParams, buildFeedParams, buildLinkParams } from '@/lib/facebook-page';
+import {
+  getFacebookConfig, buildPhotoParams, buildFeedParams, buildLinkParams, publishLinkToFacebookPage,
+} from '@/lib/facebook-page';
+
+describe('sayfa belirteci', () => {
+  const originalFetch = global.fetch;
+  afterEach(() => { global.fetch = originalFetch; });
+
+  const run = async (pageResponse: Record<string, unknown>) => {
+    const fetchMock = jest.fn()
+      .mockResolvedValueOnce({ ok: true, json: async () => pageResponse })
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ id: 'p1' }) });
+    global.fetch = fetchMock as unknown as typeof fetch;
+    await publishLinkToFacebookPage('Mesaj', 'https://x', { pageId: '123', token: 'sistem' });
+    expect(String(fetchMock.mock.calls[0][0])).toContain('fields=access_token');
+    return (fetchMock.mock.calls[1][1].body as URLSearchParams).get('access_token');
+  };
+
+  it('gönderi, sayfadan alınan belirteçle yazılır', async () => {
+    expect(await run({ access_token: 'sayfa', id: '123' })).toBe('sayfa');
+  });
+  it('sayfa belirteci dönmezse env belirteci kullanılır', async () => {
+    expect(await run({ id: '123' })).toBe('sistem');
+  });
+});
 
 describe('getFacebookConfig', () => {
   it('iki değişken de varsa yapılandırmayı döndürür', () => {
