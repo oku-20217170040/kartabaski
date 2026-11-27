@@ -19,6 +19,13 @@ Her iş bitiminde (kod, sunucu, dış hizmet ya da yalnız araştırma) bu dosya
 
 ---
 
+## 27.11.2026 — Threads kurulumu başladı (yarım: Threads hesabı gerekiyor)
+- Neden: sosyal medya sırasındaki sıradaki platform.
+- Ne: "KartaBaski Paylasim" uygulamasına "Access the Threads API" kullanım durumu ve `threads_content_publish`, `threads_manage_replies` izinleri eklendi (`threads_basic` hazırdı).
+- Nasıl: Meta geliştirici panelinden. @kartabaskii için Threads Tester daveti denendi.
+- Doğrulama: davet rol listesinde görünmüyor; threads.com/@kartabaskii "Threads hesabını nasıl oluşturmak istediğini seç" ekranına yönleniyor, yani hesabın Threads profili yok görünüyor.
+- Açık: kullanıcı onayıyla Threads profili (herkese açık) açılacak; sonra tester daveti, davet kabulü, kullanıcı belirteci (panelde User Token Generator, 60 gün, kod kendisi yeniliyor) ve sunucuda `THREADS_ACCESS_TOKEN`.
+
 ## 27.11.2026 — Facebook sayfa profili tamamlandı, ilk gönderi yayında
 - Neden: düzeltme sonrası gönderi yayınlandı; kullanıcı sayfa profilinin tamamlanmasını istedi.
 - Ne: profil fotoğrafı (logo), kapak görseli (sitedeki gerçek kupa fotoğraflarıyla), telefon, e-posta (sitedeki iletişim adresi), site ve Telegram kanalı bağlantıları, Instagram hesabı, "Daha fazla bilgi al" eylem düğmesi (siteye). Adres ve çalışma saati bilerek girilmedi.
