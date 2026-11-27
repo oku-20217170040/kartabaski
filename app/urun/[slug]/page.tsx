@@ -9,6 +9,8 @@ import RelatedPosts from '@/components/RelatedPosts';
 import { getReviewAggregate } from '@/lib/reviews';
 import { PHONE, SITE_NAME } from '@/lib/constants';
 import { SITE_URL, jsonLdString } from '@/lib/site';
+import { plainText, productMetaDescription } from '@/lib/seo-text';
+import { displayTitle } from '@/lib/format';
 import { getTitle, getPriceMin, getPriceMax, getCategory, getActive, getFirstImageId, getShortDesc, getDescription } from '@/lib/product-utils';
 
 export const revalidate = 3600;
@@ -44,11 +46,15 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (!product || !getActive(product)) notFound();
 
   const title = getTitle(product);
-  const description = getShortDesc(product) || getDescription(product) || `${title} – KAR-TA BASKI'da özel baskı`;
   const priceMin = getPriceMin(product);
   const priceMax = getPriceMax(product);
   const priceLabel = formatPriceRange(priceMin, priceMax);
   const category = getCategory(product);
+  const description = productMetaDescription({
+    title: displayTitle(title),
+    text: getDescription(product) || getShortDesc(product),
+    price: priceMin ? priceLabel : undefined,
+  });
   const imageId = getFirstImageId(product);
   const imageUrl = imageId
     ? (imageId.startsWith('http') ? imageId : cloudinaryUrl(imageId, 'f_auto,q_auto,w_1200,h_630,c_fill'))
@@ -56,7 +62,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   return {
     title: `${title}${priceMin ? ` – ${priceLabel}` : ''}`,
-    description: `${description} | KAR-TA BASKI`,
+    description,
     keywords: [title, category, 'kupa baskı', 'özel tasarım', 'sihirli kupa', 'kar-ta baski'],
     openGraph: {
       title: `${title} | ${SITE_NAME}`,
@@ -121,7 +127,7 @@ export default async function ProductDetailPage({ params }: Props) {
     '@context': 'https://schema.org',
     '@type': 'Product',
     name: pTitle,
-    description: getShortDesc(product) || getDescription(product) || `${pTitle} – KAR-TA BASKI'da özel kupa baskı`,
+    description: plainText(getDescription(product) || getShortDesc(product)) || `${pTitle} – kişiye özel kupa baskı`,
     ...(product.productCode && { sku: product.productCode }),
     ...(category && { category }),
     ...(seoTags.length > 0 && { keywords: seoTags.join(', ') }),

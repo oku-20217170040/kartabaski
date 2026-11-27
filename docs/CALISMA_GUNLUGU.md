@@ -19,6 +19,21 @@ Her iş bitiminde (kod, sunucu, dış hizmet ya da yalnız araştırma) bu dosya
 
 ---
 
+## 27.11.2026 — 50 blog yazısı, 30 günlük yayın planı ve öneri raporu
+- Neden: yapay zekâ aramalarında görünürlük (kullanıcı isteği).
+- Ne: 50 yazı yayında; 28.11–27.12 arası her gün 10:00 ve 18:00 (TSİ) birer yazı planlı (60). Blog 24'lük sayfalara bölündü, ilgili yazılar, stok kapaklarda kaynak satırı.
+- Nasıl: `lib/blog-cadence.ts` günde 2, en az 4 saat; cron taslak üretimi yalnız `BLOG_AUTO_GENERATE=1`. Yazılar Admin SDK ile `posts` koleksiyonuna yazıldı (`batch: blog-2026-11-27`; toplu geri alma bu alanla). Eski otomatik planlı taslak silinmedi, takvimden çıkarıldı. Kapaklar `karta-baski/blog/` altında kopya: `docs/BLOG_GORSELLERI.md`. Öneriler: `docs/YAPAY_ZEKA_GORUNURLUGU.md`.
+- Doğrulama: 715 test, lint, ayrı kopyada build; yazılar betikle (uzunluk, bağlantı, tekrar, tutar) denetlendi, kapaklar gözle kontrol edildi. İlk planlı yayın henüz gerçekleşmedi (simülasyon testi var).
+- Açık: plan sürerken panelde "Şimdi taslak üret" kullanmayın. Ürün açıklamalarındaki çelişkiler (rapor bölüm 2) düzeltilmedi.
+
+## 27.11.2026 — Teknik SEO ve yapay zekâ görünürlüğü
+- Neden: sitenin arama motorlarında ve yapay zekâ yanıtlarında daha doğru ve hızlı tanınması (kullanıcı onayladı).
+- Ne: `llms.txt`, blog RSS (`feed.xml`), görsel site haritası, IndexNow bildirimi, ana sayfa canonical, temiz ürün arama açıklaması, işletme verisinde iletişim noktası.
+- Nasıl: yeni içerik üretmeden var olan veriden. `lib/seo-text.ts` ürün açıklamasındaki süs imlerini ve satır kırıklarını temizleyip özellik + fiyatla 158 karakterlik açıklama kurar. IndexNow ayrı cron adımıdır (`lib/indexnow.ts`, durum `seo_state/indexnow`): blog koduna dokunmadan, site haritasında değişen ürün ve yazıları bildirir. Marka online mağaza olarak anlatılır; adres eklenmez.
+- Düzeltme: önceki denetimde “ürün sayfasında arama açıklaması yok” denmişti; yanlıştı (açıklama çok satırlı olduğu için denetim görmemişti). Açıklama vardı ama ✔ imleri ve satır kırıklarıyla uzundu.
+- Doğrulama: 696 test, tür kontrolü, ayrı kopyada build ve yerel deneme; canlıya alındı (geri dönüş imajı onceki-20261127b), yeni adresler 200, ilk IndexNow bildiriminde 19 adres kabul edildi.
+- Açık: Google/Bing sonuçlarına yansıma günler alır. Fiyat tablosu, karşılaştırma ve soru-cevap sayfaları ayrı iş.
+
 ## 27.11.2026 — Bing Webmaster Tools kuruldu
 - Neden: Bing dizini bazı yapay zekâ aramalarını da besliyor (kullanıcı isteği).
 - Ne: yalnız `https://www.kartabaski.com/` ve site haritası eklendi; Bing durumu “Success”, 19 adres.

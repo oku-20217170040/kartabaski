@@ -173,7 +173,7 @@ Copy `.env.local.example` to `.env.local` and fill in:
 | `/siparis-takip` | Order lookup by code (`KB` + 11 chars): status, cargo and item summary only — no name, phone, texts or photos (`publicOrder`). Photos and proof approval stay on `/siparis/[token]`; customers cannot delete orders themselves |
 | `/gizlilik` | KVKK notice |
 
-`app/sitemap.ts` and `app/robots.ts` auto-generate SEO sitemap and robots.txt.
+`app/sitemap.ts` and `app/robots.ts` auto-generate SEO sitemap and robots.txt. Also for search and AI crawlers: `app/llms.txt` (site summary built from real data; shared FAQ in `lib/faq.ts`), `app/feed.xml` (blog RSS), `app/sitemap-gorseller.xml` (image sitemap), IndexNow (`lib/indexnow.ts`, cron step; the key file in `public/` is public by design). Product meta descriptions come from `lib/seo-text.ts`. Never add a street address or opening hours: the brand is presented as an online store only.
 
 ### Admin Panel
 

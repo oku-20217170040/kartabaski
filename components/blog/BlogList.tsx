@@ -21,7 +21,7 @@ export function blogListMetadata(page: number): Metadata {
   return {
     title,
     description,
-    alternates: { canonical: url },
+    alternates: { canonical: url, types: { 'application/rss+xml': `${SITE_URL}/feed.xml` } },
     openGraph: { title: `Blog${suffix} | ${SITE_NAME}`, description, type: 'website', locale: 'tr_TR', url },
   };
 }
