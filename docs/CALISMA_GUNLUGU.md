@@ -19,6 +19,13 @@ Her iş bitiminde (kod, sunucu, dış hizmet ya da yalnız araştırma) bu dosya
 
 ---
 
+## 28.11.2026 — TikTok sandbox ve doğrulama (yarım: hedef kullanıcı, kapsamlar, demo videosu)
+- Neden: TikTok incelemesi demo videosu istiyor; onaysız uygulama sandbox'ta gösterilir.
+- Ne: alan adı doğrulaması (URL prefix, imza dosyası `public/`) yayında ve doğrulandı. Sandbox oluşturuldu, sunucuya sandbox client key yazıldı (`TIKTOK-KAYDEDILDI`).
+- Nasıl: imza dosyası PR #45 ile eklendi ve yayına alındı. Sandbox ilk denemede `non_sandbox_target` hatası verdi: hedef kullanıcı (Target Users) listesi boş; hesap henüz eklenmedi. Sandbox kapsamları da henüz eklenmedi.
+- Doğrulama: `/admin/tiktok` 307 (giriş yönlendirmesi, beklenen); konteyner sağlıklı.
+- Açık: Target Users'a @kartabaski eklenecek, sandbox'a kapsamlar (`user.info.basic`, `video.upload`) ve ürünler eklenecek, sonra demo kaydı ve Production incelemesi gönderimi.
+
 ## 27.11.2026 — TikTok geliştirici kaydı, Kullanım Şartları sayfası yayında (yarım: uygulama incelemesi)
 - Neden: TikTok Content Posting API için uygulama kaydı ve incelemede istenen Kullanım Şartları sayfası gerekiyordu.
 - Ne: `/kullanim-sartlari` sayfası eklendi ve yayına alındı (PR #43). TikTok'ta "KartaBaski" uygulaması ve "KAR-TA BASKI" kuruluşu oluşturuldu.
