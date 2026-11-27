@@ -8,6 +8,7 @@ Ayrıntılı kayıt: `docs/CALISMA_GUNLUGU.md`.
 - Fiyatlar 27.11.2026 tarihli fiyat listesine göre güncel. Listede olup sitede ürünü olmayanlar: İkili Kaşıklı Fincan Seti, Halka Kulplu Kupa, Türk Kahvesi Fincanı, Türk Kahvesi Fincanı Set (fotoğraf ve kullanıcı onayı bekliyor).
 - Bekleyen kullanıcı bilgisi: kupa baskı alanı ölçüleri, diğer sosyal hesaplar.
 - Bekleyen kullanıcı adımı: diğer yöneticiler Telegram grubunda `/katil` yazacak; sosyal medya anahtarları girilmedi.
+- Sosyal medya sırası (27.11.2026): Telegram, Instagram, Facebook, Threads bağlı ve otomatik. Pinterest: işletme hesabı ve geliştirici uygulaması ("KartaBaski Paylasim") tamam, Trial onayı Pinterest'ten bekleniyor; onay maili gelince gizli anahtar sunucuya yazılacak, `/admin/pinterest` ile bağlanacak. TikTok sırada (developers.tiktok.com). Ayrıntı: `docs/SOSYAL_MEDYA_KURULUM_2.md`, `docs/CALISMA_GUNLUGU.md`.
 - Marka online mağaza olarak anlatılır; siteye adres eklenmez.
 - Zamanlayıcı sunucudadır (`tools/sunucu/zamanlayici.sh`); aşağıdaki eski notta geçen GitHub zamanlaması geçersizdir.
 - Canlıya alma sırası için günlüğün “Her sürümde izlenen yol” bölümüne bakın.

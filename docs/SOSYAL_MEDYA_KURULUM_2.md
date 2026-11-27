@@ -38,7 +38,7 @@ Sayfa: `/admin/pinterest`. Pinler kupa kategorisine göre panolara gider (Serami
 5. `/admin/pinterest` → **Pinterest'e bağlan**. Token ve yenileme anahtarı Firestore `pinterest_settings/main` içinde saklanır, süresi azalınca kendiliğinden yenilenir.
 6. Not: Trial erişimde atılan pinler yalnızca hesap sahibine görünür; herkese açık için Standard erişim başvurusu gerekir (uygulama amacı: işletme sahibinin kendi kupa kataloğunu kendi panolarına pinlemesi; demo videosunda bağlanma, 1 pin paylaşma ve pinden ürün sayfasına geçiş gösterilir).
 
-Durum: Firestore `pinterest_auto/state`.
+Durum (27.11.2026): işletme hesabı açık; geliştirici uygulaması "KartaBaski Paylasim" oluşturuldu, yönlendirme adresi eklendi, Trial erişimi onayı bekleniyor. Onay maili gelince: uygulamada gizli anahtar görünür, kopyalanıp sunucuya yazılır (`PINTEREST_APP_ID` ve `PINTEREST_APP_SECRET`), sonra `/admin/pinterest` üzerinden bağlanılır. Otomatik paylaşım açılmadan kullanıcı onayı alınır. Firestore `pinterest_auto/state`.
 
 ## 3. TikTok
 
