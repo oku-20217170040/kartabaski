@@ -23,10 +23,10 @@ Hedef: ChatGPT, Claude, Gemini, Perplexity ve Google yapay zekâ özetlerinde "k
 Ana sayfa canonical, ürün arama açıklaması, işletme yapılandırılmış verisi, site haritası görselleri, RSS, IndexNow ve `llms.txt` ayrı bir çalışma olarak uygulanıyor; güncel durum için `CALISMA_GUNLUGU.md`. Aşağıdaki içerik düzeltmeleri henüz yapılmadı.
 
 1. **Çelişkileri giderin**
-   - `/hakkimizda`: "Sepet ya da ödeme ekranı yok" yazıyor; sitede `/sepet` var. Doğrusu: "Ödeme sitede alınmaz."
-   - Sihirli Kupa açıklaması "kurumsal 85₺/adet" diyor, aynı sayfada 45 adet üzeri 160₺ yazıyor.
-   - Seramik Kahve Fincanı "6'lı Set Tasarımsız: 1120₺" (büyük olasılıkla 120₺).
-   - Porselen Motto Fincan "Sihirli Kupa" kategorisinde.
+   - `/hakkimizda`: "Sepet ya da ödeme ekranı yok" yazıyor; sitede `/sepet` var. Doğrusu: "Ödeme sitede alınmaz." **(Düzeltildi: 27.11.2026)**
+   - Sihirli Kupa açıklaması "kurumsal 85₺/adet" diyor, aynı sayfada 45 adet üzeri 160₺ yazıyor. **(Düzeltildi: 27.11.2026)**
+   - Seramik Kahve Fincanı "6'lı Set Tasarımsız: 1120₺" (büyük olasılıkla 120₺). **(Düzeltildi: 27.11.2026)**
+   - Porselen Motto Fincan "Sihirli Kupa" kategorisinde. **(Düzeltildi: 27.11.2026)**
    - Yayındaki eski "Sihirli Kupa Nasıl Çalışır" yazısı Tabaklı Fincan'ı sihirli kupa olarak listeliyor.
    - Ana sayfadaki yapılandırılmış veri (`app/layout.tsx`) olmayan ürünleri ("Sihirli Mat Kupa", "Sihirli Konik Kupa") ve doğrulanmamış ödeme yöntemlerini ("Cash, Credit Card") söylüyor; meta anahtar kelimelerde de eski adlar var.
 2. **Cevap sayfaları**: `/fiyatlar` (tek, 6'lı, 45+ tablo; güncelleme tarihi), `/teslimat-ve-iade` (kargo ücreti, süre, iade, ödeme yöntemi: bugün hiçbiri yazmıyor), `/iletisim` (işletme unvanı, telefon, e-posta, yanıt süresi). Yapay zekâya en çok "ne kadar, kaç günde, nasıl sipariş, güvenilir mi" soruluyor.

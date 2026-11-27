@@ -30,7 +30,7 @@ npm run test:coverage # Jest with coverage report
 ## Architecture
 
 **KAR-TA BASKI** is an online mug printing (kupa baskı) catalog and order site (Next.js 14 App Router + Firebase + Cloudinary).
-No cart or checkout — all sales happen via WhatsApp.
+There is a cart (`/sepet`) that creates an order, but no online payment: the final price is confirmed over WhatsApp. Prices follow the owner's price list: each product description lists single, set and 45+ tiers, `priceMax` (or `priceMin`) holds the single-unit price, and `configurator_cups.price` must match it. Blog posts quote prices too: update them together.
 
 ### Data Flow
 
