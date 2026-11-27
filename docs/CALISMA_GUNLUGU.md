@@ -23,7 +23,7 @@ Her iş bitiminde (kod, sunucu, dış hizmet ya da yalnız araştırma) bu dosya
 - Neden: sitede çelişen fiyatlar vardı; kullanıcı güncel fiyat listesini (PDF) verdi.
 - Ne: Büyük Beyaz Kupa tek adet 200 → 250 TL; Kahve Fincanı 245 → 250 TL (ürün ve tasarım aracı); Seramik Kahve Fincanı 6'lı tasarımsız 1120 → 120 TL; Sihirli Kupa'dan yanlış “85 TL” satırı kaldırıldı, 2'li set 325 TL eklendi, görsel sayısı 1+2 yapıldı; Porselen Motto Fincan kategorisi Kahve Fincanı; fiyat geçen 23 blog yazısı ve Hakkımızda metni.
 - Nasıl: ürün ve yazı kayıtları Firestore'da doğrudan güncellendi (önce yedek, sonra kuru deneme, metin bulunamazsa hiç yazmayan betik). Yayın durumu ve planlar değişmedi. Karşılaştırma cümleleri ve türetilen tutarlar yeni fiyata göre yeniden hesaplandı.
-- Doğrulama: yayındaki 11 ürünün fiyat satırları listeyle birebir; tasarım aracında 7 bardak doğru; yazılarda eski tek adet değeri kalmadı; canlı sonuç aşağıdaki sürümle denendi.
+- Doğrulama: yayındaki 11 ürünün fiyat satırları listeyle birebir; tasarım aracında 7 bardak doğru; yazılarda eski tek adet değeri kalmadı; 720 test ve build geçti; canlıda ürün, Hakkımızda ve blog sayfaları denendi (geri dönüş imajı onceki-20261127e), 14 sayfa IndexNow ile bildirildi.
 - Açık: listedeki dört ürün sitede yok (İkili Kaşıklı Fincan Seti, Halka Kulplu Kupa, Türk Kahvesi Fincanı ve Seti). Motto kategorisi kullanıcıya sorulmadan benzer porselenlerle aynı yapıldı.
 
 ## 27.11.2026 — IndexNow düzeltmesi ve blog sonrası kontrol
