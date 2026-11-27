@@ -19,6 +19,20 @@ Her iş bitiminde (kod, sunucu, dış hizmet ya da yalnız araştırma) bu dosya
 
 ---
 
+## 27.11.2026 — Pinterest profili dolduruldu (yarım: işletme hesabı ve uygulama)
+- Neden: kullanıcı hesabı açtı (`kartabaski`) ve profilin doldurulmasını istedi.
+- Ne: ad "KAR-TA BASKI", hakkında metni (tanım, teslimat, WhatsApp), logo yüklendi; web sitesi alanında site adresi var.
+- Nasıl: Pinterest ayarları tarayıcıda. Sekme arka plandayken ayar sayfaları boş kalıyor; profil sayfasındaki kalem simgesi ve dosya alanı ile yüklendi.
+- Doğrulama: profil sayfasında ad, hakkında ve logo görüldü. Site adresi `http://` biçiminde görünebiliyor (site https'e yönlendirir).
+- Açık: hesap kişisel görünüyor; geliştirici uygulaması için işletme hesabına dönüştürülmeli (koşul kabulü, kullanıcı onayı). Panolar bilerek açılmadı: otomasyon ihtiyaç oldukça kendi açar.
+
+## 27.11.2026 — Pinterest kurulumu başladı
+- Neden: sosyal medya sırasındaki sıradaki platform.
+- Ne: tarayıcıda Pinterest oturumu yok; işletme hesabı oluşturma formu açıldı.
+- Nasıl: pinterest.com/business/create. E-posta ve parola kullanıcıda.
+- Doğrulama: yok (henüz hesap açılmadı).
+- Açık: işletme hesabı (açılacak ya da giriş); sonra geliştirici uygulaması, yönlendirme `/api/pinterest/callback`, anahtarlar sunucuda, panelden "Pinterest'e bağlan". Deneme erişiminde pinleri yalnız hesap sahibi görür; herkese açık için Standard başvurusu gerekir (docs/SOSYAL_MEDYA_KURULUM_2.md).
+
 ## 27.11.2026 — Threads profili tamamlandı, ilk gönderi yayında
 - Neden: kullanıcı Threads profilinin uygun şekilde doldurulmasını istedi.
 - Ne: biyografi (tanım + WhatsApp numarası), "Online mağaza" (site) ve "Telegram kanalı" bağlantıları eklendi. Ad ve logo hazırdı; adres yazılmadı.
