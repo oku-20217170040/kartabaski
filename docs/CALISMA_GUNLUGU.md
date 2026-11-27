@@ -24,7 +24,8 @@ Her iş bitiminde (kod, sunucu, dış hizmet ya da yalnız araştırma) bu dosya
 - Ne: profil fotoğrafı (logo), kapak görseli (sitedeki gerçek kupa fotoğraflarıyla), telefon, e-posta (sitedeki iletişim adresi), site ve Telegram kanalı bağlantıları, Instagram hesabı, "Daha fazla bilgi al" eylem düğmesi (siteye). Adres ve çalışma saati bilerek girilmedi.
 - Nasıl: Facebook arayüzünden tarayıcıda. Kapak, HTML'den Playwright ile üretildi (kobalt zemin, Archivo). Meta'nın pazarlama e-postaları kapatıldı.
 - Doğrulama: logo, kapak, telefon, e-posta, bağlantılar ve Instagram sayfada görüldü; eylem düğmesi menüde "düzenle" olarak görünüyor (ziyaretçi görünümü ayrıca denenmedi).
-- Açık: sayfa kullanıcı adı `kartabaski` boşta, kaydı Meta parola istediği için hesap sahibinde. WhatsApp bağlantısı numaraya gelen onay koduyla yapılır (kullanıcıda). Facebook otomatik paylaşımı kapalı. info@kartabaski.com adresinin e-posta aldığı doğrulanmadı.
+- Sonradan (aynı akşam): kullanıcı parolasını girdi, `facebook.com/kartabaski` açılıyor. Kullanıcı onayıyla Facebook otomatik paylaşımı açıldı (günde 3, 10:00–21:00; sayfa yenilenince "Açık" kaldı). Açıldığında saat aralığı dışındaydı; ilk otomatik tur henüz izlenmedi.
+- Açık: WhatsApp bağlantısı numaraya gelen onay koduyla yapılır (kullanıcıda). info@kartabaski.com adresinin e-posta aldığı doğrulanmadı.
 
 ## 27.11.2026 — Facebook yayın hatası (#200 publish_actions) giderildi
 - Neden: ilk otomasyon turu "(#200) publish_actions" hatasıyla gönderi atamadı.
