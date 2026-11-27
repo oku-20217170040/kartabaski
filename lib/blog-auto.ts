@@ -1,10 +1,11 @@
 import 'server-only';
 
-// Blog otomasyonu (cron tarafından çağrılır): planlı yazıyı yayınlar, kuyruk azsa yeni taslak üretir.
-//  - Yayın sıklığı: lib/blog-cadence.ts (günde en fazla 1, aralarında 12 saat, TSİ 07:00'den sonra).
+// Blog otomasyonu (cron tarafından çağrılır): planlı yazıyı yayınlar; açıksa kuyruk azalınca yeni taslak üretir.
+//  - Yayın sıklığı: lib/blog-cadence.ts (günde en fazla 2, aralarında en az 4 saat, TSİ 07:00'den sonra).
 //  - Konu: lib/blog-topics.ts (özel gün yaklaşıyorsa o gün öne alınır, yoksa sabit/kategori/anahtar kelime konuları).
 //  - Üretim: GEMINI_API_KEY varsa Gemini, yoksa şablon (lib/blog-draft.ts). Ürün verisi kodla eklenir.
-//  - Ortam: BLOG_AUTO_GENERATE=0 üretimi kapatır; BLOG_AUTO_PUBLISH=0 taslakları planlamaz (admin onayı bekler).
+//  - Ortam: cron yalnız BLOG_AUTO_GENERATE=1 ise taslak üretir (varsayılan kapalı; admin'deki elle üretim hep açık).
+//    BLOG_AUTO_PUBLISH=0 üretilen taslakları planlamaz (admin onayı bekler).
 import { FieldValue } from 'firebase-admin/firestore';
 import { adminDb } from './firebase-admin';
 import { listPosts, savePost, type PostInput } from './posts';
@@ -17,7 +18,8 @@ import { geminiConfigured, generateWithGemini } from './blog-llm';
 import { findTopic, pickNextTopic } from './blog-topics';
 import { buildLlmPrompt, buildTemplateDraft, makeSlug, parseLlmDraft, pickProductsForTopic, type BlogDraft } from './blog-draft';
 import {
-  BLOG_GRACE_MS, BLOG_QUEUE_MIN, blogGenDue, blogSlotDue, nextAutoSlot, nextBlogState, type BlogStepState,
+  BLOG_GRACE_MS, BLOG_QUEUE_MIN, blogAutoGenerateEnabled, blogGenDue, blogSlotDue, nextAutoSlot, nextBlogState,
+  type BlogStepState,
 } from './blog-cadence';
 import { trDayKey } from './tr-time';
 import type { Post } from './posts-types';
@@ -120,8 +122,9 @@ export async function generateBlogDraft(opts: { now?: number; existing?: Post[];
 }
 
 /**
- * Cron turu: planlı yazıyı yayınlar (sıklık kuralı izin verirse) ve günde bir kez kuyruğa bakıp
- * kuyruk BLOG_QUEUE_MIN'den azsa yeni taslak üretir. Koleksiyon yalnızca bu iki işten biri gerekliyse okunur.
+ * Cron turu: planlı yazıyı yayınlar (sıklık kuralı izin verirse). Otomatik üretim açıksa ayrıca günde bir kez
+ * kuyruğa bakıp kuyruk BLOG_QUEUE_MIN'den azsa yeni taslak üretir. Koleksiyon yalnızca bu iki işten biri
+ * gerekliyse okunur.
  */
 export async function runBlogStep(now = Date.now()): Promise<{ ran: boolean; reason?: string; slug?: string }> {
   const snap = await stateRef().get();
@@ -129,7 +132,7 @@ export async function runBlogStep(now = Date.now()): Promise<{ ran: boolean; rea
   const s: BlogStepState = { blogDay: d.blogDay, blogCount: d.blogCount, blogLastAt: d.blogLastAt, blogNextAt: d.blogNextAt };
 
   const slotDue = blogSlotDue(now, s);
-  const genDue = process.env.BLOG_AUTO_GENERATE !== '0' && blogGenDue(now, d.genDay);
+  const genDue = blogAutoGenerateEnabled() && blogGenDue(now, d.genDay);
   if (!slotDue && !genDue) return { ran: false, reason: 'günlük blog kotası dolu, saat erken ya da sıradaki yazının vakti gelmedi' };
 
   const all = await listPosts(false);
@@ -196,7 +199,7 @@ export async function getBlogAutoStatus(now = Date.now()): Promise<BlogAutoStatu
   const next = pickNextTopic(now, { usedIds: d.usedTopics ?? [], keywordTargets: seo.keywordTargets });
   return {
     geminiConfigured: geminiConfigured(),
-    autoGenerate: process.env.BLOG_AUTO_GENERATE !== '0',
+    autoGenerate: blogAutoGenerateEnabled(),
     autoPublish: process.env.BLOG_AUTO_PUBLISH !== '0',
     lastGenAt: d.lastGenAt,
     lastGenSlug: d.lastGenSlug,

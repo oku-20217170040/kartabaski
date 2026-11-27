@@ -8,6 +8,7 @@ import { renderMarkdown, slugifyHeading } from '@/lib/markdown';
 import { cloudinaryUrl } from '@/lib/format';
 import { SITE_URL } from '@/lib/site';
 import { trDayKey, trHour, trTime, TR_OFFSET_MS } from '@/lib/tr-time';
+import { BLOG_DAILY_MAX, BLOG_MIN_GAP_MS } from '@/lib/blog-cadence';
 import { CATEGORIES } from '@/types';
 import { uploadFiles } from '@/components/admin/upload';
 import { useToast, errorMessage } from '@/components/admin/Toast';
@@ -256,7 +257,7 @@ export default function PostEditor({ initial, onSaved }: Props) {
         <div className="form-group">
           <label className="form-label" htmlFor="blg-schedule">Planlı yayın <span className="blg-counter">· Türkiye saati; boş bırakırsanız yalnızca taslak olur</span></label>
           <input id="blg-schedule" type="datetime-local" className="form-input" value={schedule} onChange={(e) => setSchedule(e.target.value)} />
-          <div className="blg-help">Planlı yazılar günde en fazla bir kez, vakti geldiğinde otomatik yayına çıkar.</div>
+          <div className="blg-help">Planlı yazılar vakti gelince otomatik yayına çıkar: günde en fazla {BLOG_DAILY_MAX} yazı, aralarında en az {BLOG_MIN_GAP_MS / 3600000} saat.</div>
         </div>
       )}
 

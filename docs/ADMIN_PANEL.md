@@ -13,7 +13,7 @@
 | `/admin/yorumlar` | Davet bağlantılı müşteri yorumları | `lib/reviews*`, `app/yorum/[token]` |
 | `/admin/sosyal-medya` + 6 platform | Instagram, Facebook, Threads, Telegram, Pinterest, TikTok | `lib/social-run.ts`, `lib/*-auto.ts` |
 | `/admin/sosyal-medya/paylas` | Hızlı Paylaşım & Gönderi Havuzu: fotoğraf yükleyip (müşteri siparişi, ürün, atölye, kampanya) otomatik metinle bağlı tüm platformlarda anında veya sırayla yayınlama (+ isteğe bağlı ücretsiz stüdyo arka planı) | `lib/social-broadcast*`, `lib/actions-social-broadcast.ts` |
-| `/admin/blog` | Blog + otomatik taslak/yayın | `lib/posts.ts`, `lib/blog-*` |
+| `/admin/blog` | Blog + planlı yayın, isteğe bağlı otomatik taslak | `lib/posts.ts`, `lib/blog-*` |
 | `/admin/seo` | Varsayılan meta, anahtar kelimeler, doğrulama kodları | `lib/seo-*` |
 
 ## Otomasyon
@@ -21,11 +21,15 @@
 - Tetikleyici: sunucu crontab'ı (`tools/sunucu/zamanlayici.sh`, 30 dakikada bir, TSİ 07:00–00:30). GitHub iş akışı yalnız elle çalıştırma içindir.
 - Yönetim botu: `docs/TELEGRAM_BOTU.md`.
 - Sosyal platformlar varsayılan **kapalı**; token girildikten sonra Merkez'den açılır.
+- Blog yayını (`lib/blog-cadence.ts`): günde en fazla 2 yazı, iki yayın arası en az 4 saat, planlı saatten en çok 5 dakika önce; TSİ 07:00'den önce yayın yok. Geciken yazılar eskiden yeniye aynı sınırlarla çıkar. Zamanlayıcı bir gün içinde sıradaki tarihi gördükten sonra aynı güne daha erken bir yazı planlanırsa o yazı gecikebilir.
+- Blog taslağı: cron yalnız `BLOG_AUTO_GENERATE=1` ise üretir (varsayılan kapalı). `/admin/blog` içindeki "Şimdi taslak üret" her zaman çalışır; üretilen taslak takvime eklenir (`BLOG_AUTO_PUBLISH=0` ise eklenmez). Yaklaşan özel gün konusu hemen sıraya girer ve o günün iki yayın hakkından birini kullanır.
+- Blog listesi 6 saat önbellekte tutulur; cron yayını ve panel işlemleri anında yeniler. Firestore'a panel dışından yazılan yazılar listede en geç 6 saatte görünür (panelden bir yazıyı kaydetmek hemen yeniler). Liste sayfaları: `/blog`, `/blog/sayfa/2` … (sayfa başına 24).
+- Stok fotoğraflı kapakların kaynağı yazı belgesindeki `coverCredit` alanındadır (`author?`, `source`, `url`, `license`); panelden kapak değişir ya da kaldırılırsa silinir.
 
 ## Ortam değişkenleri (sunucu `.env`)
 Hepsi isteğe bağlı; eksik olan modül "bağlı değil" gösterip atlanır.
 - Genel: `CRON_SECRET`, `TELEGRAM_BOT_TOKEN` (yönetim botu; hedef grup `/kur` ile bağlanır, `TELEGRAM_CHAT_ID` yalnız yedek hedef)
-- Blog: `GEMINI_API_KEY` (yoksa şablonla üretir), `GEMINI_MODEL`, `BLOG_AUTO_GENERATE=0`, `BLOG_AUTO_PUBLISH=0`
+- Blog: `GEMINI_API_KEY` (yoksa şablonla üretir), `GEMINI_MODEL`, `BLOG_AUTO_GENERATE=1` (cron taslak üretsin; varsayılan kapalı), `BLOG_AUTO_PUBLISH=0`
 - Ürün Fotoğrafları (biri yeter; panelden seçilir):
   - **Ücretsiz / kredi kartsız:** `CLOUDFLARE_ACCOUNT_ID` + `CLOUDFLARE_API_TOKEN` (Cloudflare Workers AI günlük 10.000 ücretsiz neuron, varsayılan `@cf/black-forest-labs/flux-2-klein-4b`, isteğe bağlı `CLOUDFLARE_IMAGE_MODEL`), `HF_TOKEN` veya anahtarsız `HF_FREE_ANON=1` (Hugging Face ZeroGPU Space, varsayılan `black-forest-labs/FLUX.1-Kontext-Dev`, isteğe bağlı `HF_IMAGE_SPACE`).
   - **Ücretli / faturalandırmalı:** `GEMINI_API_KEY` (`GEMINI_IMAGE_MODEL`), `FAL_KEY` (Seedream/Flux, `FAL_IMAGE_MODEL`), `OPENAI_API_KEY` (`OPENAI_IMAGE_MODEL`), `REPLICATE_API_TOKEN` (`REPLICATE_IMAGE_MODEL`).

@@ -2,6 +2,14 @@
 
 export interface FaqItem { q: string; a: string }
 
+/** Stok fotoğraf kapaklarının kaynağı; yalnız yükleme sırasında yazılır, panelden düzenlenmez. */
+export interface CoverCredit {
+  author?: string;
+  source: string; // site adı
+  url: string; // fotoğrafın kaynak sayfası
+  license: string;
+}
+
 export interface Post {
   id: string;
   slug: string;
@@ -9,6 +17,7 @@ export interface Post {
   excerpt: string; // liste kartı + meta description
   content: string; // basit Markdown
   coverImage?: string; // Cloudinary public_id
+  coverCredit?: CoverCredit; // yalnız stok fotoğraf kapaklarda
   tags: string[];
   faq: FaqItem[]; // FAQPage JSON-LD (GEO/AI arama için)
   productIds?: string[]; // yazıda geçen/önerilen ürünler (ürün sayfasında "İlgili yazılar" için)

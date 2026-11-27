@@ -19,6 +19,13 @@ Her iş bitiminde (kod, sunucu, dış hizmet ya da yalnız araştırma) bu dosya
 
 ---
 
+## 27.11.2026 — 50 blog yazısı, 30 günlük yayın planı ve öneri raporu
+- Neden: yapay zekâ aramalarında görünürlük (kullanıcı isteği).
+- Ne: 50 yazı yayında; 28.11–27.12 arası her gün 10:00 ve 18:00 (TSİ) birer yazı planlı (60). Blog 24'lük sayfalara bölündü, ilgili yazılar, stok kapaklarda kaynak satırı.
+- Nasıl: `lib/blog-cadence.ts` günde 2, en az 4 saat; cron taslak üretimi yalnız `BLOG_AUTO_GENERATE=1`. Yazılar Admin SDK ile `posts` koleksiyonuna yazıldı (`batch: blog-2026-11-27`; toplu geri alma bu alanla). Eski otomatik planlı taslak silinmedi, takvimden çıkarıldı. Kapaklar `karta-baski/blog/` altında kopya: `docs/BLOG_GORSELLERI.md`. Öneriler: `docs/YAPAY_ZEKA_GORUNURLUGU.md`.
+- Doğrulama: 715 test, lint, ayrı kopyada build; yazılar betikle (uzunluk, bağlantı, tekrar, tutar) denetlendi, kapaklar gözle kontrol edildi. İlk planlı yayın henüz gerçekleşmedi (simülasyon testi var).
+- Açık: plan sürerken panelde "Şimdi taslak üret" kullanmayın. Ürün açıklamalarındaki çelişkiler (rapor bölüm 2) düzeltilmedi.
+
 ## 27.11.2026 — Teknik SEO ve yapay zekâ görünürlüğü
 - Neden: sitenin arama motorlarında ve yapay zekâ yanıtlarında daha doğru ve hızlı tanınması (kullanıcı onayladı).
 - Ne: `llms.txt`, blog RSS (`feed.xml`), görsel site haritası, IndexNow bildirimi, ana sayfa canonical, temiz ürün arama açıklaması, işletme verisinde iletişim noktası.

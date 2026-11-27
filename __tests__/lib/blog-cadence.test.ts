@@ -1,4 +1,7 @@
-import { blogSlotDue, nextBlogState, blogGenDue, nextAutoSlot, BLOG_DAILY_MAX, BLOG_MIN_GAP_MS, BLOG_PUBLISH_HOUR } from '@/lib/blog-cadence';
+import {
+  blogSlotDue, nextBlogState, blogGenDue, blogAutoGenerateEnabled, nextAutoSlot,
+  BLOG_DAILY_MAX, BLOG_GRACE_MS, BLOG_MIN_GAP_MS, BLOG_PUBLISH_HOUR,
+} from '@/lib/blog-cadence';
 import { trHour, trDayKey } from '@/lib/tr-time';
 
 const DAY = '2026-11-11';
@@ -17,20 +20,26 @@ describe('blog yayın sıklığı kuralı', () => {
   });
 
   it('günde en fazla BLOG_DAILY_MAX yazı', () => {
-    expect(BLOG_DAILY_MAX).toBe(1);
-    expect(blogSlotDue(at(22), { blogDay: DAY, blogCount: 1, blogLastAt: at(8), blogNextAt: at(8) })).toBe(false);
+    expect(BLOG_DAILY_MAX).toBe(2);
+    expect(blogSlotDue(at(22), { blogDay: DAY, blogCount: 1, blogLastAt: at(8), blogNextAt: at(8) })).toBe(true);
+    expect(blogSlotDue(at(22), { blogDay: DAY, blogCount: 2, blogLastAt: at(12), blogNextAt: at(8) })).toBe(false);
   });
 
   it('iki yayın arasında en az BLOG_MIN_GAP_MS', () => {
+    expect(BLOG_MIN_GAP_MS).toBe(4 * H);
+    // gün anahtarı farklı olsa da aralık korunur
+    expect(blogSlotDue(at(9), { blogDay: '2026-11-10', blogCount: 1, blogLastAt: at(6) })).toBe(false);
     const s = { blogDay: DAY, blogCount: 0, blogLastAt: at(8), blogNextAt: at(7) };
     expect(blogSlotDue(at(8) + BLOG_MIN_GAP_MS - 1, s)).toBe(false);
     expect(blogSlotDue(at(8) + BLOG_MIN_GAP_MS, s)).toBe(true);
   });
 
-  it('sıradaki yazının vakti (2 saat erken pay dahil) gelmeden okuma yapılmaz', () => {
+  it('sıradaki yazının vakti (5 dakika erken pay dahil) gelmeden okuma yapılmaz', () => {
     const s = { blogDay: DAY, blogCount: 0, blogLastAt: 0, blogNextAt: at(18) };
-    expect(blogSlotDue(at(15), s)).toBe(false);
-    expect(blogSlotDue(at(16), s)).toBe(true);
+    expect(BLOG_GRACE_MS).toBe(5 * 60 * 1000);
+    expect(blogSlotDue(at(17, 30), s)).toBe(false);
+    expect(blogSlotDue(at(18) - BLOG_GRACE_MS - 1, s)).toBe(false);
+    expect(blogSlotDue(at(18) - BLOG_GRACE_MS, s)).toBe(true);
   });
 
   it('bugün sıra boşsa yeni planlananlar yarına kalır; eski durum belgesinde bakılır', () => {
@@ -47,6 +56,11 @@ describe('blog yayın sıklığı kuralı', () => {
 });
 
 describe('günlük taslak üretimi', () => {
+  it('otomatik üretim yalnız BLOG_AUTO_GENERATE=1 ile açılır', () => {
+    expect(blogAutoGenerateEnabled('1')).toBe(true);
+    for (const v of [undefined, '', '0', 'true']) expect(blogAutoGenerateEnabled(v)).toBe(false);
+  });
+
   it('günde bir kez ve 07:00 sonrası', () => {
     expect(blogGenDue(at(6), undefined)).toBe(false);
     expect(blogGenDue(at(8), undefined)).toBe(true);

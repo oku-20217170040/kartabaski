@@ -11,6 +11,7 @@ import { useConfirm } from '@/components/admin/ConfirmDialog';
 import { IconEdit, IconExternal, IconPlus, IconSparkles, IconTrash } from '@/components/admin/icons';
 import type { Post } from '@/lib/posts-types';
 import type { BlogAutoStatus } from '@/lib/blog-auto';
+import { BLOG_DAILY_MAX, BLOG_MIN_GAP_MS, BLOG_QUEUE_MIN } from '@/lib/blog-cadence';
 import './blog-admin.css';
 
 const fmt = (ts?: number) =>
@@ -97,7 +98,7 @@ export default function AdminBlogPage() {
       <div className="admin-header">
         <div>
           <h1 className="adm-page-title">Blog</h1>
-          <p className="adm-page-sub">Rehber yazıları aramalarda görünür olmanızı sağlar; otomasyon kuyruk azaldıkça yeni taslak hazırlar.</p>
+          <p className="adm-page-sub">Rehber yazıları aramalarda görünür olmanızı sağlar; planlı yazılar vakti gelince kendiliğinden yayına çıkar.</p>
         </div>
         <div className="adm-actions-row">
           <button type="button" className="btn btn-secondary adm-btn-icon-label" onClick={generate} disabled={busy}>
@@ -118,8 +119,9 @@ export default function AdminBlogPage() {
           <h2 className="adm-section-title">Otomasyon</h2>
           <div className="blg-auto">
             <div className="blg-auto-row">
-              <span>Üretim: <b>{auto.autoGenerate ? (auto.geminiConfigured ? 'Gemini' : 'Şablon (Gemini bağlı değil)') : 'Kapalı'}</b></span>
-              <span>Yayın: <b>{auto.autoPublish ? 'Otomatik planlı' : 'Admin onayı bekler'}</b></span>
+              <span>Otomatik üretim: <b>{auto.autoGenerate ? 'Açık' : 'Kapalı'}</b></span>
+              <span>Üretici: <b>{auto.geminiConfigured ? 'Gemini' : 'Şablon (Gemini bağlı değil)'}</b></span>
+              <span>Üretilen taslak: <b>{auto.autoPublish ? 'Takvime eklenir' : 'Admin onayı bekler'}</b></span>
               <span>Kullanılan konu: <b>{auto.usedTopics}</b></span>
               <span>Son üretim: <b>{fmt(auto.lastGenAt)}</b></span>
             </div>
@@ -127,7 +129,14 @@ export default function AdminBlogPage() {
               <span>Sıradaki konu: <b>{auto.nextTopic ? `${auto.nextTopic.title}${auto.nextTopic.urgent ? ' (özel gün, öne alındı)' : ''}` : 'konu kalmadı'}</b></span>
             </div>
             {auto.lastError && <div className="blg-auto-error">Son hata: {auto.lastError}</div>}
-            <div className="blg-hint">Günde en fazla 1 yazı yayınlanır; kuyrukta 3&apos;ten az planlı yazı kalırsa günde bir taslak üretilir. Telegram bağlıysa bildirim gelir.</div>
+            <div className="blg-hint">
+              Planlı yazılar vakti gelince yayınlanır: günde en fazla {BLOG_DAILY_MAX} yazı, iki yazı arasında en az {BLOG_MIN_GAP_MS / 3600000} saat.{' '}
+              {auto.autoGenerate
+                ? `Planlı yazı sayısı ${BLOG_QUEUE_MIN} adedin altına düşerse günde bir taslak üretilir.`
+                : 'Kendiliğinden taslak üretilmez; taslağı "Şimdi taslak üret" düğmesiyle siz hazırlatırsınız.'}{' '}
+              {auto.autoPublish && 'Üretilen taslak takvime eklenir; yaklaşan özel gün konusu hemen sıraya girer. '}
+              Telegram bağlıysa bildirim gelir.
+            </div>
           </div>
         </div>
       )}
@@ -172,7 +181,7 @@ export default function AdminBlogPage() {
       ) : shown.length === 0 ? (
         <div className="adm-empty">
           <div className="adm-empty-title">{posts.length === 0 ? 'Henüz yazı yok' : 'Yazı bulunamadı'}</div>
-          {posts.length === 0 && <p>İlk yazıyı ekleyin ya da &quot;Şimdi taslak üret&quot; ile otomasyonu başlatın.</p>}
+          {posts.length === 0 && <p>İlk yazıyı ekleyin ya da &quot;Şimdi taslak üret&quot; ile bir taslak hazırlatın.</p>}
         </div>
       ) : (
         <div className="adm-list">
