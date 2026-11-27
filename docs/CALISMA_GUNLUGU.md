@@ -19,6 +19,13 @@ Her iş bitiminde (kod, sunucu, dış hizmet ya da yalnız araştırma) bu dosya
 
 ---
 
+## 27.11.2026 — Facebook sayfası oluşturuldu ve sistem kullanıcısına bağlandı (yarım: gönderi testi ve otomatik paylaşım kapalı)
+- Neden: sosyal medya sırasında Facebook sayfası gerekiyordu; sayfa yoktu.
+- Ne: KAR-TA BASKI işletme portföyü altında "Kar-Ta BASKI" Facebook sayfası açıldı (kategori: Butik Mağaza; açıklamada adres ya da çalışma saati yok). Sayfa "KartaBaski Otomasyon" sistem kullanıcısına atandı (İçerik ve Topluluk hareketleri). Sayfa kimliği sunucu `.env` içinde `FACEBOOK_PAGE_ID` olarak tanımlandı; belirteç de `FACEBOOK_PAGE_ACCESS_TOKEN` olarak sunucuda.
+- Nasıl: uygulamaya "Manage everything on your Page" kullanım durumu eklendi; belirteç Asla süreli, pages izinleriyle üretildi. İlk denemede Business Settings'te görünen kimlik sayfa kimliği sanıldı; Graph /me/accounts ile gerçek sayfa kimliği bulundu ve düzeltildi.
+- Doğrulama: konteyner sağlıklı; Graph ile sayfa adı ve yayında olma durumu okunabiliyor. Gönderi atılmadı (test gönderisi yapılmadı).
+- Açık: Facebook otomatik paylaşımı kapalı; açılmadan önce test gönderisi ve kullanıcı onayı gerekir. Belirteç yalnızca sunucuda; sohbet ve depoda yok.
+
 ## 27.11.2026 — Instagram doğrulaması graph.facebook.com'a taşındı (yarım: belirteç yapıştırılıp doğrulanacak)
 - Neden: Meta'da kurulan Instagram bağlantısı bir sistem kullanıcısı belirteciyle yapıldı; uygulama ise Instagram Login uç noktası (graph.instagram.com) ile doğrulamaya çalıştığı için her denemede "Cannot parse access token (kod 190)" hatası alındı. Belirteç Meta'da geçerliydi (graph.facebook.com üzerinden hesap "kartabaskii" olarak döndü).
 - Ne: `lib/instagram.ts` API adresi graph.facebook.com/v26.0 oldu; hesap doğrulaması kullanıcı kimliğiyle yapılır (`/{id}?fields=id,username`); sistem kullanıcısı belirteci yenilenmediği için yenileme atlanır. Çağıran iki yerdeki argüman kaldırıldı.
