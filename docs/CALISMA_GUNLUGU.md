@@ -24,6 +24,7 @@ Her iş bitiminde (kod, sunucu, dış hizmet ya da yalnız araştırma) bu dosya
 - Ne: bildirim artık zamana göre değil, daha önce bildirilen sayfa sürümlerine göre.
 - Nasıl: ilk bildirim sırasında yazı listesi önbellekten eski geliyordu; sonradan haritaya düşen yazıların tarihi “son bildirim”den eski olduğu için atlanıyordu. `pendingUrls` (`lib/indexnow-utils.ts`) adres + tarih kaydı tutar (`seo_state/indexnow.sent`). Eski kayıtta bu alan olmadığı için ilk turda bütün adresler yeniden gider.
 - Blog kontrolü (canlı): 51 yazının hepsi açılıyor; liste, 2. sayfa ve örnek yazılar 360 px ve masaüstünde taşma, kırık görsel ve sayfa hatası vermedi. Yarım saatlik sunucu zamanlayıcısı sabahtan beri HTTP 200.
+- Doğrulama: 720 test ve ayrı kopyada build; canlıya alındı (geri dönüş imajı onceki-20261127d), ilk turda 69 adres kabul edildi.
 - Açık: ilk planlı yayın 28.11 10:00'da; henüz görülmedi. `docs/YAPAY_ZEKA_GORUNURLUGU.md` içindeki site içi çelişkiler kullanıcı kararını bekliyor.
 
 ## 27.11.2026 — 50 blog yazısı, 30 günlük yayın planı ve öneri raporu
