@@ -19,6 +19,13 @@ Her iş bitiminde (kod, sunucu, dış hizmet ya da yalnız araştırma) bu dosya
 
 ---
 
+## 27.11.2026 — Telegram kanalı açıldı ve otomatik paylaşım başladı (yarım: Instagram sırada)
+- Neden: sosyal medya otomasyonları sırayla kurulacaktı; ilk adım Telegram kanalı.
+- Ne: herkese açık kanal "KAR-TA BASKI" (@kartabaski) açıldı, logo ve açıklama girildi. Yönetici botu yalnızca "Gönderi gönder" ve "Gönderileri düzenle" yetkileriyle kanal yöneticisi yapıldı. Test gönderisi (tabaklı kahve fincanı, "Satışta") kanala gitti. Otomatik paylaşım açıldı: günde 3 gönderi, 10:00–21:00.
+- Nasıl: sunucu `.env` dosyasına `TELEGRAM_CHANNEL_ID=@kartabaski` eklendi, konteyner `--force-recreate` ile yeniden başlatıldı. Bot tokenı ve yönetici paneli girişi kullanıcı tarafından yapıldı; sohbete yazılmadı. Kanal ayarları Telegram arayüzünden tarayıcıda yapıldı.
+- Doğrulama: konteyner sağlıklı (healthy); test gönderisi panelde "Satışta" olarak göründü. Otomatik turların zamanlaması canlıda henüz izlenmedi.
+- Açık: Instagram (@kartabaskii) kurulumu başlamadı. Kanaldaki ilk otomatik gönderilerin saatleri bir gün sonra kontrol edilmeli.
+
 ## 27.11.2026 — Fiyatlar fiyat listesine göre güncellendi
 - Neden: sitede çelişen fiyatlar vardı; kullanıcı güncel fiyat listesini (PDF) verdi.
 - Ne: Büyük Beyaz Kupa tek adet 200 → 250 TL; Kahve Fincanı 245 → 250 TL (ürün ve tasarım aracı); Seramik Kahve Fincanı 6'lı tasarımsız 1120 → 120 TL; Sihirli Kupa'dan yanlış “85 TL” satırı kaldırıldı, 2'li set 325 TL eklendi, görsel sayısı 1+2 yapıldı; Porselen Motto Fincan kategorisi Kahve Fincanı; fiyat geçen 23 blog yazısı ve Hakkımızda metni.
