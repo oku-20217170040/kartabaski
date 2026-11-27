@@ -19,6 +19,13 @@ Her iş bitiminde (kod, sunucu, dış hizmet ya da yalnız araştırma) bu dosya
 
 ---
 
+## 27.11.2026 — Pinterest işletme hesabına geçildi (yarım: geliştirici uygulaması)
+- Neden: geliştirici uygulaması işletme hesabı istiyor; kullanıcı dönüştürmenin yapılmasını istedi.
+- Ne: hesap işletme hesabı oldu. İşletme adı "KAR-TA BASKI", ülke Türkiye, site adresi girildi; tür "çevrimiçi satıcı veya pazaryeri", hedefler çevrimiçi satış ve site trafiği, odak "kendin yap ve el işleri", reklam "planlamıyorum".
+- Nasıl: Pinterest işletme kurulum soruları (tarayıcıda). Reklam ya da ödeme adımı açılmadı.
+- Doğrulama: kurulum sonrası başlangıç önerileri ekranı geldi; profil sayfasında ad, hakkında ve site bağlantısı duruyor, sayfa verisi işletme (partner) hesabı gösteriyor.
+- Açık: geliştirici uygulaması (developers.pinterest.com/apps, yönlendirme `/api/pinterest/callback`), anahtarların sunucuya girilmesi, panelden bağlama, otomatik paylaşım için kullanıcı onayı. Web sitesi sahiplenme (claim) yapılmadı; paylaşım için gerekmiyor. Sonra TikTok.
+
 ## 27.11.2026 — Pinterest profili dolduruldu (yarım: işletme hesabı ve uygulama)
 - Neden: kullanıcı hesabı açtı (`kartabaski`) ve profilin doldurulmasını istedi.
 - Ne: ad "KAR-TA BASKI", hakkında metni (tanım, teslimat, WhatsApp), logo yüklendi; web sitesi alanında site adresi var.
