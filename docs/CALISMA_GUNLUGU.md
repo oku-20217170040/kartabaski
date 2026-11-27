@@ -24,7 +24,7 @@ Her iş bitiminde (kod, sunucu, dış hizmet ya da yalnız araştırma) bu dosya
 - Ne: `llms.txt`, blog RSS (`feed.xml`), görsel site haritası, IndexNow bildirimi, ana sayfa canonical, temiz ürün arama açıklaması, işletme verisinde iletişim noktası.
 - Nasıl: yeni içerik üretmeden var olan veriden. `lib/seo-text.ts` ürün açıklamasındaki süs imlerini ve satır kırıklarını temizleyip özellik + fiyatla 158 karakterlik açıklama kurar. IndexNow ayrı cron adımıdır (`lib/indexnow.ts`, durum `seo_state/indexnow`): blog koduna dokunmadan, site haritasında değişen ürün ve yazıları bildirir. Marka online mağaza olarak anlatılır; adres eklenmez.
 - Düzeltme: önceki denetimde “ürün sayfasında arama açıklaması yok” denmişti; yanlıştı (açıklama çok satırlı olduğu için denetim görmemişti). Açıklama vardı ama ✔ imleri ve satır kırıklarıyla uzundu.
-- Doğrulama: birim testleri, tür kontrolü, ayrı kopyada build ve yerelde adreslerin denenmesi; canlı sonuç sürüm kaydında.
+- Doğrulama: 696 test, tür kontrolü, ayrı kopyada build ve yerel deneme; canlıya alındı (geri dönüş imajı onceki-20261127b), yeni adresler 200, ilk IndexNow bildiriminde 19 adres kabul edildi.
 - Açık: Google/Bing sonuçlarına yansıma günler alır. Fiyat tablosu, karşılaştırma ve soru-cevap sayfaları ayrı iş.
 
 ## 27.11.2026 — Bing Webmaster Tools kuruldu
