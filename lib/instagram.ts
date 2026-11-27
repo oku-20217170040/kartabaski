@@ -8,9 +8,9 @@ import { adminDb } from './firebase-admin';
  * (instagram_settings/main, yalnız Admin SDK) saklanır; env'e geri yazılmaz.
  * Açık/kapalı ve kota ayarları `social_settings/instagram` belgesindedir (lib/social-settings.ts).
  */
-const API = 'https://graph.instagram.com/v26.0';
-const DAY = 24 * 3600 * 1000;
-const REFRESH_WHEN_LEFT_MS = 20 * DAY;
+// Sistem kullanıcısı belirteci (Business portföyü + Unified login) graph.facebook.com ile çalışır;
+// graph.instagram.com bu belirteci "Cannot parse access token" (kod 190) ile reddeder.
+const API = 'https://graph.facebook.com/v26.0';
 
 export interface IgConnection {
   token?: string;
@@ -78,36 +78,27 @@ async function call(path: string, params: Record<string, string>): Promise<Recor
   return r.json;
 }
 
-/** Token 60 günlük; süresi 20 günün altına inince (veya hiç yenilenmemişse) yeniler. Hata fırlatmaz. */
-export async function refreshTokenIfNeeded(now = Date.now()): Promise<{ refreshed: boolean; expiresAt?: number; error?: string }> {
-  try {
-    const s = await getConnection();
-    if (s.tokenExpiresAt && s.tokenExpiresAt - now > REFRESH_WHEN_LEFT_MS) return { refreshed: false, expiresAt: s.tokenExpiresAt };
-    const token = s.token || process.env.INSTAGRAM_ACCESS_TOKEN;
-    if (!token) return { refreshed: false, error: 'token yok' };
-    const r = await http(`https://graph.instagram.com/refresh_access_token?grant_type=ig_refresh_token&access_token=${encodeURIComponent(token)}`);
-    const next = r.json.access_token;
-    const expiresIn = Number(r.json.expires_in);
-    if (!r.ok || typeof next !== 'string' || !expiresIn) {
-      return { refreshed: false, expiresAt: s.tokenExpiresAt, error: errMessage(r.json, 'token yenilenemedi') };
-    }
-    const expiresAt = now + expiresIn * 1000;
-    await connRef().set({ token: next, tokenExpiresAt: expiresAt, tokenRefreshedAt: now }, { merge: true });
-    return { refreshed: true, expiresAt };
-  } catch (e) {
-    return { refreshed: false, error: e instanceof Error ? e.message : 'token yenilenemedi' };
-  }
+/**
+ * Sistem kullanıcısı belirteci yenilenmez (süresi dolmaz; Meta'nın ig_refresh_token akışı yalnız
+ * Instagram Login belirteçleri içindir). Bu yüzden yenileme atlanır ve durum "yenileme gerekmiyor" döner.
+ */
+export async function refreshTokenIfNeeded(): Promise<{ refreshed: boolean; expiresAt?: number; error?: string }> {
+  const s = await getConnection().catch((): IgConnection => ({}));
+  return { refreshed: false, expiresAt: s.tokenExpiresAt };
 }
 
-/** Bağlantı testi: hesabın kimliği ve kullanıcı adı. */
+/** Bağlantı testi: panelde girilen (ya da INSTAGRAM_USER_ID) Instagram hesap kimliğiyle hesabı okur. */
 export async function whoAmI(): Promise<{ ok: boolean; username?: string; userId?: string; error?: string }> {
   try {
     const token = await currentToken();
-    const r = await http(`${API}/me?fields=user_id,username&access_token=${encodeURIComponent(token)}`);
+    const s = await getConnection();
+    const uid = s.userId || process.env.INSTAGRAM_USER_ID;
+    if (!uid) return { ok: false, error: 'Hesap kimliği gerekli (panelde "Hesap kimliği" alanına girin)' };
+    const r = await http(`${API}/${encodeURIComponent(uid)}?fields=id,username&access_token=${encodeURIComponent(token)}`);
     if (!r.ok) return { ok: false, error: errMessage(r.json, `hata ${r.status}`) };
-    const userId = String(r.json.user_id ?? '');
+    const userId = String(r.json.id ?? uid);
     const username = String(r.json.username ?? '');
-    if (userId) await connRef().set({ userId }, { merge: true });
+    await connRef().set({ userId }, { merge: true });
     return { ok: true, username, userId };
   } catch (e) {
     return { ok: false, error: e instanceof Error ? e.message : 'bağlanılamadı' };

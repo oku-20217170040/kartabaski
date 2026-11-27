@@ -387,7 +387,7 @@ async function publishToPlatform(
         if (!(await isInstagramConnected())) {
           return { target: { status: 'skipped', error: 'Bağlı değil', updatedAt: now } };
         }
-        await refreshInstagramTokenIfNeeded(now);
+        await refreshInstagramTokenIfNeeded();
         const remoteId = urls.length === 1
           ? await publishSinglePost(urls[0], item.captions.mainCaption)
           : await publishCarousel(urls.slice(0, 10), item.captions.mainCaption);
