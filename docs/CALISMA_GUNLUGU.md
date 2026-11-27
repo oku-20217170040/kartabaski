@@ -19,6 +19,13 @@ Her iş bitiminde (kod, sunucu, dış hizmet ya da yalnız araştırma) bu dosya
 
 ---
 
+## 27.11.2026 — TikTok geliştirici kaydı, Kullanım Şartları sayfası yayında (yarım: uygulama incelemesi)
+- Neden: TikTok Content Posting API için uygulama kaydı ve incelemede istenen Kullanım Şartları sayfası gerekiyordu.
+- Ne: `/kullanim-sartlari` sayfası eklendi ve yayına alındı (PR #43). TikTok'ta "KartaBaski" uygulaması ve "KAR-TA BASKI" kuruluşu oluşturuldu.
+- Nasıl: sayfa mevcut gizlilik sayfasının yapısıyla yazıldı; metin taslak, içinde adres ya da dükkân bilgisi yok. Yayın: sunucuda yedek (`kartabaski-yedek-20261127-204413.tgz`) ve eski imaj etiketi (`onceki-20261127-204413`) alındı, `docker compose up -d --build` çalıştırıldı.
+- Doğrulama: testler 722/722 geçti; canlıda `/kullanim-sartlari` 200, ana sayfa 200, konteyner healthy.
+- Açık: TikTok'ta gizlilik adresi doğrulaması (URL özellikleri, doğrulama metni bekleniyor), Web URL alanı, demo video (zorunlu), sonra Client Secret'ın sunucuya girilmesi ve `/admin/tiktok` ile bağlama.
+
 ## 27.11.2026 — Pinterest yönlendirme adresi eklendi, durum belgelendi (yarım: Trial onayı)
 - Neden: kullanıcı "şimdi yapılacakların hepsini yapalım" dedi; anahtar Trial onayına kadar görünmediği için yapılabilen tek adım yönlendirme adresiydi.
 - Ne: uygulamaya `https://www.kartabaski.com/api/pinterest/callback` eklendi. Gizli anahtar hâlâ "trial erişimi bekliyor" durumunda kullanılamıyor.
