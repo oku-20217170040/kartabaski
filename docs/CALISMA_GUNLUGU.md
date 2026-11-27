@@ -19,7 +19,14 @@ Her iş bitiminde (kod, sunucu, dış hizmet ya da yalnız araştırma) bu dosya
 
 ---
 
-## 27.11.2026 — Threads bağlandı (otomatik paylaşım kapalı)
+## 27.11.2026 — Threads profili tamamlandı, ilk gönderi yayında
+- Neden: kullanıcı Threads profilinin uygun şekilde doldurulmasını istedi.
+- Ne: biyografi (tanım + WhatsApp numarası), "Online mağaza" (site) ve "Telegram kanalı" bağlantıları eklendi. Ad ve logo hazırdı; adres yazılmadı.
+- Nasıl: threads.com profil düzenleme penceresi (tarayıcıda). Ekran görüntüsü sık sık zaman aşımına uğradı; erişilebilirlik ağacıyla tıklandı.
+- Doğrulama: sayfa yenilendikten sonra biyografi ve bağlantılar profilde görüldü. İlk model gönderisi 22:17'de profilde (saat aralığı dışında olduğu için elle "şimdi paylaş" ile atılmış görünüyor).
+- Açık: "10 profili takip et" ve ilgi alanları bilerek yapılmadı.
+
+## 27.11.2026 — Threads bağlandı
 - Neden: sosyal medya sırasındaki sıradaki platform.
 - Ne: "KartaBaski Paylasim" uygulamasına "Access the Threads API" kullanım durumu ve `threads_content_publish`, `threads_manage_replies` izinleri eklendi (`threads_basic` hazırdı).
 - Nasıl: Meta geliştirici panelinden. @kartabaskii için Threads Tester daveti denendi.
