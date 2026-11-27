@@ -27,7 +27,8 @@ Her iş bitiminde (kod, sunucu, dış hizmet ya da yalnız araştırma) bu dosya
 - Deneme: kullanıcı onayladı (ad tercihi `kartabaski`, olmazsa `kartabaskii`). Web kaydı "Instagram ile devam et" ile giriş formu arasında dönüyor; profil açılamadı, parola gerektiren adım kullanıcıda. Instagram ile açılan Threads profili Instagram kullanıcı adını alır.
 - Sonradan: kullanıcı Threads profilini açtı; Threads Tester daveti gönderildi, durum "Pending".
 - Tamamlanan: kullanıcı daveti kabul etti, User Token Generator ile belirteç üretip panodan sunucuya `THREADS_ACCESS_TOKEN` olarak kaydetti (belirteç sohbete ve depoya yazılmadı). Canlıda Graph `/me` 200 ve `kartabaskii`; panelde @kartabaskii bağlı, 11 model sırada. Giriş notu: web'deki "Instagram ile devam et" döngüye soktu, kullanıcı adı + Instagram şifresiyle giriş yapıldı.
-- Açık: otomatik paylaşım kapalı (kullanıcı kararı bekliyor); gönderi atılmadı. Belirteç 60 günlük, kod yeniliyor; ilk 24 saatte yenileme denemesi hata verebilir (izlenmeli).
+- Sonradan: kullanıcı onayıyla otomatik paylaşım açıldı (günde 3, 10:00–21:00; sayfa yenilenince "Açık" kaldı).
+- Açık: ilk Threads gönderisi henüz atılmadı, ilk tur izlenmeli. Belirteç 60 günlük, kod yeniliyor; ilk 24 saatte yenileme denemesi hata verebilir.
 
 ## 27.11.2026 — Facebook sayfa profili tamamlandı, ilk gönderi yayında
 - Neden: düzeltme sonrası gönderi yayınlandı; kullanıcı sayfa profilinin tamamlanmasını istedi.
