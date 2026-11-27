@@ -19,6 +19,13 @@ Her iş bitiminde (kod, sunucu, dış hizmet ya da yalnız araştırma) bu dosya
 
 ---
 
+## 27.11.2026 — Pinterest yönlendirme adresi eklendi, durum belgelendi (yarım: Trial onayı)
+- Neden: kullanıcı "şimdi yapılacakların hepsini yapalım" dedi; anahtar Trial onayına kadar görünmediği için yapılabilen tek adım yönlendirme adresiydi.
+- Ne: uygulamaya `https://www.kartabaski.com/api/pinterest/callback` eklendi. Gizli anahtar hâlâ "trial erişimi bekliyor" durumunda kullanılamıyor.
+- Nasıl: uygulama ayarları sayfası, "Yeniden yönlendirme URI'leri" alanı.
+- Doğrulama: uygulama sayfasında adresin listede olduğu görüldü.
+- Açık: Pinterest onay maili (kullanıcı haber verecek). Sonra anahtar sunucuya yazılacak, `/admin/pinterest` ile bağlanacak, otomatik paylaşım için onay alınacak. Mail gelmeden devam edilemez.
+
 ## 27.11.2026 — Pinterest geliştirici uygulaması oluşturuldu (yarım: anahtar ve bağlama)
 - Neden: Pinterest API ile otomatik pin paylaşımı için uygulama kaydı gerekiyordu.
 - Ne: "KartaBaski Paylasim" uygulaması oluşturuldu; durum "Trial erişimi bekliyor". Uygulama simgesi (logo) yüklendi.
