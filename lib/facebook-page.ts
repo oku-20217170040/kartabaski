@@ -4,7 +4,8 @@
  *
  * Gerekli env (yalnızca sunucuda, asla commit edilmez):
  *   FACEBOOK_PAGE_ID            Sayfa kimliği
- *   FACEBOOK_PAGE_ACCESS_TOKEN  Sayfa erişim token'ı (pages_manage_posts izniyle)
+ *   FACEBOOK_PAGE_ACCESS_TOKEN  Sayfa belirteci ya da sayfaya atanmış sistem kullanıcısı belirteci
+ *                               (pages_show_list, pages_read_engagement, pages_manage_posts)
  * İkisi de yoksa gönderim atlanır; diğer platformlar etkilenmez.
  */
 
@@ -61,6 +62,16 @@ async function graph(path: string, init: RequestInit & { query?: URLSearchParams
 
 const graphPost = (path: string, params: URLSearchParams) => graph(path, { method: 'POST', body: params });
 
+/**
+ * Sayfaya yazma çağrıları sayfa belirteci ister; sistem kullanıcısı belirteciyle yapılırsa Graph
+ * "(#200) publish_actions" hatası verir. Env'deki belirteçle sayfanın kendi belirteci alınır
+ * (env'de zaten sayfa belirteci varsa aynı değer ya da hiç alan dönmez, o zaman env değeri kullanılır).
+ */
+async function withPageToken(cfg: FacebookConfig): Promise<FacebookConfig> {
+  const r = await graph(cfg.pageId, { query: new URLSearchParams({ fields: 'access_token', access_token: cfg.token }) });
+  return typeof r.access_token === 'string' && r.access_token ? { ...cfg, token: r.access_token } : cfg;
+}
+
 /** Bağlantı testi: sayfa adı. Hata fırlatmaz. */
 export async function facebookWhoAmI(cfg: FacebookConfig | null = getFacebookConfig()): Promise<{ ok: boolean; name?: string; error?: string }> {
   if (!cfg) return { ok: false, error: 'FACEBOOK_PAGE_ID / FACEBOOK_PAGE_ACCESS_TOKEN tanımlı değil' };
@@ -83,7 +94,8 @@ export async function updateFacebookPostMessage(
 ): Promise<boolean> {
   if (!cfg) throw new Error('FACEBOOK_PAGE_ID / FACEBOOK_PAGE_ACCESS_TOKEN tanımlı değil');
   if (!postId) throw new Error('Gönderi kimliği yok');
-  const r = await graphPost(postId, new URLSearchParams({ message, access_token: cfg.token }));
+  const page = await withPageToken(cfg);
+  const r = await graphPost(postId, new URLSearchParams({ message, access_token: page.token }));
   return r.success === true;
 }
 
@@ -98,18 +110,19 @@ export async function publishToFacebookPage(
 ): Promise<string> {
   if (!cfg) throw new Error('FACEBOOK_PAGE_ID / FACEBOOK_PAGE_ACCESS_TOKEN tanımlı değil');
   if (imageUrls.length === 0) throw new Error('Yayınlanacak görsel yok');
+  const { pageId, token } = await withPageToken(cfg);
 
   if (imageUrls.length === 1) {
-    const r = await graphPost(`${cfg.pageId}/photos`, buildPhotoParams(imageUrls[0], caption, cfg.token, true));
+    const r = await graphPost(`${pageId}/photos`, buildPhotoParams(imageUrls[0], caption, token, true));
     return String(r.post_id ?? r.id ?? '');
   }
 
   const mediaIds: string[] = [];
   for (const url of imageUrls) {
-    const r = await graphPost(`${cfg.pageId}/photos`, buildPhotoParams(url, '', cfg.token, false));
+    const r = await graphPost(`${pageId}/photos`, buildPhotoParams(url, '', token, false));
     mediaIds.push(String(r.id));
   }
-  const r = await graphPost(`${cfg.pageId}/feed`, buildFeedParams(mediaIds, caption, cfg.token));
+  const r = await graphPost(`${pageId}/feed`, buildFeedParams(mediaIds, caption, token));
   return String(r.id ?? '');
 }
 
@@ -120,6 +133,7 @@ export async function publishLinkToFacebookPage(
   cfg: FacebookConfig | null = getFacebookConfig()
 ): Promise<string> {
   if (!cfg) throw new Error('FACEBOOK_PAGE_ID / FACEBOOK_PAGE_ACCESS_TOKEN tanımlı değil');
-  const r = await graphPost(`${cfg.pageId}/feed`, buildLinkParams(message, link, cfg.token));
+  const page = await withPageToken(cfg);
+  const r = await graphPost(`${page.pageId}/feed`, buildLinkParams(message, link, page.token));
   return String(r.id ?? '');
 }
