@@ -19,12 +19,15 @@ Her iş bitiminde (kod, sunucu, dış hizmet ya da yalnız araştırma) bu dosya
 
 ---
 
-## 27.11.2026 — Threads kurulumu başladı (yarım: Threads hesabı gerekiyor)
+## 27.11.2026 — Threads bağlandı (otomatik paylaşım kapalı)
 - Neden: sosyal medya sırasındaki sıradaki platform.
 - Ne: "KartaBaski Paylasim" uygulamasına "Access the Threads API" kullanım durumu ve `threads_content_publish`, `threads_manage_replies` izinleri eklendi (`threads_basic` hazırdı).
 - Nasıl: Meta geliştirici panelinden. @kartabaskii için Threads Tester daveti denendi.
 - Doğrulama: davet rol listesinde görünmüyor; threads.com/@kartabaskii "Threads hesabını nasıl oluşturmak istediğini seç" ekranına yönleniyor, yani hesabın Threads profili yok görünüyor.
-- Açık: kullanıcı onayıyla Threads profili (herkese açık) açılacak; sonra tester daveti, davet kabulü, kullanıcı belirteci (panelde User Token Generator, 60 gün, kod kendisi yeniliyor) ve sunucuda `THREADS_ACCESS_TOKEN`.
+- Deneme: kullanıcı onayladı (ad tercihi `kartabaski`, olmazsa `kartabaskii`). Web kaydı "Instagram ile devam et" ile giriş formu arasında dönüyor; profil açılamadı, parola gerektiren adım kullanıcıda. Instagram ile açılan Threads profili Instagram kullanıcı adını alır.
+- Sonradan: kullanıcı Threads profilini açtı; Threads Tester daveti gönderildi, durum "Pending".
+- Tamamlanan: kullanıcı daveti kabul etti, User Token Generator ile belirteç üretip panodan sunucuya `THREADS_ACCESS_TOKEN` olarak kaydetti (belirteç sohbete ve depoya yazılmadı). Canlıda Graph `/me` 200 ve `kartabaskii`; panelde @kartabaskii bağlı, 11 model sırada. Giriş notu: web'deki "Instagram ile devam et" döngüye soktu, kullanıcı adı + Instagram şifresiyle giriş yapıldı.
+- Açık: otomatik paylaşım kapalı (kullanıcı kararı bekliyor); gönderi atılmadı. Belirteç 60 günlük, kod yeniliyor; ilk 24 saatte yenileme denemesi hata verebilir (izlenmeli).
 
 ## 27.11.2026 — Facebook sayfa profili tamamlandı, ilk gönderi yayında
 - Neden: düzeltme sonrası gönderi yayınlandı; kullanıcı sayfa profilinin tamamlanmasını istedi.
