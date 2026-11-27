@@ -5,7 +5,7 @@ Ayrıntılı kayıt: `docs/CALISMA_GUNLUGU.md`.
 - Canlıda ve `main`'de: adres formu, sipariş yönetimi, sipariş koduyla takip, 3D kupa, Telegram yönetim botu, teknik SEO (`llms.txt`, RSS, görsel haritası, IndexNow), 50 yeni blog yazısı.
 - Blog planı: 28 Kasım – 27 Aralık arasında günde 2 yazı (60 yazı) sırada. Plan sürerken panelde “Şimdi taslak üret” düğmesine basılmamalı. İlk kendiliğinden yayın 28.11 10:00'dan sonra kontrol edilmeli.
 - Google Search Console ve Bing Webmaster Tools kuruldu, site haritası gönderildi.
-- Bekleyen karar: `docs/YAPAY_ZEKA_GORUNURLUGU.md` içindeki site içi çelişkiler (Hakkımızda metni, Sihirli Kupa toplu fiyatı, 6'lı set fiyatı, bir ürünün kategorisi).
+- Fiyatlar 27.11.2026 tarihli fiyat listesine göre güncel. Listede olup sitede ürünü olmayanlar: İkili Kaşıklı Fincan Seti, Halka Kulplu Kupa, Türk Kahvesi Fincanı, Türk Kahvesi Fincanı Set (fotoğraf ve kullanıcı onayı bekliyor).
 - Bekleyen kullanıcı bilgisi: kupa baskı alanı ölçüleri, diğer sosyal hesaplar.
 - Bekleyen kullanıcı adımı: diğer yöneticiler Telegram grubunda `/katil` yazacak; sosyal medya anahtarları girilmedi.
 - Marka online mağaza olarak anlatılır; siteye adres eklenmez.

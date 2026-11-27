@@ -42,7 +42,7 @@ export default function HakkimizdaPage() {
             <div className="prose">
               <h2 id="ne-yapiyoruz" style={{ marginTop: 0 }}>Ne yapıyoruz?</h2>
               <p>Fotoğraf, logo ya da yazı; neyi kupaya taşımak istiyorsanız onu basıyoruz. Minimum sipariş adedi yok, tek adet de sipariş verebilirsiniz.</p>
-              <p>Siparişler ve teklif talepleri WhatsApp üzerinden ilerler. Sepet ya da ödeme ekranı yok; ürünü seçip bize yazmanız yeterli.</p>
+              <p>Kupanızı sitede tasarlayıp sepete ekleyerek sipariş oluşturabilir ya da bize doğrudan WhatsApp’tan yazabilirsiniz. Kesin fiyat ve onay WhatsApp üzerinden ilerler; sitede ödeme alınmaz.</p>
             </div>
           </div>
         </section>
