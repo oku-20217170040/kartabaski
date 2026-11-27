@@ -19,6 +19,14 @@ Her iş bitiminde (kod, sunucu, dış hizmet ya da yalnız araştırma) bu dosya
 
 ---
 
+## 27.11.2026 — Teknik SEO ve yapay zekâ görünürlüğü
+- Neden: sitenin arama motorlarında ve yapay zekâ yanıtlarında daha doğru ve hızlı tanınması (kullanıcı onayladı).
+- Ne: `llms.txt`, blog RSS (`feed.xml`), görsel site haritası, IndexNow bildirimi, ana sayfa canonical, temiz ürün arama açıklaması, işletme verisinde iletişim noktası.
+- Nasıl: yeni içerik üretmeden var olan veriden. `lib/seo-text.ts` ürün açıklamasındaki süs imlerini ve satır kırıklarını temizleyip özellik + fiyatla 158 karakterlik açıklama kurar. IndexNow ayrı cron adımıdır (`lib/indexnow.ts`, durum `seo_state/indexnow`): blog koduna dokunmadan, site haritasında değişen ürün ve yazıları bildirir. Marka online mağaza olarak anlatılır; adres eklenmez.
+- Düzeltme: önceki denetimde “ürün sayfasında arama açıklaması yok” denmişti; yanlıştı (açıklama çok satırlı olduğu için denetim görmemişti). Açıklama vardı ama ✔ imleri ve satır kırıklarıyla uzundu.
+- Doğrulama: birim testleri, tür kontrolü, ayrı kopyada build ve yerelde adreslerin denenmesi; canlı sonuç sürüm kaydında.
+- Açık: Google/Bing sonuçlarına yansıma günler alır. Fiyat tablosu, karşılaştırma ve soru-cevap sayfaları ayrı iş.
+
 ## 27.11.2026 — Bing Webmaster Tools kuruldu
 - Neden: Bing dizini bazı yapay zekâ aramalarını da besliyor (kullanıcı isteği).
 - Ne: yalnız `https://www.kartabaski.com/` ve site haritası eklendi; Bing durumu “Success”, 19 adres.

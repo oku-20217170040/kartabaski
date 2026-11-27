@@ -32,6 +32,10 @@ const localBusinessSchema = {
   currenciesAccepted: 'TRY',
   paymentAccepted: 'Cash, Credit Card',
   areaServed: { '@type': 'Country', name: 'Turkey' },
+  contactPoint: {
+    '@type': 'ContactPoint', contactType: 'customer service', telephone: `+${PHONE}`,
+    areaServed: 'TR', availableLanguage: 'Turkish', url: `${SITE_URL}/nasil-siparis-verilir`,
+  },
   knowsAbout: ['Kupa baskı', 'Kişiye özel hediye', 'Sihirli kupa', 'Kurumsal hediye', 'Sublimation baskı'],
   hasOfferCatalog: {
     '@type': 'OfferCatalog',

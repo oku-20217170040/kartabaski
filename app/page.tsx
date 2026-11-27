@@ -1,3 +1,4 @@
+import type { Metadata } from 'next';
 import { Suspense } from 'react';
 import Link from 'next/link';
 import { unstable_cache } from 'next/cache';
@@ -13,7 +14,12 @@ import { VITRIN_PRODUCT_SLUG } from '@/lib/vitrin';
 import ProductsClient from './ProductsClient';
 import { WhatsAppIcon, MailIcon, InstagramIcon, ChevronDownIcon } from '@/components/icons';
 import { PHONE, PHONE_DISPLAY, WHATSAPP_BASE, DEFAULT_WA_TEXT } from '@/lib/constants';
-import { INSTAGRAM_URL } from '@/lib/site';
+import { INSTAGRAM_URL, SITE_URL } from '@/lib/site';
+import { HOME_FAQ as FAQ } from '@/lib/faq';
+
+export const metadata: Metadata = {
+  alternates: { canonical: SITE_URL, types: { 'application/rss+xml': `${SITE_URL}/feed.xml` } },
+};
 
 const getProducts = unstable_cache(() => getProductsServer(), ['products'], {
   tags: ['products'],
@@ -21,29 +27,6 @@ const getProducts = unstable_cache(() => getProductsServer(), ['products'], {
 });
 
 const WA_HREF = `${WHATSAPP_BASE}?text=${encodeURIComponent(DEFAULT_WA_TEXT)}`;
-
-const FAQ = [
-  {
-    q: 'Tek adet sipariş verebilir miyim?',
-    a: 'Evet. Minimum sipariş adedi yok; tek bir hediyelik kupa da basıyoruz.',
-  },
-  {
-    q: 'Tasarımım hazır değil, ne yapmalıyım?',
-    a: 'Fotoğrafınızı, logonuzu ya da yazdırmak istediğiniz metni WhatsApp üzerinden gönderin. Tasarımı ücretsiz olarak biz hazırlıyoruz.',
-  },
-  {
-    q: 'Baskıdan önce nasıl görüneceğini görebilir miyim?',
-    a: 'Evet. Baskıya geçmeden önce tasarımın dijital önizlemesini size gönderiyoruz; onayınız olmadan baskı yapılmaz.',
-  },
-  {
-    q: 'Siparişim ne zaman kargoya verilir?',
-    a: 'Tasarım onayından sonra 3 iş günü içinde kargoya teslim ediyoruz. Türkiye’nin her yerine gönderim yapıyoruz.',
-  },
-  {
-    q: 'Toplu siparişte indirim var mı?',
-    a: '45 adet ve üzeri siparişlerde adet başı fiyat düşüyor. Adet ve ürün bilgisini yazın, size özel teklif hazırlayalım.',
-  },
-];
 
 const faqSchema = {
   '@context': 'https://schema.org',

@@ -17,7 +17,7 @@ const DESCRIPTION =
 export const metadata: Metadata = {
   title: TITLE,
   description: DESCRIPTION,
-  alternates: { canonical: `${SITE_URL}/blog` },
+  alternates: { canonical: `${SITE_URL}/blog`, types: { 'application/rss+xml': `${SITE_URL}/feed.xml` } },
   openGraph: { title: `Blog | ${SITE_NAME}`, description: DESCRIPTION, type: 'website', locale: 'tr_TR', url: `${SITE_URL}/blog` },
 };
 
