@@ -5,15 +5,27 @@ import { FieldValue } from 'firebase-admin/firestore';
 import { unstable_cache } from 'next/cache';
 import { adminDb } from './firebase-admin';
 import { matchPostsForProduct } from './blog-match';
-import type { Post } from './posts-types';
+import { BLOG_GRACE_MS } from './blog-cadence';
+import type { CoverCredit, Post } from './posts-types';
 
 const COL = 'posts';
 
 /** Yazı kapakları yalnızca bu klasörden silinir/kabul edilir. */
 export const COVER_ID_RE = /^karta-baski\/[A-Za-z0-9_\-/]{3,120}$/;
 
+/** Kaynak, lisans ve http(s) bağlantısı eksiksizse döner; aksi halde yok sayılır. */
+function toCoverCredit(v: unknown): CoverCredit | undefined {
+  if (!v || typeof v !== 'object') return undefined;
+  const raw = v as Record<string, unknown>;
+  const text = (x: unknown) => (typeof x === 'string' ? x.trim() : '');
+  const [author, source, url, license] = [raw.author, raw.source, raw.url, raw.license].map(text);
+  if (!source || !license || !/^https?:\/\//i.test(url)) return undefined;
+  return { ...(author ? { author } : {}), source, url, license };
+}
+
 export function toPost(id: string, d: FirebaseFirestore.DocumentData): Post {
   const strList = (v: unknown): string[] => (Array.isArray(v) ? v.map(String).filter(Boolean) : []);
+  const coverCredit = toCoverCredit(d.coverCredit);
   return {
     id,
     slug: String(d.slug ?? id),
@@ -21,6 +33,7 @@ export function toPost(id: string, d: FirebaseFirestore.DocumentData): Post {
     excerpt: String(d.excerpt ?? ''),
     content: String(d.content ?? ''),
     coverImage: d.coverImage ? String(d.coverImage) : undefined,
+    ...(coverCredit ? { coverCredit } : {}),
     tags: strList(d.tags),
     faq: Array.isArray(d.faq) ? d.faq.map((f: { q?: unknown; a?: unknown }) => ({ q: String(f.q ?? ''), a: String(f.a ?? '') })) : [],
     ...(strList(d.productIds).length ? { productIds: strList(d.productIds) } : {}),
@@ -41,10 +54,11 @@ export async function listPosts(publishedOnly: boolean): Promise<Post[]> {
   return filtered.sort((a, b) => (b.publishedAt || b.updatedAt) - (a.publishedAt || a.updatedAt));
 }
 
-// Yayındaki yazılar: server action'lar revalidateTag('posts') ile anında temizler (yedek: 10 dk).
+// Yayındaki yazılar: cron yayını ve admin işlemleri revalidateTag('posts') ile anında temizler (yedek: 6 saat;
+// her yenileme tüm koleksiyonu okur, Firestore ücretsiz kotası için süre uzun tutulur).
 export const getCachedPublishedPosts = unstable_cache(() => listPosts(true), ['posts'], {
   tags: ['posts'],
-  revalidate: 600,
+  revalidate: 6 * 3600,
 });
 
 /** Yayındaki yazılar, yeni önce (sosyal medya agentları ve vitrin kullanır; önbellekten okunur). */
@@ -84,7 +98,7 @@ export async function slugTaken(slug: string, exceptId?: string): Promise<boolea
   return snap.docs.some((d) => d.id !== exceptId);
 }
 
-export type PostInput = Omit<Post, 'id' | 'publishedAt' | 'updatedAt'>;
+export type PostInput = Omit<Post, 'id' | 'publishedAt' | 'updatedAt' | 'coverCredit'>;
 
 /** Firestore undefined kabul etmez: seçmeli alanlar ya yazılır ya da (güncellemede) silinir. */
 function buildFields(input: PostInput) {
@@ -117,7 +131,12 @@ export async function savePost(input: PostInput, id?: string): Promise<string> {
       await deleteImages([String(prevData.coverImage)]);
     }
     const publishedAt = input.published ? Number(prevData.publishedAt) || now : 0;
-    await ref.set({ ...fields, publishedAt, updatedAt: now }, { merge: true });
+    // Kaynak bilgisi eski fotoğrafa aittir: kapak değişir ya da kaldırılırsa silinir, aksi halde merge korur.
+    const coverChanged = String(prevData.coverImage ?? '') !== (input.coverImage ?? '');
+    await ref.set(
+      { ...fields, ...(coverChanged ? { coverCredit: FieldValue.delete() } : {}), publishedAt, updatedAt: now },
+      { merge: true },
+    );
     return id;
   }
   // Yeni belgede FieldValue.delete() geçersiz: yalnızca dolu alanları yaz
@@ -180,7 +199,7 @@ export async function publishPostNow(id: string, now = Date.now()): Promise<Post
 }
 
 /** Vakti gelmiş en eski planlı yazıyı yayınlar (çağrı başına en fazla bir; günlük sıklık `lib/blog-cadence.ts`). */
-export async function publishDue(now = Date.now(), graceMs = 2 * 3600 * 1000): Promise<Post | null> {
+export async function publishDue(now = Date.now(), graceMs = BLOG_GRACE_MS): Promise<Post | null> {
   const due = (await listScheduled()).find((p) => (p.scheduledAt ?? 0) <= now + graceMs);
   return due ? publishPostNow(due.id, now) : null;
 }

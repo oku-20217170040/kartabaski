@@ -166,7 +166,7 @@ Copy `.env.local.example` to `.env.local` and fill in:
 | `/nasil-siparis-verilir` | 3-step order guide page |
 | `/hakkimizda` | About page |
 | `/sepet` | Cart → creates the order |
-| `/blog`, `/blog/[slug]` | Blog |
+| `/blog`, `/blog/sayfa/[n]`, `/blog/[slug]` | Blog (24 posts per page). Publishing rule: `lib/blog-cadence.ts` (2 per day); cover sources in `docs/BLOG_GORSELLERI.md`; cron drafts only with `BLOG_AUTO_GENERATE=1` |
 | `/yorum/[token]` | Customer review form (invite link) |
 | `/tasarla/[slug]` | Design editor; adds a designed line to the cart (photos stay in IndexedDB) |
 | `/siparis/[token]` | Order page; WhatsApp message carries only this link. A logged-in admin is redirected to `/admin/siparisler/[token]` (`?musteri=1` shows the customer view) |

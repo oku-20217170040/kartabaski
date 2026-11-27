@@ -16,6 +16,10 @@
 .blog-card-excerpt { color: var(--ink-2); font-size: 15px; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
 .blog-card-meta { color: var(--ink-3); font-size: 13px; }
 
+.blog-pager { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 8px; margin-top: 48px; padding: 0; list-style: none; }
+.blog-pager .btn { min-width: 44px; }
+.blog-pager-gap { color: var(--ink-3); }
+
 .blog-related { padding: 56px 0; border-top: 1px solid var(--line); }
 .blog-related .h2 { margin-bottom: 28px; }
 
@@ -28,6 +32,10 @@
 .blog-meta { color: var(--ink-3); font-size: 14px; margin-bottom: 28px; }
 .blog-cover { position: relative; aspect-ratio: 1200 / 630; border-radius: var(--radius-lg); overflow: hidden; margin-bottom: 32px; background: var(--brand-soft); }
 .blog-cover img { object-fit: cover; }
+.blog-cover.has-credit { margin-bottom: 0; }
+.blog-credit { margin-bottom: 20px; font-size: 13px; color: var(--ink-3); }
+.blog-credit a { display: inline-flex; align-items: center; min-height: 44px; overflow-wrap: anywhere; }
+.blog-credit a:hover { color: var(--ink); text-decoration: underline; }
 
 .blog-toc { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 18px 22px; margin-bottom: 32px; font-size: 15px; }
 .blog-toc strong { font-weight: 600; color: var(--ink); }

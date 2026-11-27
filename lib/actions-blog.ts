@@ -43,7 +43,7 @@ export async function getProductOptionsAction(): Promise<{ id: string; title: st
   return items.map((p) => ({ id: p.id, title: p.title, category: p.category })).sort((a, b) => a.title.localeCompare(b.title, 'tr'));
 }
 
-export async function savePostAction(data: Omit<Post, 'id' | 'publishedAt' | 'updatedAt'>, id?: string): Promise<string> {
+export async function savePostAction(data: Omit<Post, 'id' | 'publishedAt' | 'updatedAt' | 'coverCredit'>, id?: string): Promise<string> {
   await requireAdmin();
   const parsed = PostInputSchema.safeParse(data);
   if (!parsed.success) throw new Error(parsed.error.issues[0]?.message || 'Yazı bilgileri geçersiz.');
@@ -56,7 +56,9 @@ export async function savePostAction(data: Omit<Post, 'id' | 'publishedAt' | 'up
 /** Planlı yazıyı sırada yukarı/aşağı taşır (tarihler yer değiştirir). */
 export async function movePostScheduleAction(id: string, dir: 'up' | 'down'): Promise<boolean> {
   await requireAdmin();
-  return moveScheduled(id, dir);
+  const moved = await moveScheduled(id, dir);
+  if (moved) revalidateTag('posts');
+  return moved;
 }
 
 export async function publishPostNowAction(id: string): Promise<void> {
@@ -70,6 +72,7 @@ export async function setPostScheduleAction(id: string, at: number | null): Prom
   await requireAdmin();
   if (at !== null && (!Number.isFinite(at) || at < Date.now() - 86400000)) throw new Error('Geçersiz tarih.');
   await setSchedule(id, at);
+  revalidateTag('posts');
 }
 
 export async function deletePostAction(id: string): Promise<void> {

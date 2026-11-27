@@ -13,6 +13,8 @@ import { renderMarkdown, extractHeadings } from '@/lib/markdown';
 import { readingMinutes } from '@/lib/posts-types';
 import { postSeo, postDescription } from '@/lib/blog-seo';
 import { faqPageSchema } from '@/lib/faq-schema';
+import { relatedPosts } from '@/lib/blog-match';
+import { cn } from '@/lib/utils';
 import { cloudinaryUrl } from '@/lib/format';
 import { SITE_URL, jsonLdString } from '@/lib/site';
 import { SITE_NAME, WHATSAPP_BASE, PHONE_DISPLAY } from '@/lib/constants';
@@ -58,7 +60,7 @@ export default async function BlogPost({ params }: Props) {
     getCachedPublishedPosts().catch(() => []),
     getProductsByIds(post.productIds),
   ]);
-  const more = all.filter((p) => p.id !== post.id).slice(0, 3);
+  const more = relatedPosts(all, post, 3);
 
   const seo = postSeo(post.slug);
   const heading = seo.title ? seo.title.replace(new RegExp(`\\s*\\|\\s*${SITE_NAME}$`), '') : post.title;
@@ -67,6 +69,7 @@ export default async function BlogPost({ params }: Props) {
   const url = `${SITE_URL}/blog/${post.slug}`;
   const published = new Date(post.publishedAt || post.updatedAt);
   const image = post.coverImage ? cloudinaryUrl(post.coverImage, 'f_auto,q_auto,w_1200,h_630,c_fill') : undefined;
+  const credit = post.coverCredit;
   const waText = `Merhaba, "${post.title}" yazınızı okudum. Kupa baskı hakkında bilgi almak istiyorum.`;
 
   const article = {
@@ -120,9 +123,16 @@ export default async function BlogPost({ params }: Props) {
             </header>
 
             {image && (
-              <div className="blog-cover">
+              <div className={cn('blog-cover', credit && 'has-credit')}>
                 <Image src={image} alt={post.title} fill sizes="(max-width: 800px) 100vw, 760px" priority />
               </div>
+            )}
+            {image && credit && (
+              <p className="blog-credit">
+                <a href={credit.url} target="_blank" rel="noopener noreferrer">
+                  Temsilî fotoğraf: {credit.author ? `${credit.author} · ` : ''}{credit.source} ({credit.license})
+                </a>
+              </p>
             )}
 
             {toc.length >= 3 && (
