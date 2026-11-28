@@ -54,7 +54,7 @@ Kapak temalı görsel olur. Küçük bir kopyanın kenar pikselleri ölçülür;
 
 ## B — Ürün hikâyesi
 
-- 1080×1920, tek fotoğraf; boşluklar aynı fotoğrafın bulanık kopyasıyla doldurulur. Ortada, okunacak bir zeminle: ürün adı, en fazla 7 fiyat kademesi, kartabaski.com.
+- 1080×1920, tek fotoğraf; zemin aynı fotoğrafın bulanık kopyası. Yazılar fotoğrafın üstüne binmez: ürün adı üstte, fotoğraf ortada, en fazla 7 fiyat kademesi ve kartabaski.com altta (kullanıcı geri bildirimi, 28.11.2026).
 - Ürünler sırayla döner; her seferinde ürünün en uzun süredir kullanılmamış rengi/fotoğrafı seçilir.
 - Fiyatlar yayın anında okunur.
 - Otomatik hikâyeye tıklanabilir bağlantı eklenmez.

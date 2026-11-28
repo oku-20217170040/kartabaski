@@ -42,21 +42,21 @@ export function telegramMetni(u: PaylasimUrun, color: string): string {
   return full.length <= 1024 ? full : build('');
 }
 
+/** Hikâye yerleşimi (1080×1920): ad üstte, fotoğraf ortada temiz, fiyatlar altta. Alt/üst Instagram arayüzüne pay bırakılır. */
+export const HIKAYE = { baslikUst: 220, fotoUst: 330, fotoBoy: 840, fiyatUst: 1200, satir: 62 } as const;
+
 export function hikayeUrl(cloud: string, imageId: string, u: PaylasimUrun): string {
   if (!cloud) throw new Error('Cloudinary cloud adı tanımlı değil');
-  const lines = [
-    { text: clip(u.title, 30), style: 'Roboto_56_bold', color: 'white', bg: '1D47C4' },
-    ...u.tiers.slice(0, MAX_KADEME).map((t) => ({ text: clip(`${etiket(t.label)}: ${t.price}`, 40), style: 'Roboto_42_bold', color: 'rgb:121214', bg: 'ffffffe6' })),
-    { text: 'kartabaski.com', style: 'Roboto_40_bold', color: 'rgb:121214', bg: 'FFC51B' },
-  ];
-  const layers = lines.map((l, i) => {
-    const y = Math.round((i - (lines.length - 1) / 2) * 84);
-    return `l_text:${l.style}:%20${overlayText(l.text)}%20,co_${l.color},b_rgb:${l.bg}/fl_layer_apply,g_center,y_${y}`;
-  });
-  // Zemin: aynı fotoğrafın bulanık kopyası; üstüne fotoğrafın tamamı (kupa kırpılmaz), sonra yazılar.
-  const base = [
+  const text = (value: string, style: string, color: string, bg: string, y: number) =>
+    `l_text:${style}:%20${overlayText(value)}%20,co_${color},b_rgb:${bg}/fl_layer_apply,g_north,y_${y}`;
+  const rows = u.tiers.slice(0, MAX_KADEME);
+  // Zemin: aynı fotoğrafın bulanık kopyası. Fotoğrafın tamamı kendi alanında durur; hiçbir yazı üstüne binmez.
+  const layers = [
     'f_jpg,q_85,c_fill,g_auto,w_1080,h_1920', 'e_blur:1500',
-    `l_${imageId.replace(/\//g, ':')}/c_fit,w_1080,h_1920/fl_layer_apply,g_center`,
+    `l_${imageId.replace(/\//g, ':')}/c_fit,w_1080,h_${HIKAYE.fotoBoy}/c_pad,w_1080,h_${HIKAYE.fotoBoy},b_rgb:00000000/fl_layer_apply,g_north,y_${HIKAYE.fotoUst}`,
+    text(clip(u.title, 30), 'Roboto_56_bold', 'white', '1D47C4', HIKAYE.baslikUst),
+    ...rows.map((t, i) => text(clip(`${etiket(t.label)}: ${t.price}`, 40), 'Roboto_40_bold', 'rgb:121214', 'ffffff', HIKAYE.fiyatUst + i * HIKAYE.satir)),
+    text('kartabaski.com', 'Roboto_40_bold', 'rgb:121214', 'FFC51B', HIKAYE.fiyatUst + rows.length * HIKAYE.satir),
   ];
-  return `https://res.cloudinary.com/${cloud}/image/upload/${[...base, ...layers].join('/')}/${imageId}`;
+  return `https://res.cloudinary.com/${cloud}/image/upload/${layers.join('/')}/${imageId}`;
 }
