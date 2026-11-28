@@ -30,7 +30,7 @@ Her iş bitiminde (kod, sunucu, dış hizmet ya da yalnız araştırma) bu dosya
   - Yazı tipi listesi `tools/yazi-tipi-katalogu.mjs` ile üretilir (Fontsource; her ailenin karakter tablosu okunur). Dosyalar `/api/yazi-tipi` ile kendi alan adımızdan gelir, sunucu bir kez indirip Docker biriminde saklar; ziyaretçi dış adrese bağlanmaz.
   - Süsler Phosphor ve Fluent Emoji Flat (ikisi de MIT) npm paketlerinden derlemede `public/suslar` altına yazılır (`tools/sus-hazirla.mjs`, git'e girmez).
   - Siparişte yazı özeti ve arka plan isteği sunucuda katmanlardan üretilir; listede olmayan tip düz yazıya döner, olmayan fotoğrafı gösteren tasarım reddedilir.
-- Doğrulama: 793 test, tip denetimi, lint, ayrı kopyada üretim derlemesi; sahte verili tarayıcı denemesi (düzen, sürükleme, yazı tipi ve süs seçimi, fotoğraf, arka plan silme, sepet, taslak, eski satır düzenleme, iki yüz, sipariş kaydı, yönetim şablonu, 360 px). Gerçek telefonda parmakla deneme yapılmadı.
+- Doğrulama: 793 test, tip denetimi, lint, ayrı kopyada üretim derlemesi; sahte verili tarayıcı denemesi (düzen, sürükleme, yazı tipi ve süs seçimi, fotoğraf, arka plan silme, sepet, taslak, eski satır düzenleme, iki yüz, sipariş kaydı, yönetim şablonu, 360 px). Gerçek telefonda parmakla deneme yapılmadı. Yayın sonrası canlıda sayfalar, yazı tipi ve süs adresleri, tasarım ekranında hazır düzen ve yazı tipi seçici, ana sayfa vitrini denendi (PR #63).
 - Açık / dikkat: sunucudaki `yazi-tipleri` biriminde indirilen tipler birikir. Yeni süs seti ya da paket sürümü değişirse eski siparişteki adlar korunmalı. Tarayıcının gösteremediği fotoğraf (HEIC) siparişe eklenir ama şablonda yerleştirilemez.
 
 ## 28.11.2026 — TikTok uygulaması incelemeye gönderildi
