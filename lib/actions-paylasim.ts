@@ -6,7 +6,7 @@ import { getProductsServer } from './products-server';
 import { updateProduct } from './products-admin';
 import type { SocialPlatform } from './social-types';
 import { parsePriceLines, priceSourceKey } from './paylasim/fiyat';
-import { clearTarget, getAyar, getGorsel, getItem, listItems, patchItem, saveAyar } from './paylasim/depo';
+import { clearPending, clearTarget, getAyar, getGorsel, getItem, listItems, patchItem, saveAyar } from './paylasim/depo';
 import { productImages, groupKey } from './paylasim/sira';
 import { uzunMetin } from './paylasim/metin';
 import { slotTimes } from './paylasim/zaman';
@@ -81,6 +81,24 @@ async function runPaylasimStepIfPreview() {
   if ((await getAyar(true)).mode === 'onizleme') await runPaylasimStep();
 }
 
+/**
+ * Önizlemede sırayı baştan kurar: yeni onaylanan ürünler dolu saatlerin arkasında beklemez.
+ * Elle yapılan sıra değişiklikleri silinir; canlıda ve durdurulmuşken dokunulmaz.
+ */
+async function sirayiYenidenKur(): Promise<boolean> {
+  const ayar = await getAyar(true);
+  if (ayar.mode !== 'onizleme' || ayar.paused) return false;
+  await clearPending();
+  await runPaylasimStep();
+  return true;
+}
+
+export async function yenileAction(): Promise<Sonuc> {
+  return dene(async () => {
+    if (!(await sirayiYenidenKur())) throw new Error('Sıra yalnız önizleme modunda yeniden kurulur.');
+  });
+}
+
 export async function ertleAction(key: string): Promise<Sonuc> {
   return dene(async () => {
     const now = Date.now();
@@ -136,7 +154,7 @@ export async function kademeOnayAction(productId: string, tiers: Kademe[]): Prom
     if (!clean.length) throw new Error('En az bir fiyat satırı girin.');
     await updateProduct(productId, { slug: p.slug, priceTiers: clean, priceTiersSource: priceSourceKey(p.description) });
     revalidateTag('products');
-    await runPaylasimStepIfPreview();
+    await sirayiYenidenKur();
   });
 }
 

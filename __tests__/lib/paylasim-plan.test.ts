@@ -1,4 +1,4 @@
-import { durumHesapla, planla } from '@/lib/paylasim/plan';
+import { durumHesapla, planla, yenilenecekler } from '@/lib/paylasim/plan';
 import { isDue, slotTimes } from '@/lib/paylasim/zaman';
 import { VARSAYILAN_AYAR, type Paylasim, type PaylasimUrun } from '@/lib/paylasim/types';
 import { trTime } from '@/lib/tr-time';
@@ -63,5 +63,17 @@ describe('durumHesapla', () => {
   });
   it('denenecek hedef kaldıysa bekliyor', () => {
     expect(durumHesapla({ instagram: ok }, ['instagram', 'facebook'])).toBe('bekliyor');
+  });
+});
+
+describe('yenilenecekler', () => {
+  it('yalnız hiç gönderilmemiş bekleyen paylaşımlar yenilenir', () => {
+    const list = [
+      item({ key: 'bekleyen' }),
+      item({ key: 'yarim', targets: { instagram: { status: 'tamam', attempts: 1 } } }),
+      item({ key: 'bitti', status: 'yayinlandi' }),
+      item({ key: 'iptal', status: 'iptal' }),
+    ];
+    expect(yenilenecekler(list)).toEqual(['bekleyen']);
   });
 });

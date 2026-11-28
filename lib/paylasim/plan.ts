@@ -83,6 +83,10 @@ export function planla({ products, items, ayar, imageUsedAt, white, now }: PlanG
   return out;
 }
 
+/** Sıra baştan kurulurken silinebilecekler: bekleyen ve hiçbir platforma gönderilmemiş olanlar. */
+export const yenilenecekler = (items: Paylasim[]): string[] =>
+  items.filter((i) => i.status === 'bekliyor' && !Object.keys(i.targets).length).map((i) => i.key);
+
 export function durumHesapla(targets: Partial<Record<SocialPlatform, Hedef>>, platforms: SocialPlatform[]): PaylasimDurum {
   const list = platforms.map((p) => targets[p]);
   const open = list.some((t) => !t || t.status === 'gonderiliyor' || t.status === 'bekliyor' || (t.status === 'hata' && t.attempts < MAX_DENEME));

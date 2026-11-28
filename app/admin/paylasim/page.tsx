@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import {
   ertleAction, getPaylasimPanelAction, gorsellerAction, hemenAction, iptalAction, kademeOnayAction,
-  kapakAction, metinAction, saveAyarAction, tekrarAction, type PanelData,
+  kapakAction, metinAction, saveAyarAction, tekrarAction, yenileAction, type PanelData,
 } from '@/lib/actions-paylasim';
 import { cloudinaryThumb } from '@/lib/format';
 import type { Paylasim, Kademe } from '@/lib/paylasim/types';
@@ -105,6 +105,11 @@ export default function PaylasimPage() {
       </p>
       <nav className="pl-tabs">{TABS.map((t) => <button key={t} aria-current={t === tab} onClick={() => setTab(t)}>{t}</button>)}</nav>
 
+      {tab === 'Sırada' && data.ayar.mode === 'onizleme' && !data.ayar.paused && (
+        <div className="pl-actions">
+          <button disabled={busy} onClick={async () => { if (await confirm({ title: 'Sıra yeniden kurulsun mu?', message: 'Sıradaki metin, görsel ve erteleme değişiklikleriniz silinir.' })) void run(() => yenileAction(), 'Sıra yeniden kuruldu'); }}>Sırayı yeniden kur</button>
+        </div>
+      )}
       {tab === 'Sırada' && (waiting.length ? waiting.map(card) : <p className="pl-empty">Sırada paylaşım yok. Önce fiyatları onaylayın.</p>)}
       {tab === 'Yayınlanan' && (done.length ? done.map(card) : <p className="pl-empty">Henüz yayın yok.</p>)}
 

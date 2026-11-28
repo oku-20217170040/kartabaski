@@ -5,7 +5,9 @@ import { clip, hashtagsFor, productUrl } from '../social-content-utils';
 import { MAX_KADEME, type PaylasimUrun } from './types';
 
 const baslik = (u: PaylasimUrun, color: string) => `☕ ${clip(u.title, 90)}${color ? ` (${color} renk)` : ''}`;
-const satirlar = (u: PaylasimUrun) => u.tiers.map((t) => `• ${t.label}: ${t.price}`);
+/** "Özel Tasarım: (1 adet)" gibi etiketlerde parantezden önceki iki nokta gösterimde atılır (onay bozulmaz). */
+const etiket = (label: string) => label.replace(/\s*:\s*(?=\()/g, ' ');
+const satirlar = (u: PaylasimUrun) => u.tiers.map((t) => `• ${etiket(t.label)}: ${t.price}`);
 
 export function uzunMetin(u: PaylasimUrun, color: string): string {
   const ozet = clip(u.shortDesc, 200);
@@ -44,7 +46,7 @@ export function hikayeUrl(cloud: string, imageId: string, u: PaylasimUrun): stri
   if (!cloud) throw new Error('Cloudinary cloud adı tanımlı değil');
   const lines = [
     { text: clip(u.title, 30), style: 'Roboto_56_bold', color: 'white', bg: '1D47C4' },
-    ...u.tiers.slice(0, MAX_KADEME).map((t) => ({ text: clip(`${t.label}: ${t.price}`, 40), style: 'Roboto_42_bold', color: 'rgb:121214', bg: 'ffffffe6' })),
+    ...u.tiers.slice(0, MAX_KADEME).map((t) => ({ text: clip(`${etiket(t.label)}: ${t.price}`, 40), style: 'Roboto_42_bold', color: 'rgb:121214', bg: 'ffffffe6' })),
     { text: 'kartabaski.com', style: 'Roboto_40_bold', color: 'rgb:121214', bg: 'FFC51B' },
   ];
   const layers = lines.map((l, i) => {
