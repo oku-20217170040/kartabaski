@@ -19,7 +19,14 @@ Her iş bitiminde (kod, sunucu, dış hizmet ya da yalnız araştırma) bu dosya
 
 ---
 
-## 28.11.2026 — Paylaşım sistemi aşama 1 uygulama planı (yarım: uygulama)
+## 28.11.2026 — Paylaşım sistemi aşama 1 uygulandı ve yayına alındı (önizleme)
+- Neden: kullanıcı "plana başla" dedi.
+- Ne: `/admin/paylasim` paneli; ürün karuselleri ve fiyatlı hikâyeler için otomatik sıra, fiyat onayı, kapak seçimi, erteleme/düzenleme/iptal/hemen paylaşma, platform ve saat ayarı. Sistem önizleme modunda; "Canlıya al" kullanıcıda.
+- Nasıl: plan sırasıyla, her adım önce testle. `lib/paylasim/` (saf modüller + depo, yayıncılar, cron turu), cron'a `paylasim` adımı, Facebook sayfa hikâyesi, canlı modda eski ürün otomasyonlarının susması. Denemede bulunan iki şey düzeltildi: hiçbir platforma gitmeyen paylaşım "yayınlandı" sayılmıyor; onay penceresi panel biçiminden ayrıldı. Hikâyede beyaz boşluk yerine fotoğrafın bulanık kopyası.
+- Doğrulama: 750 test ve lint geçti. Sahte verili test kopyasında 360 px ve masaüstünde fiyat onayı → sıra oluşması → hemen paylaş akışı denendi (bağlantı olmadığı için hedefler atlandı); hikâye görseli ve beyaz zemin ölçümü gerçek Cloudinary görseliyle çalıştı. Gerçek platforma paylaşım denenmedi.
+- Açık: kullanıcı panelde fiyatları onaylayacak, sırayı kontrol edip canlıya alacak; Facebook hikâyesi ve Telegram albümü ilk canlı paylaşımda doğrulanmalı. Aşama 2: izin kutusu ve müşteri paylaşımları.
+
+## 28.11.2026 — Paylaşım sistemi aşama 1 uygulama planı
 - Neden: kullanıcı tasarımı onaylayıp plana geçilmesini istedi.
 - Ne: `docs/superpowers/plans/2026-11-28-paylasim-asama-1.md` (9 görev: fiyat kademeleri, kapak ve sıra, planlayıcı, metin ve hikâye görseli, depo, yayıncılar ve cron, eski otomasyonun devri, panel, yayın).
 - Nasıl: mevcut paylaşım modülleri okundu. Tasarıma göre dört küçük değişiklik planın başında yazılı (fiyat onayı açıklama satırlarının özetiyle; hikâyede 7 kademeye kadar; eski iki panel ekranı bu aşamada kalır; gönderi bağlantıları bu aşamada yok). Facebook hikâye uç noktaları resmi belgeden kontrol edildi.

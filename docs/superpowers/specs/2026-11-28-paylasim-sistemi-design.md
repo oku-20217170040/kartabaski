@@ -1,6 +1,6 @@
 # Paylaşım sistemi — tasarım (28.11.2026)
 
-Durum: tasarım sohbette onaylandı; bu belge gözden geçirme bekliyor. Kod yazılmadı.
+Durum: onaylandı. Aşama 1 uygulandı (28.11.2026); sistem önizleme modunda.
 
 ## Amaç
 
@@ -54,14 +54,14 @@ Kapak temalı görsel olur. Küçük bir kopyanın kenar pikselleri ölçülür;
 
 ## B — Ürün hikâyesi
 
-- 1080×1920, tek fotoğraf. Ortada, okunacak bir zeminle: ürün adı, fiyat kademeleri, kartabaski.com. En fazla 6 satır.
+- 1080×1920, tek fotoğraf; boşluklar aynı fotoğrafın bulanık kopyasıyla doldurulur. Ortada, okunacak bir zeminle: ürün adı, en fazla 7 fiyat kademesi, kartabaski.com.
 - Ürünler sırayla döner; her seferinde ürünün en uzun süredir kullanılmamış rengi/fotoğrafı seçilir.
 - Fiyatlar yayın anında okunur.
 - Otomatik hikâyeye tıklanabilir bağlantı eklenmez.
 
 ## Fiyat kademeleri
 
-- Üründe yeni alan: `priceTiers: { label: string; price: string }[]` ve `priceTiersApproved: boolean`. Etiket ve fiyat yazıldığı gibi gösterilir; sistem set ya da adet fiyatı hesaplamaz.
+- Üründe yeni alan: `priceTiers: { label: string; price: string }[]` ve `priceTiersSource: string` (onay anındaki açıklama fiyat satırlarının özeti; açıklama değişirse onay düşer). Etiket ve fiyat yazıldığı gibi gösterilir; sistem set ya da adet fiyatı hesaplamaz.
 - İlk doldurma açıklama metnindeki satırlardan yapılır; satırlar ürünler arasında farklı biçimde yazıldığı için hiçbiri onaysız sayılmaz.
 - Panelde ürün ürün kontrol edilip onaylanır. Onaysız ürünün A ve B paylaşımı yayınlanmaz, panelde "fiyat onayı bekliyor" görünür.
 - Ürün formunda kademeler düzenlenince onay işareti yeniden istenir.
@@ -96,11 +96,11 @@ Her rengin her fotoğrafı ayrı pin: ürün adı, renk, fiyat kademeleri, ürü
 
 - **Sırada:** önümüzdeki günlerin önizlemesi; ertele, metni ve görselleri düzenle, kapak seç, iptal, hemen paylaş.
 - **Müşteri paylaşımı:** yükleme, izin durumu, hitap, önizleme, Paylaş.
-- **Yayınlanan:** platform başına sonuç ve bağlantı, hata ve yeniden dene, kaldırılacaklar.
+- **Yayınlanan:** platform başına sonuç, hata ve yeniden dene; kaldırılacaklar (aşama 2). Gönderi bağlantıları aşama 1'de yok.
 - **Fiyatlar ve kapaklar:** kademe onayı, kapak seçimi, rehber görseli onayı.
 - **Ayarlar:** hepsini durdur, platform aç/kapat, içerik türü aç/kapat, saatler, günlük sayılar.
 
-Mevcut "Merkez" ve "Hızlı Paylaşım" ekranlarının yerini alır; platform sayfaları bağlantı ve durum için kalır. Telefonda 360 px'te taşma olmaz, dokunma hedefleri en az 44 px.
+Aşama 1'de "Merkez" ve "Hızlı Paylaşım" ekranları yanında durur; sonraki aşamada yerlerini alır; platform sayfaları bağlantı ve durum için kalır. Telefonda 360 px'te taşma olmaz, dokunma hedefleri en az 44 px.
 
 ## Mimari
 

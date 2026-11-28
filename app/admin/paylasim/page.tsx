@@ -95,8 +95,9 @@ export default function PaylasimPage() {
   };
 
   return (
+    <>
+    {dialog}
     <div className="pl">
-      {dialog}
       <h1>Paylaşım Paneli</h1>
       <p className="pl-state">
         {data.ayar.paused ? 'Durduruldu.' : data.ayar.mode === 'canli' ? 'Canlı: zamanı gelen paylaşımlar yayınlanır.' : 'Önizleme: sıra oluşur, hiçbir şey yayınlanmaz.'}
@@ -163,6 +164,7 @@ export default function PaylasimPage() {
         </article>
       )}
     </div>
+    </>
   );
 }
 

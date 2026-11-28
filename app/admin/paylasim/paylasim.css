@@ -20,3 +20,7 @@
 .admin-layout .pl .pl-check { display: flex; align-items: center; gap: 10px; min-height: 44px; }
 .admin-layout .pl .pl-check input { width: 22px; min-height: 22px; }
 .pl-times { display: grid; gap: 4px; }
+@media (max-width: 560px) {
+  .pl-tiers > div:not(.pl-actions) { grid-template-columns: minmax(0, 1fr) auto; }
+  .pl-tiers > div:not(.pl-actions) input:first-child { grid-column: 1 / -1; }
+}

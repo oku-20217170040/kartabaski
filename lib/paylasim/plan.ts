@@ -89,6 +89,6 @@ export function durumHesapla(targets: Partial<Record<SocialPlatform, Hedef>>, pl
   if (open) return 'bekliyor';
   const ok = list.filter((t) => t!.status === 'tamam').length;
   const bad = list.filter((t) => t!.status === 'hata' || t!.status === 'belirsiz').length;
-  if (!bad) return 'yayinlandi';
-  return ok ? 'kismi' : 'hata';
+  if (!ok) return 'hata'; // hiçbir platforma gitmedi
+  return bad ? 'kismi' : 'yayinlandi';
 }

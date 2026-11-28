@@ -58,6 +58,9 @@ describe('durumHesapla', () => {
     expect(durumHesapla({ instagram: ok, facebook: bad }, ['instagram', 'facebook'])).toBe('kismi');
     expect(durumHesapla({ instagram: bad }, ['instagram'])).toBe('hata');
   });
+  it('hiçbir platforma gitmediyse yayınlandı sayılmaz', () => {
+    expect(durumHesapla({ instagram: { status: 'atlandi', attempts: 1 } }, ['instagram'])).toBe('hata');
+  });
   it('denenecek hedef kaldıysa bekliyor', () => {
     expect(durumHesapla({ instagram: ok }, ['instagram', 'facebook'])).toBe('bekliyor');
   });

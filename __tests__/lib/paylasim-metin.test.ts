@@ -26,6 +26,7 @@ it('Telegram metni HTML kaçışlı ve 1024 altındadır', () => {
 it('hikâye adresi 1080×1920, ad + 7 kademe + site katmanı içerir', () => {
   const url = hikayeUrl('demo', 'karta-baski/urunler/x', u);
   expect(url).toContain('w_1080,h_1920');
+  expect(url).toContain('l_karta-baski:urunler:x/c_fit');
   expect(url.match(/l_text:/g)).toHaveLength(9);
   expect(url.endsWith('/karta-baski/urunler/x')).toBe(true);
 });

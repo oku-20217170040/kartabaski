@@ -12,12 +12,13 @@
 | `/admin/sepet-talepleri` | Sepetten WhatsApp'a gelen talepler, "Makineye aktar" | `lib/cart*`, `app/sepet` |
 | `/admin/yorumlar` | Davet bağlantılı müşteri yorumları | `lib/reviews*`, `app/yorum/[token]` |
 | `/admin/sosyal-medya` + 6 platform | Instagram, Facebook, Threads, Telegram, Pinterest, TikTok | `lib/social-run.ts`, `lib/*-auto.ts` |
+| `/admin/paylasim` | Paylaşım Paneli: ürün karuseli (günde 2) ve fiyatlı hikâye (günde 3) sırası, fiyat onayı, kapak, saat ve platform ayarı. Önizleme modunda hiçbir şey yayınlanmaz; canlıya alınca eski ürün/hikâye otomasyonu susar | `lib/paylasim/`, `lib/actions-paylasim.ts` |
 | `/admin/sosyal-medya/paylas` | Hızlı Paylaşım & Gönderi Havuzu: fotoğraf yükleyip (müşteri siparişi, ürün, atölye, kampanya) otomatik metinle bağlı tüm platformlarda anında veya sırayla yayınlama (+ isteğe bağlı ücretsiz stüdyo arka planı) | `lib/social-broadcast*`, `lib/actions-social-broadcast.ts` |
 | `/admin/blog` | Blog + planlı yayın, isteğe bağlı otomatik taslak | `lib/posts.ts`, `lib/blog-*` |
 | `/admin/seo` | Varsayılan meta, anahtar kelimeler, doğrulama kodları | `lib/seo-*` |
 
 ## Otomasyon
-- Tek kapı: `GET /api/cron/main` (blog → makine → ürün fotoğrafları → 6 sosyal platform). `CRON_SECRET` zorunlu (`Authorization: Bearer …`), yoksa 401.
+- Tek kapı: `GET /api/cron/main` (blog → makine → ürün fotoğrafları → hızlı paylaşım → paylaşım sistemi → 6 sosyal platform). `CRON_SECRET` zorunlu (`Authorization: Bearer …`), yoksa 401.
 - Tetikleyici: sunucu crontab'ı (`tools/sunucu/zamanlayici.sh`, 30 dakikada bir, TSİ 07:00–00:30). GitHub iş akışı yalnız elle çalıştırma içindir.
 - Yönetim botu: `docs/TELEGRAM_BOTU.md`.
 - Sosyal platformlar varsayılan **kapalı**; token girildikten sonra Merkez'den açılır.

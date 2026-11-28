@@ -49,7 +49,12 @@ export function hikayeUrl(cloud: string, imageId: string, u: PaylasimUrun): stri
   ];
   const layers = lines.map((l, i) => {
     const y = Math.round((i - (lines.length - 1) / 2) * 84);
-    return `l_text:${l.style}:${overlayText(l.text)},co_${l.color},b_rgb:${l.bg}/fl_layer_apply,g_center,y_${y}`;
+    return `l_text:${l.style}:%20${overlayText(l.text)}%20,co_${l.color},b_rgb:${l.bg}/fl_layer_apply,g_center,y_${y}`;
   });
-  return `https://res.cloudinary.com/${cloud}/image/upload/${['f_jpg,q_85,c_pad,b_rgb:ffffff,w_1080,h_1920', ...layers].join('/')}/${imageId}`;
+  // Zemin: aynı fotoğrafın bulanık kopyası; üstüne fotoğrafın tamamı (kupa kırpılmaz), sonra yazılar.
+  const base = [
+    'f_jpg,q_85,c_fill,g_auto,w_1080,h_1920', 'e_blur:1500',
+    `l_${imageId.replace(/\//g, ':')}/c_fit,w_1080,h_1920/fl_layer_apply,g_center`,
+  ];
+  return `https://res.cloudinary.com/${cloud}/image/upload/${[...base, ...layers].join('/')}/${imageId}`;
 }
