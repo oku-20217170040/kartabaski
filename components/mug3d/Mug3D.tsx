@@ -6,6 +6,7 @@ import { PrintContent, drawPrint, whenFontReady } from '@/lib/mug-print';
 import { DEFAULT_PLACEMENT } from '@/lib/photo-layout';
 import { SideId } from '@/lib/design-sides';
 import { MugScene, VIEWS, createMugScene } from './scene';
+import { ISnow, ISpin, IZoomIn, IZoomOut, MugGlyph } from '@/components/tasarim/ikonlar';
 
 export interface Mug3DHandle {
   snapshot: (background: string, twoSided?: boolean) => Promise<Blob | null>;
@@ -32,10 +33,12 @@ export interface Mug3DProps extends PrintContent {
   canGrab?: (side: SideId, u: number, v: number) => boolean;
   onDrag?: (u: number, v: number) => void;
   onDrop?: () => void;
+  /** Stüdyoda: alanı doldurur, düğmeler yazısız simge olur. */
+  compact?: boolean;
 }
 
 const Mug3D = forwardRef<Mug3DHandle, Mug3DProps>(function Mug3D(
-  { model, colors, label, onUnsupported, text, font, photo, placement = DEFAULT_PLACEMENT, layers, assets, back, view: shown, onView, onGrab, canGrab, onDrag, onDrop },
+  { model, colors, label, onUnsupported, text, font, photo, placement = DEFAULT_PLACEMENT, layers, assets, back, view: shown, onView, onGrab, canGrab, onDrag, onDrop, compact },
   ref,
 ) {
   const host = useRef<HTMLDivElement>(null);
@@ -183,7 +186,7 @@ const Mug3D = forwardRef<Mug3DHandle, Mug3DProps>(function Mug3D(
   };
 
   return (
-    <div className="m3d">
+    <div className={`m3d${compact ? ' is-compact' : ''}`}>
       <div
         ref={host}
         className="m3d-stage"
@@ -197,18 +200,20 @@ const Mug3D = forwardRef<Mug3DHandle, Mug3DProps>(function Mug3D(
         onPointerCancel={onPointerEnd}
         onKeyDown={onKeyDown}
       />
-      <p className="m3d-hint">
-        {model.finish === 'magic' ? 'Soğukken siyah görünür; sıcak içecek koyunca baskı ortaya çıkar.' : onGrab ? 'Yazıyı ya da süsü kupanın üstünde sürükleyin; boş yerden tutup kupayı çevirin.' : 'Çevirmek için kupayı sürükleyin.'}
-      </p>
+      {!compact && (
+        <p className="m3d-hint">
+          {model.finish === 'magic' ? 'Soğukken siyah görünür; sıcak içecek koyunca baskı ortaya çıkar.' : onGrab ? 'Yazıyı ya da süsü kupanın üstünde sürükleyin; boş yerden tutup kupayı çevirin.' : 'Çevirmek için kupayı sürükleyin.'}
+        </p>
+      )}
       <div className="m3d-buttons" role="group" aria-label="Kupa görünümü">
-        <button type="button" onClick={() => view('front')}>Ön</button>
-        <button type="button" onClick={() => view('back')}>Arka</button>
-        <button type="button" onClick={() => view('handle')}>Kulp</button>
-        <button type="button" aria-pressed={spinning} onClick={() => { scene?.setSpinning(!spinning); setSpinning(!spinning); }}>Döndür</button>
-        <button type="button" aria-label="Uzaklaştır" onClick={() => scene?.zoomBy(1 / 1.2)}>−</button>
-        <button type="button" aria-label="Yakınlaştır" onClick={() => scene?.zoomBy(1.2)}>+</button>
+        <button type="button" aria-label="Ön yüz" title="Ön yüz" onClick={() => view('front')}>{compact ? <MugGlyph face="front" size={26} /> : 'Ön'}</button>
+        <button type="button" aria-label="Arka yüz" title="Arka yüz" onClick={() => view('back')}>{compact ? <MugGlyph face="back" size={26} /> : 'Arka'}</button>
+        {!compact && <button type="button" onClick={() => view('handle')}>Kulp</button>}
+        <button type="button" aria-label="Döndür" title="Döndür" aria-pressed={spinning} onClick={() => { scene?.setSpinning(!spinning); setSpinning(!spinning); }}>{compact ? <ISpin size={22} /> : 'Döndür'}</button>
+        <button type="button" aria-label="Uzaklaştır" onClick={() => scene?.zoomBy(1 / 1.2)}>{compact ? <IZoomOut size={22} /> : '−'}</button>
+        <button type="button" aria-label="Yakınlaştır" onClick={() => scene?.zoomBy(1.2)}>{compact ? <IZoomIn size={22} /> : '+'}</button>
         {model.finish === 'magic' && (
-          <button type="button" className="m3d-magic" aria-pressed={cold} onClick={() => setCold(!cold)}>Soğuk hali</button>
+          <button type="button" className="m3d-magic" aria-label="Soğuk hali" title="Soğuk hali" aria-pressed={cold} onClick={() => setCold(!cold)}>{compact ? <ISnow size={22} /> : 'Soğuk hali'}</button>
         )}
       </div>
     </div>

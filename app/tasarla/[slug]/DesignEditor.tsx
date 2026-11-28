@@ -1,6 +1,5 @@
 'use client';
 
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import '@fontsource-variable/shantell-sans';
 import { useEffect, useMemo, useRef, useState } from 'react';
@@ -9,15 +8,21 @@ import MugPreview, { MugPreviewHandle } from '@/components/MugPreview';
 import Mug3D from '@/components/mug3d/Mug3DLazy';
 import type { Mug3DHandle } from '@/components/mug3d/Mug3D';
 import Tahta from '@/components/tasarim/Tahta';
-import KatmanPaneli from '@/components/tasarim/KatmanPaneli';
-import SusSecici from '@/components/tasarim/SusSecici';
-import DuzenSecici from '@/components/tasarim/DuzenSecici';
-import { MUG_MODELS, SNAPSHOT_BACKGROUND, mugModelFor, mugPalette, printSize } from '@/lib/mug3d';
+import AracCubugu from '@/components/tasarim/AracCubugu';
+import Pencere from '@/components/tasarim/Pencere';
+import { Menu, MenuItem, Panel, UstCubuk } from '@/components/tasarim/Studyo';
+import AracPaneli from '@/components/tasarim/panel/AracPaneli';
+import SusPaneli from '@/components/tasarim/panel/SusPaneli';
+import { DesenPaneli, DuzenPaneli, YaziPaneli } from '@/components/tasarim/panel/Galeriler';
+import { FotoPaneli, KatmanListesi, KupaPaneli } from '@/components/tasarim/panel/KupaFotoKatman';
+import {
+  ICart, IClear, IClose, ICopy, IDownload, ILayers, IMug, IPattern, IPhoto, IRedo, ISticker, ITemplates, IText, IUndo, MugGlyph,
+} from '@/components/tasarim/ikonlar';
+import { TAB_TITLES, TOOL_TITLES, Tab, Tool } from '@/components/tasarim/turler';
+import { MUG_MODELS, SNAPSHOT_BACKGROUND, mugModelFor, mugPalette, printSize, swatchColor } from '@/lib/mug3d';
 import { drawPrint } from '@/lib/mug-print';
 import { SIDES, SIDE_HINTS, SIDE_LABELS, SideId } from '@/lib/design-sides';
 import { takeDraft } from '@/lib/design-draft';
-import { CartIcon } from '@/components/cart/CartLink';
-import { CloseIcon } from '@/components/icons';
 import { useCart } from '@/lib/cart-context';
 import { saveFile } from '@/lib/cart-files';
 import { cartImageSrc, productToCartItem } from '@/lib/cart-products';
@@ -30,12 +35,14 @@ import { getPriceMin, getSlug, getTitle } from '@/lib/product-utils';
 import { lineHref } from '@/lib/configurator-lines';
 import type { DesignSide } from '@/lib/cart-types';
 import { trackEvent } from '@/lib/analytics-client';
+import { useMediaQuery } from '@/lib/use-media-query';
 import { Side, copySide, emptySide, insertPhotoLayer, isEmptySide, placePhoto, removePhoto, setReady } from '@/lib/tasarim/belge';
 import { hitLayer, Geometry } from '@/lib/tasarim/ciz';
+import { PatternStyle, TextStyle, patternFrom } from '@/lib/tasarim/hazir-parcalar';
 import { moveTo } from '@/lib/tasarim/hareket';
-import { COLLAGE_LABELS, Collage, arrange } from '@/lib/tasarim/kolaj';
+import { arrange } from '@/lib/tasarim/kolaj';
 import {
-  Layer, MAX_LAYERS, addLayer, duplicateLayer, layersText, moveLayer, patternLayer, printableLayers, removeLayer,
+  Layer, MAX_LAYERS, addLayer, duplicateLayer, layersText, moveLayer, printableLayers, removeLayer,
   shapeLayer, textLayer, updateLayer, wantsCut,
 } from '@/lib/tasarim/model';
 import { Template, applyTemplate } from '@/lib/tasarim/sablonlar';
@@ -43,7 +50,7 @@ import { clearSavedDesign, loadSavedDesign, storeDesign, DraftSide } from '@/lib
 import { useDoc } from '@/lib/tasarim/use-belge';
 import { useSide } from '@/lib/tasarim/use-yuz';
 import '@/components/cart/cart.css';
-import '@/components/tasarim/tasarim.css';
+import '@/components/tasarim/studyo.css';
 
 interface Props {
   product: Product;
@@ -59,18 +66,37 @@ const same = (a: string, b: string) => a.toLocaleLowerCase('tr-TR') === b.toLoca
 const TEXT_SPOTS = [0.5, 0.8, 0.2, 0.65, 0.35];
 const SHAPE_SPOTS: [number, number][] = [[0.14, 0.3], [0.86, 0.3], [0.14, 0.72], [0.86, 0.72], [0.5, 0.2], [0.5, 0.8], [0.32, 0.5], [0.68, 0.5]];
 
-function layerName(l: Layer): string {
-  if (l.kind === 'text') return l.text.trim().split('\n')[0].slice(0, 18) || 'Boş yazı';
-  if (l.kind === 'photo') return l.n < 0 ? 'Hazır desen' : `Fotoğraf ${l.n + 1}`;
-  if (l.kind === 'shape') return 'Süs';
-  return 'Desen';
-}
-
 /** Cihaza kaydedilemeyen fotoğraf taslağa girmez. */
 function draftSide(side: Side): DraftSide {
   let kept = side;
   for (let i = side.photos.length - 1; i >= 0; i -= 1) if (!side.photos[i].fileId) kept = removePhoto(kept, i);
   return { layers: kept.layers, photos: kept.photos.map((p) => p.fileId!), ready: kept.ready };
+}
+
+/** Sipariş penceresindeki önizleme resmi; görseller hazır olunca bir kez alınır. */
+function FinishShot({ make, ready }: { make: () => Promise<Blob | null>; ready: boolean }) {
+  const [url, setUrl] = useState('');
+  const maker = useRef(make);
+  maker.current = make;
+  useEffect(() => {
+    if (!ready) return;
+    let made = '';
+    let alive = true;
+    maker.current().then((blob) => {
+      if (!blob || !alive) return;
+      made = URL.createObjectURL(blob);
+      setUrl(made);
+    }).catch(() => {});
+    return () => { alive = false; if (made) URL.revokeObjectURL(made); };
+  }, [ready]);
+  return (
+    <div className="std-finish-shot">
+      {url && (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={url} alt="Tasarımınızın önizlemesi" />
+      )}
+    </div>
+  );
 }
 
 export default function DesignEditor({ product, initialColor, lineKey }: Props) {
@@ -94,8 +120,11 @@ export default function DesignEditor({ product, initialColor, lineKey }: Props) 
   const [adding, setAdding] = useState(false);
   const [error, setError] = useState('');
   const [selected, setSelected] = useState<string | null>(null);
-  const [fresh, setFresh] = useState<string | null>(null);
-  const [picker, setPicker] = useState<'shape' | 'template' | null>(null);
+  /** Açık menü sekmesi ve seçili öğenin açık aracı. */
+  const [tab, setTab] = useState<Tab | null>(null);
+  const [tool, setTool] = useState<Tool | null>(null);
+  const [finish, setFinish] = useState(false);
+  const desktop = useMediaQuery('(min-width: 900px)') === true;
   const [restored, setRestored] = useState(false);
   /** Kayıtlı tasarım yüklenmeden üzerine yazılmasın. */
   const [hydrated, setHydrated] = useState(false);
@@ -133,10 +162,22 @@ export default function DesignEditor({ product, initialColor, lineKey }: Props) 
   const blurry = (twoSided ? SIDES : (['front'] as SideId[])).find((id) => Array.from(renders[id].sharp.values()).includes('zayif'));
   const loading = front.loading || (twoSided && back.loading);
 
+  /** Öğe seçilince telefonda menü paneli kapanır, araç çubuğu görünür. */
+  const select = (id: string | null) => {
+    setSelected(id);
+    setTool(null);
+    if (id && !desktop) setTab(null);
+  };
+
   const selectSide = (id: SideId) => {
     setSide(id);
     setView(id);
-    setSelected(null);
+    select(null);
+  };
+
+  const pickTab = (next: Tab) => {
+    setTool(null);
+    setTab((now) => (now === next && !desktop ? null : next));
   };
 
   // Sepetten "Düzenle", konfigüratörden seçim ya da yarım kalan tasarım: biri yüklenir.
@@ -207,34 +248,34 @@ export default function DesignEditor({ product, initialColor, lineKey }: Props) 
   }, [undo, redo]);
 
   const full = current.layers.length >= MAX_LAYERS;
-  const add = (next: Layer) => {
+  const add = (next: Layer, open?: Tool) => {
+    if (full && next.kind !== 'pattern') { setError(`En fazla ${MAX_LAYERS} öğe eklenebilir.`); return; }
     store.setLayers(editing, (list) => addLayer(list, next));
     setSelected(next.id);
-    setFresh(next.kind === 'text' ? next.id : null);
+    setTool(open ?? null);
+    if (!desktop || open) setTab(null);
     setError('');
   };
 
-  const addText = () => {
+  /** Hazır stille ya da düz yazı ekler ve yazma panelini açar. */
+  const addText = (style: TextStyle) => {
     const texts = current.layers.filter((l) => l.kind === 'text').length;
     const withPhoto = photoLayers.length > 0;
     add(textLayer({
-      text: 'Yazınız',
+      ...style.patch,
+      text: style.text,
       y: withPhoto && !texts ? 0.82 : TEXT_SPOTS[texts % TEXT_SPOTS.length],
       s: withPhoto || texts ? 0.15 : 0.22,
-    }));
+    }), 'metin');
   };
 
   const addShape = (set: 'ph' | 'fl', name: string) => {
     const [x, y] = SHAPE_SPOTS[current.layers.filter((l) => l.kind === 'shape').length % SHAPE_SPOTS.length];
     add(shapeLayer(set, name, { x, y, s: 0.3 }));
-    setPicker(null);
   };
 
-  const addPattern = () => {
-    const found = current.layers.find((l) => l.kind === 'pattern');
-    if (found) setSelected(found.id);
-    else add(patternLayer({ set: 'ph', name: 'heart', color: '#E0306E' }));
-  };
+  /** Bir yüzde tek desen olur; yenisi eskisinin yerini alır. */
+  const addPattern = (style: PatternStyle) => add(patternFrom(style));
 
   const pickTemplate = (template: Template) => {
     store.change(editing, (s) => ({
@@ -242,8 +283,8 @@ export default function DesignEditor({ product, initialColor, lineKey }: Props) 
       layers: applyTemplate(s.layers, template),
       slot: s.layers.some((l) => l.kind === 'photo') ? undefined : template.photo,
     }));
-    setSelected(null);
-    setPicker(null);
+    select(null);
+    if (!desktop) setTab(null);
   };
 
   const addPhotos = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -259,7 +300,10 @@ export default function DesignEditor({ product, initialColor, lineKey }: Props) 
       const free = Math.max(0, room - current.photos.length);
       if (rejected.length) setError(`Açılamayan dosya eklenmedi: ${rejected.join(', ')}. JPG veya PNG deneyin.`);
       else if (files.length > free) setError(`En fazla ${MAX_LINE_PHOTOS} fotoğraf eklenebilir.`);
-      if (files.length && free) await store.addFiles(editing, files.slice(0, free), sheet);
+      if (files.length && free) {
+        await store.addFiles(editing, files.slice(0, free), sheet);
+        if (!desktop) setTab(null);
+      }
     } catch {
       setError('Fotoğraf eklenemedi. Başka bir dosya deneyin.');
     } finally {
@@ -270,10 +314,10 @@ export default function DesignEditor({ product, initialColor, lineKey }: Props) 
   /** Fotoğraf listesinden: katmanı varsa seçilir, yoksa baskıya eklenir. */
   const pickPhoto = (n: number) => {
     const found = current.layers.find((l) => l.kind === 'photo' && l.n === n);
-    if (found) { setSelected(found.id); return; }
+    if (found) { select(found.id); return; }
     const next = placePhoto(current, n);
     store.change(editing, (s) => ({ ...s, layers: insertPhotoLayer(s.layers, next) }));
-    setSelected(next.id);
+    select(next.id);
   };
 
   /** Öğeyi siler; fotoğraf katmanında fotoğrafın kendisi de gider. */
@@ -283,7 +327,7 @@ export default function DesignEditor({ product, initialColor, lineKey }: Props) 
     if (target.kind === 'photo' && target.n >= 0) store.dropPhoto(editing, target.n);
     else if (target.kind === 'photo') store.change(editing, (s) => setReady(s, undefined));
     else store.setLayers(editing, (list) => removeLayer(list, id));
-    setSelected(null);
+    if (id === selected) select(null);
   };
 
   const change = (id: string, patch: Partial<Layer>, tag?: string) =>
@@ -300,8 +344,7 @@ export default function DesignEditor({ product, initialColor, lineKey }: Props) 
     const target = g && store.doc[hitSide].layers.find((l) => l.id === g.id);
     if (!g || !target) return false;
     if (twoSided) setSide(hitSide);
-    setSelected(target.id);
-    setFresh(null);
+    select(target.id);
     grab.current = { side: hitSide, layer: target, g, x, y, tag: `mug:${target.id}:${Date.now()}` };
     return true;
   };
@@ -313,18 +356,22 @@ export default function DesignEditor({ product, initialColor, lineKey }: Props) 
     store.setLayers(held.side, (list) => updateLayer(list, held.layer.id, patch), held.tag);
   };
 
-  const download = async () => {
-    setError('');
-    let blob: Blob | null | undefined = model
+  /** Tasarımın o anki görüntüsü (indirme ve sipariş penceresi). */
+  const makeShot = async (): Promise<Blob | null> => {
+    const shot = model
       ? await view3d.current?.snapshot(SNAPSHOT_BACKGROUND, twoSided)
       : mug ? await preview.current?.snapshot(mug.field) : null;
-    if (!blob) {
-      const canvas = document.createElement('canvas');
-      canvas.width = sheet.width * 2;
-      canvas.height = sheet.height * 2;
-      drawPrint(canvas, { ...render.content, base: boardColor });
-      blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/jpeg', 0.92));
-    }
+    if (shot) return shot;
+    const canvas = document.createElement('canvas');
+    canvas.width = sheet.width * 2;
+    canvas.height = sheet.height * 2;
+    drawPrint(canvas, { ...render.content, base: boardColor });
+    return new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/jpeg', 0.92));
+  };
+
+  const download = async () => {
+    setError('');
+    const blob = await makeShot();
     if (!blob) { setError('Görsel hazırlanamadı.'); return; }
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -337,7 +384,7 @@ export default function DesignEditor({ product, initialColor, lineKey }: Props) 
   const startOver = () => {
     store.reset();
     clearSavedDesign(slug);
-    setSelected(null);
+    select(null);
     setRestored(false);
     setNote('');
     setNeedsDesign(false);
@@ -370,7 +417,6 @@ export default function DesignEditor({ product, initialColor, lineKey }: Props) 
       return;
     }
     setSaving(true);
-    setSelected(null);
     try {
       const frontSide = await saveSide(store.doc.front);
       const backSide = twoSided ? await saveSide(store.doc.back) : undefined;
@@ -403,34 +449,135 @@ export default function DesignEditor({ product, initialColor, lineKey }: Props) 
     }
   };
 
-  return (
-    <div className="wrap tsr">
-      <header className="tsr-head">
-        <nav aria-label="Konum">
-          <ol className="breadcrumb">
-            <li><Link href={lineHref(slug)}>{title}</Link></li>
-            <li aria-current="page">Tasarım</li>
-          </ol>
-        </nav>
-        <h1 className="h2">Kupanızı tasarlayın</h1>
-        <p>{title} · {formatPriceRange(getPriceMin(product), 0)}’den başlayan</p>
-      </header>
+  const names = options.length ? options : mugColors;
+  const swatches = names.map((name) => ({ name, hex: swatchColor(printModel, name) }));
+  const price = `${formatPriceRange(getPriceMin(product), 0)}’den`;
 
-      {restored && (
-        <p className="tsr-restored" role="status">
-          Yarım kalan tasarımınız yüklendi.
-          <button type="button" className="tsr-chip" onClick={startOver}>Baştan başla</button>
-        </p>
+  /** Açık panel: seçili öğenin aracı ya da menü sekmesi (masaüstünde bir sekme hep açıktır). */
+  const shownTool = layer && tool ? tool : null;
+  const shownTab: Tab | null = shownTool ? null : tab ?? (desktop ? 'duzen' : null);
+
+  const tabPanel = shownTab === 'kupa' ? (
+    <KupaPaneli
+      colors={swatches} color={color} onColor={setColor} twoSided={twoSided}
+      onSides={(two) => { setTwoSided(two); if (!two) selectSide('front'); }}
+      ready={current.ready} onRemoveReady={() => store.change(editing, (s) => setReady(s, undefined))}
+    />
+  ) : shownTab === 'duzen' ? (
+    <DuzenPaneli side={current} sources={render.sources} sheet={sheet} background={boardColor} onPick={pickTemplate} />
+  ) : shownTab === 'yazi' ? (
+    <YaziPaneli sheet={sheet} background={boardColor} onAdd={addText} />
+  ) : shownTab === 'foto' ? (
+    <FotoPaneli
+      photos={current.photos} layers={current.layers} room={room} busy={adding} onFiles={addPhotos} onPick={pickPhoto}
+      onRemove={(n) => { store.dropPhoto(editing, n); select(null); }}
+      onCollage={(kind) => store.setLayers(editing, (list) => arrange(list, kind, sheet))}
+    />
+  ) : shownTab === 'sus' ? (
+    <SusPaneli onPick={addShape} />
+  ) : shownTab === 'desen' ? (
+    <DesenPaneli
+      sheet={sheet} background={boardColor} current={current.layers.find((l) => l.kind === 'pattern')} onPick={addPattern}
+      onClear={() => { store.setLayers(editing, (list) => list.filter((l) => l.kind !== 'pattern')); select(null); }}
+    />
+  ) : shownTab === 'katman' ? (
+    <KatmanListesi
+      layers={current.layers} sources={render.sources} selected={selected} onSelect={select} onRemove={remove}
+      onOrder={(id, step) => store.setLayers(editing, (list) => moveLayer(list, id, step))}
+    />
+  ) : null;
+
+  const menu: MenuItem<Tab>[] = [
+    { id: 'duzen', label: 'Düzenler', icon: <ITemplates /> },
+    { id: 'yazi', label: 'Yazı', icon: <IText /> },
+    { id: 'foto', label: 'Fotoğraf', icon: <IPhoto /> },
+    { id: 'sus', label: 'Süsler', icon: <ISticker /> },
+    { id: 'desen', label: 'Desen', icon: <IPattern /> },
+    { id: 'kupa', label: 'Kupa', icon: <IMug /> },
+  ];
+
+  return (
+    <div className={`std${layer ? ' has-selection' : ''}${shownTool || shownTab ? ' has-panel' : ''}`}>
+      <UstCubuk back={lineHref(slug)} title={title} subtitle={price}>
+        <button type="button" className="std-icon-btn" onClick={store.undo} disabled={!store.canUndo} aria-label="Geri al" title="Geri al"><IUndo /></button>
+        <button type="button" className="std-icon-btn" onClick={store.redo} disabled={!store.canRedo} aria-label="Yinele" title="Yinele"><IRedo /></button>
+        <button type="button" className="std-icon-btn" aria-pressed={shownTab === 'katman'} onClick={() => pickTab('katman')} aria-label="Katmanlar" title="Katmanlar"><ILayers /></button>
+        <button type="button" className="std-icon-btn" onClick={download} disabled={!hasContent || loading} aria-label="Görseli indir" title="Görseli indir"><IDownload /></button>
+        <button type="button" className="std-buy" onClick={() => { setError(''); select(null); setFinish(true); }} disabled={!hydrated}>
+          <ICart size={20} /> <span>{lineKey ? 'Kaydet' : 'Sepete ekle'}</span>
+        </button>
+      </UstCubuk>
+
+      <Menu items={menu} active={shownTab} onPick={pickTab} label="Tasarım araçları" />
+
+      {(shownTool || shownTab) && (
+        <Panel
+          title={shownTool ? TOOL_TITLES[shownTool] : TAB_TITLES[shownTab!]}
+          onBack={shownTool && desktop ? () => setTool(null) : undefined}
+          onClose={shownTool ? () => setTool(null) : () => setTab(null)}
+        >
+          {shownTool && layer ? (
+            <AracPaneli
+              tool={shownTool} layer={layer} geometry={render.geometry.find((g) => g.id === layer.id)} sheet={sheet}
+              sources={render.sources} background={boardColor} sharp={render.sharp.get(layer.id)} cutFailed={render.cutFailed}
+              onChange={(patch, tag) => change(layer.id, patch, tag && `${tag}:${layer.id}`)}
+              onOrder={(step) => store.setLayers(editing, (list) => moveLayer(list, layer.id, step))}
+            />
+          ) : tabPanel}
+        </Panel>
       )}
 
-      <div className="tsr-grid">
-        <div
-          className={`tsr-stage${mug ? ' is-live' : ''}${model ? ' is-3d' : ''}`}
-          style={mug ? { ['--field' as string]: mug.field, ['--on-field' as string]: mug.onField } : undefined}
-        >
+      {layer ? (
+        <AracCubugu
+          layer={layer} tool={tool} onTool={(next) => { setTab(null); setTool((now) => (now === next ? null : next)); }}
+          cutting={render.cutting}
+          onToggleCut={() => layer.kind === 'photo' && change(layer.id, { cut: !layer.cut || undefined })}
+          onDuplicate={() => {
+            const copy = duplicateLayer(current.layers, layer.id);
+            if (!copy.id) return;
+            store.setLayers(editing, () => copy.layers);
+            select(copy.id);
+          }}
+          onRemove={() => remove(layer.id)}
+          onDone={() => select(null)}
+        />
+      ) : (
+        <div className="std-context is-idle">
+          <div className="std-quick" role="group" aria-label="Kupa rengi">
+            {swatches.map((c) => (
+              <button key={c.name} type="button" aria-pressed={same(c.name, color)} aria-label={c.name} title={c.name} onClick={() => setColor(c.name)}>
+                <i style={{ background: c.hex }} />
+              </button>
+            ))}
+          </div>
+          {current.layers.length > 0 && (
+            <button type="button" className="std-tool" onClick={() => { store.change(editing, () => emptySide()); select(null); }}><IClear /><span>Temizle</span></button>
+          )}
+          {twoSided && !isEmptySide(current) && (
+            <button type="button" className="std-tool" onClick={() => { store.change(other, () => copySide(current, MAX_LINE_PHOTOS - current.photos.length)); selectSide(other); }}>
+              <ICopy /><span>{SIDE_LABELS[other]}e kopyala</span>
+            </button>
+          )}
+        </div>
+      )}
+
+      <div className="std-work">
+        {twoSided && (
+          <div className="std-sides" role="group" aria-label="Hazırladığınız yüz">
+            {SIDES.map((id) => (
+              <button key={id} type="button" aria-pressed={side === id} onClick={() => selectSide(id)} title={SIDE_HINTS[id]}>
+                <MugGlyph face={id} size={30} /> {SIDE_LABELS[id]}
+                <i className={isEmptySide(store.doc[id]) ? undefined : 'is-full'} role="img" aria-label={isEmptySide(store.doc[id]) ? 'boş' : 'hazır'} />
+              </button>
+            ))}
+          </div>
+        )}
+
+        <div className={`std-mug${mug ? ' is-field' : ''}`} style={mug ? { ['--field' as string]: mug.field, ['--on-field' as string]: mug.onField } : undefined}>
           {model && colors3d ? (
             <Mug3D
               handle={view3d}
+              compact
               model={model}
               colors={colors3d}
               label={`${title}${color ? `, ${color}` : ''}`}
@@ -446,224 +593,93 @@ export default function DesignEditor({ product, initialColor, lineKey }: Props) 
             />
           ) : mug ? (
             <MugPreview
-              ref={preview}
-              mug={mug}
-              text=""
-              font="duz"
-              photo={null}
-              layers={render.content.layers}
-              assets={render.content.assets}
-              mirrored={editing === 'back'}
+              ref={preview} mug={mug} text="" font="duz" photo={null}
+              layers={render.content.layers} assets={render.content.assets} mirrored={editing === 'back'}
             />
-          ) : (
-            <>
-              {colorImage && (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img className="tsr-product" src={cartImageSrc(colorImage) ?? ''} alt={`${title}${color ? `, ${color}` : ''}`} />
-              )}
-              <p className="tsr-hint">
-                {mugColors.length
-                  ? `${color} renginde canlı kupa görünümü yok; tasarımınızı baskı alanında hazırlayabilirsiniz.`
-                  : 'Baskıdan önce nasıl duracağını size göndeririz.'}
-              </p>
-            </>
-          )}
-          {hasContent && (
-            <button type="button" className="tsr-chip" disabled={loading} onClick={download}>Görseli indir</button>
-          )}
+          ) : colorImage ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img className="std-product" src={cartImageSrc(colorImage) ?? ''} alt={`${title}${color ? `, ${color}` : ''}`} />
+          ) : null}
         </div>
 
-        <form className="tsr-form" onSubmit={(e) => { e.preventDefault(); submit(); }} noValidate>
-          {options.length + mugColors.length > 0 && (
-            <fieldset className="tsr-field">
-              <legend>Renk: <b>{color}</b></legend>
-              <div className="tsr-chips">
-                {(options.length ? options : mugColors).map((c) => (
-                  <button key={c} type="button" className="tsr-chip" aria-pressed={same(c, color)} onClick={() => setColor(c)}>{c}</button>
-                ))}
-              </div>
-            </fieldset>
-          )}
+        <div className="std-board" style={{ ['--ratio' as string]: String(sheet.width / sheet.height) }}>
+          <Tahta
+            sheet={sheet}
+            background={boardColor}
+            layers={current.layers}
+            assets={render.assets}
+            geometry={render.geometry}
+            selected={selected}
+            onSelect={select}
+            onEdit={(id) => { if (current.layers.find((l) => l.id === id)?.kind === 'text') { setSelected(id); setTab(null); setTool('metin'); } }}
+            onChange={change}
+            onRemove={remove}
+            label={sideName ? `${sideName} baskı alanı` : 'Baskı alanı'}
+          />
+        </div>
 
-          <fieldset className="tsr-field">
-            <legend>Baskı</legend>
-            <div className="tsr-chips">
-              <button type="button" className="tsr-chip" aria-pressed={!twoSided} onClick={() => { setTwoSided(false); selectSide('front'); }}>Tek yüz</button>
-              <button type="button" className="tsr-chip" aria-pressed={twoSided} onClick={() => setTwoSided(true)}>İki yüze ayrı baskı</button>
-            </div>
-          </fieldset>
-
-          {twoSided && (
-            <div className="tsr-sides" role="group" aria-label="Hazırladığınız yüz">
-              {SIDES.map((id) => (
-                <button key={id} type="button" aria-pressed={side === id} onClick={() => selectSide(id)}>
-                  <b>{SIDE_LABELS[id]}</b>
-                  <span>{SIDE_HINTS[id]} · {isEmptySide(store.doc[id]) ? 'boş' : 'hazır'}</span>
-                </button>
-              ))}
-            </div>
-          )}
-
-          {current.ready && (
-            <div className="tsr-ready">
-              {current.ready.image && (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={cartImageSrc(current.ready.image) ?? ''} alt="" />
-              )}
-              <p>Hazır tasarım: <b>{current.ready.name}</b></p>
-              <button type="button" className="tsr-chip" onClick={() => store.change(editing, (s) => setReady(s, undefined))}>Kaldır</button>
-            </div>
-          )}
-
-          <section className={`tsr-studio${layer ? ' is-editing' : ''}`} aria-label={sideName ? `${sideName} tasarımı` : 'Tasarım'}>
-            <div className="tsr-add-bar" role="group" aria-label="Ekle">
-              <button type="button" className="tsr-tool" onClick={addText} disabled={full}>Yazı ekle</button>
-              <label className={`tsr-tool${adding || current.photos.length >= room ? ' is-off' : ''}`}>
-                {adding ? 'Ekleniyor…' : 'Fotoğraf ekle'}
-                <input type="file" accept="image/*" multiple className="sr-only" disabled={adding || current.photos.length >= room} onChange={addPhotos} />
-              </label>
-              <button type="button" className="tsr-tool" onClick={() => setPicker('shape')} disabled={full}>Süs ekle</button>
-              <button type="button" className="tsr-tool" onClick={addPattern}>Desen</button>
-              <button type="button" className="tsr-tool is-wide" onClick={() => setPicker('template')}>Hazır düzenler</button>
-            </div>
-
-            <Tahta
-              sheet={sheet}
-              background={boardColor}
-              layers={current.layers}
-              assets={render.assets}
-              geometry={render.geometry}
-              selected={selected}
-              onSelect={(id) => { setSelected(id); setFresh(null); }}
-              onChange={change}
-              onRemove={remove}
-              label={sideName ? `${sideName} baskı alanı` : 'Baskı alanı'}
-            />
-
-            <div className="tsr-history">
-              <button type="button" className="tsr-chip" onClick={store.undo} disabled={!store.canUndo}>Geri al</button>
-              <button type="button" className="tsr-chip" onClick={store.redo} disabled={!store.canRedo}>Yinele</button>
-              {current.layers.length > 0 && (
-                <button type="button" className="tsr-chip" onClick={() => { store.change(editing, () => emptySide()); setSelected(null); }}>Temizle</button>
-              )}
-              {twoSided && !isEmptySide(current) && (
-                <button
-                  type="button" className="tsr-chip"
-                  onClick={() => { store.change(other, () => copySide(current, MAX_LINE_PHOTOS - current.photos.length)); selectSide(other); }}
-                >
-                  {SIDE_LABELS[other]}e kopyala
-                </button>
-              )}
-            </div>
-
-            {render.photoFailed && (
-              <p className="tsk-warn" role="status">
-                Bir fotoğraf bu tarayıcıda gösterilemiyor. Siparişe eklenir, baskıda biz yerleştiririz; burada görmek için JPG ya da PNG yükleyin.
-              </p>
-            )}
-            {render.failed && !render.photoFailed && (
-              <p className="tsr-error" role="alert">
-                Bir yazı tipi ya da görsel yüklenemedi. <button type="button" className="tsr-chip" onClick={render.retry}>Yeniden dene</button>
-              </p>
-            )}
-            {current.slot && !current.photos.length && <p className="tsr-small" role="status">Bu düzende fotoğraf yeri var: fotoğraf eklediğinizde yerine oturur.</p>}
-
-            {current.layers.length > 1 && (
-              <ul className="tsr-layers" aria-label="Eklenenler">
-                {current.layers.map((l) => (
-                  <li key={l.id}>
-                    <button type="button" className="tsr-chip" aria-pressed={selected === l.id} onClick={() => { setSelected(l.id); setFresh(null); }}>{layerName(l)}</button>
-                  </li>
-                ))}
-              </ul>
-            )}
-
-            {layer && (
-              <KatmanPaneli
-                layer={layer}
-                geometry={render.geometry.find((g) => g.id === layer.id)}
-                sheet={sheet}
-                sharp={render.sharp.get(layer.id)}
-                cutting={render.cutting}
-                cutFailed={render.cutFailed}
-                focusText={fresh === layer.id}
-                onChange={(patch, tag) => change(layer.id, patch, tag)}
-                onDuplicate={() => {
-                  const copy = duplicateLayer(current.layers, layer.id);
-                  if (!copy.id) return;
-                  store.setLayers(editing, () => copy.layers);
-                  setSelected(copy.id);
-                }}
-                onOrder={(step) => store.setLayers(editing, (list) => moveLayer(list, layer.id, step))}
-                onRemove={() => remove(layer.id)}
-                onDone={() => setSelected(null)}
-              />
-            )}
-
-            {current.photos.length > 0 && (
-              <div className="tsr-field">
-                <span className="tsr-label">Fotoğraflar ({current.photos.length}/{room})</span>
-                <ul className="tsr-photos">
-                  {current.photos.map((p, i) => {
-                    const placed = current.layers.some((l) => l.kind === 'photo' && l.n === i);
-                    return (
-                      <li key={p.uid}>
-                        <button type="button" className="tsr-photo" onClick={() => pickPhoto(i)} aria-label={placed ? `${i + 1}. fotoğrafı seç` : `${i + 1}. fotoğrafı baskıya ekle`}>
-                          {/* eslint-disable-next-line @next/next/no-img-element */}
-                          <img src={p.url} alt="" />
-                          {!placed && <span>Baskıya ekle</span>}
-                        </button>
-                        <button type="button" className="tsr-photo-remove" onClick={() => { store.dropPhoto(editing, i); setSelected(null); }} aria-label={`${i + 1}. fotoğrafı kaldır`}><CloseIcon size={16} /></button>
-                      </li>
-                    );
-                  })}
-                </ul>
-                {photoLayers.length > 1 && (
-                  <div className="tsr-chips" role="group" aria-label="Fotoğrafları diz">
-                    {(Object.entries(COLLAGE_LABELS) as [Collage, string][]).map(([kind, name]) => (
-                      <button key={kind} type="button" className="tsr-chip" onClick={() => store.setLayers(editing, (list) => arrange(list, kind, sheet))}>{name}</button>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
-            <p className="tsr-small">Fotoğraflar siparişi oluşturana kadar cihazınızda kalır.</p>
-          </section>
-
-          <label className="tsr-check">
-            <input type="checkbox" checked={needsDesign} onChange={(e) => setNeedsDesign(e.target.checked)} />
-            Tasarımım yok, siz hazırlayın
-          </label>
-
-          <div className="tsr-field">
-            <label htmlFor="tsr-not">Not <span>(isteğe bağlı)</span></label>
-            <textarea id="tsr-not" className="cart-input" rows={3} maxLength={NOTE_MAX} value={note} placeholder="Teslim tarihi, özel isteğiniz…" onChange={(e) => setNote(e.target.value)} />
-          </div>
-
-          <div className="tsr-field">
-            <span className="tsr-label">Adet</span>
-            <div className="cart-qty" role="group" aria-label="Adet">
-              <button type="button" onClick={() => setQty(clampQty(qty - 1))} disabled={qty <= 1} aria-label="Adedi azalt">−</button>
-              <input type="text" inputMode="numeric" aria-label="Adet" value={qty} onChange={(e) => setQty(clampQty(Number(e.target.value.replace(/\D/g, '').slice(0, 3)) || 1))} />
-              <button type="button" onClick={() => setQty(clampQty(qty + 1))} disabled={qty >= MAX_QTY} aria-label="Adedi artır">+</button>
-            </div>
-          </div>
-
-          {blurry && (
-            <p className="tsk-warn" role="status">
-              {twoSided ? `${SIDE_LABELS[blurry]}deki` : 'Tasarımdaki'} bir fotoğraf bulanık basılabilir. Küçültün ya da daha büyüğünü yükleyin.
+        <div className="std-toasts">
+          {restored && (
+            <p className="std-toast" role="status">
+              Yarım kalan tasarımınız yüklendi.
+              <button type="button" onClick={startOver}>Baştan başla</button>
+              <button type="button" className="std-icon-btn" onClick={() => setRestored(false)} aria-label="Bildirimi kapat"><IClose size={18} /></button>
             </p>
           )}
-          <p className="tsr-error" role="alert">{error}</p>
-          <button type="submit" className="btn btn-primary btn-block tsr-submit" disabled={saving || adding || loading || !hydrated}>
-            <CartIcon size={18} /> {saving ? 'Ekleniyor…' : loading ? 'Tasarım hazırlanıyor…' : lineKey ? 'Değişikliği kaydet' : 'Sepete ekle'}
-          </button>
-        </form>
+          {error && !finish && (
+            <p className="std-toast is-error" role="alert">
+              {error}
+              <button type="button" className="std-icon-btn" onClick={() => setError('')} aria-label="Bildirimi kapat"><IClose size={18} /></button>
+            </p>
+          )}
+          {adding && <p className="std-toast" role="status">Fotoğraf ekleniyor…</p>}
+          {render.cutting && <p className="std-toast" role="status">Arka plan siliniyor…</p>}
+          {render.photoFailed && (
+            <p className="std-toast is-error" role="status">Bir fotoğraf bu tarayıcıda gösterilemiyor. Siparişe eklenir, baskıda biz yerleştiririz.</p>
+          )}
+          {render.failed && !render.photoFailed && (
+            <p className="std-toast is-error" role="alert">
+              Bir yazı tipi ya da görsel yüklenemedi.
+              <button type="button" onClick={render.retry}>Yeniden dene</button>
+            </p>
+          )}
+          {current.slot && !current.photos.length && <p className="std-toast" role="status">Bu düzende fotoğraf yeri var: fotoğraf eklediğinizde oturur.</p>}
+        </div>
       </div>
 
-      {picker === 'shape' && <SusSecici onPick={addShape} onClose={() => setPicker(null)} />}
-      {picker === 'template' && (
-        <DuzenSecici side={current} sources={render.sources} sheet={sheet} background={boardColor} onPick={pickTemplate} onClose={() => setPicker(null)} />
+      {finish && (
+        <Pencere title={lineKey ? 'Değişikliği kaydedin' : 'Sepete ekleyin'} onClose={() => setFinish(false)}>
+          <form className="std-finish" onSubmit={(e) => { e.preventDefault(); submit(); }} noValidate>
+            <FinishShot make={makeShot} ready={!loading} />
+            <p className="std-finish-price"><b>{title}</b> {color} · {price}</p>
+
+            <div className="std-finish-row">
+              <span>Adet</span>
+              <div className="cart-qty" role="group" aria-label="Adet">
+                <button type="button" onClick={() => setQty(clampQty(qty - 1))} disabled={qty <= 1} aria-label="Adedi azalt">−</button>
+                <input type="text" inputMode="numeric" aria-label="Adet" value={qty} onChange={(e) => setQty(clampQty(Number(e.target.value.replace(/\D/g, '').slice(0, 3)) || 1))} />
+                <button type="button" onClick={() => setQty(clampQty(qty + 1))} disabled={qty >= MAX_QTY} aria-label="Adedi artır">+</button>
+              </div>
+            </div>
+
+            <textarea className="std-input" rows={2} maxLength={NOTE_MAX} value={note} aria-label="Not (isteğe bağlı)" placeholder="Not (isteğe bağlı): teslim tarihi, özel isteğiniz…" onChange={(e) => setNote(e.target.value)} />
+
+            <label className="std-check">
+              <input type="checkbox" checked={needsDesign} onChange={(e) => setNeedsDesign(e.target.checked)} />
+              Tasarımım yok, siz hazırlayın
+            </label>
+
+            {blurry && (
+              <p className="std-warn" role="status">
+                {twoSided ? `${SIDE_LABELS[blurry]}deki` : 'Tasarımdaki'} bir fotoğraf bulanık basılabilir. Küçültün ya da daha büyüğünü yükleyin.
+              </p>
+            )}
+            {error && <p className="std-error" role="alert">{error}</p>}
+            <button type="submit" className="btn btn-primary btn-block std-submit" disabled={saving || adding || loading || !hydrated}>
+              <ICart size={20} /> {saving ? 'Ekleniyor…' : loading ? 'Tasarım hazırlanıyor…' : lineKey ? 'Değişikliği kaydet' : 'Sepete ekle'}
+            </button>
+          </form>
+        </Pencere>
       )}
     </div>
   );
