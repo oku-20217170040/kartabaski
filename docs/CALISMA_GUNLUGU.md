@@ -19,6 +19,13 @@ Her iş bitiminde (kod, sunucu, dış hizmet ya da yalnız araştırma) bu dosya
 
 ---
 
+## 28.11.2026 — Hikâyede yazılar fotoğrafın dışında (PR #54)
+- Neden: kullanıcı yazıların kupayı ve fotoğrafı kapattığını bildirdi.
+- Ne: ad üstte, fotoğraf ortada temiz, fiyatlar ve site adresi altta.
+- Nasıl: `lib/paylasim/metin.ts` `hikayeUrl` (yerleşim `HIKAYE` sabitinde); test yazıların fotoğraf alanına girmediğini denetliyor.
+- Doğrulama: üç gerçek ürün fotoğrafıyla görsel kontrol; 754 test, lint, derleme; sunucuda yedek ve imaj etiketi (`onceki-20261128-015627`), derleme 0, konteyner sağlıklı.
+- Açık / dikkat: düzeltmeden önce (04:49 TR) panelden "Hemen paylaş" ile bir Tabaklı Kahve Fincanı hikâyesi eski düzende Instagram ve Facebook'a yayınlanmış; Telegram'a giden TikTok bağlantısı da eski düzende. Bu, ilk gerçek Instagram ve Facebook hikâye gönderimi ve ikisi de başarılı. Sıra henüz yeniden kurulmadı (tek ürün).
+
 ## 28.11.2026 — Paylaşım fiyat onayları tamamlandı (11/11)
 - Neden: canlıda yalnız bir ürün onaylı görünüyordu; kullanıcı gösterilen fiyat tablosunu onaylayıp kalan 10 ürünün onaylanmasını istedi.
 - Ne: 10 ürüne `priceTiers` ve `priceTiersSource` yazıldı.
