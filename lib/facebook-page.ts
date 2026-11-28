@@ -1,6 +1,6 @@
 /**
  * Facebook Sayfası gönderisi (Graph API). Ürün fotoğraflarını, yeni blog yazılarını ve özel gün
- * kampanyalarını KAR-TA BASKI sayfasına yazar. Hikâyeler kapsam dışı (sayfa hikâyesi ayrı bir akış).
+ * kampanyalarını KAR-TA BASKI sayfasına yazar.
  *
  * Gerekli env (yalnızca sunucuda, asla commit edilmez):
  *   FACEBOOK_PAGE_ID            Sayfa kimliği
@@ -136,4 +136,13 @@ export async function publishLinkToFacebookPage(
   const page = await withPageToken(cfg);
   const r = await graphPost(`${page.pageId}/feed`, buildLinkParams(message, link, page.token));
   return String(r.id ?? '');
+}
+
+/** Sayfa hikâyesi: görsel yayınlanmadan yüklenir, sonra hikâye olarak paylaşılır. */
+export async function publishFacebookStory(imageUrl: string, cfg: FacebookConfig | null = getFacebookConfig()): Promise<string> {
+  if (!cfg) throw new Error('FACEBOOK_PAGE_ID / FACEBOOK_PAGE_ACCESS_TOKEN tanımlı değil');
+  const { pageId, token } = await withPageToken(cfg);
+  const photo = await graphPost(`${pageId}/photos`, buildPhotoParams(imageUrl, '', token, false));
+  const r = await graphPost(`${pageId}/photo_stories`, new URLSearchParams({ photo_id: String(photo.id), access_token: token }));
+  return String(r.post_id ?? photo.id);
 }
