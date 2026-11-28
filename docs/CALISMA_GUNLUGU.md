@@ -19,6 +19,13 @@ Her iş bitiminde (kod, sunucu, dış hizmet ya da yalnız araştırma) bu dosya
 
 ---
 
+## 28.11.2026 — TikTok uygulaması incelemeye gönderildi
+- Neden: kullanıcı hazırlanan videolarla başvurunun gönderilmesini istedi.
+- Ne: "KartaBaski" uygulamasının Production sürümü incelemede ("In review").
+- Nasıl: geliştirici sayfasında boş kalan form dolduruldu (simge, açıklama, kategori "Business", kullanım şartları ve gizlilik adresleri, web platformu, açıklama metni, iki demo videosu, Login Kit ve Content Posting API, yönlendirme adresi; kapsamlar yalnız `user.info.basic` ve `video.upload`; Direct Post kapalı). Web adresi doğrulaması için sondaki `/` gerekti.
+- Doğrulama: kaydettikten sonra sayfa yenilendi, alanlar kalıcıydı; gönderim sonrası "is in review" uyarısı görüldü.
+- Açık: TikTok'un yanıtı. Videoda izin ekranı görünmediği için reddedilebilir; o durumda web videosu yeniden çekilecek. Onay gelince sunucuya sandbox yerine canlı anahtar ve gizli anahtar yazılacak (kullanıcı girer), hesap yeniden bağlanacak.
+
 ## 28.11.2026 — TikTok demo videoları hazırlandı (yarım: izin ekranı görünmüyor)
 - Neden: TikTok incelemesi için kullanıcının iki ekran kaydı yüklemeye hazırlanacaktı.
 - Ne: web (28 sn) ve telefon (26 sn) videosu MP4 olarak, İngilizce adım altyazılarıyla; dosyalar kullanıcının bilgisayarında, depoda değil.
