@@ -19,6 +19,17 @@ Her iş bitiminde (kod, sunucu, dış hizmet ya da yalnız araştırma) bu dosya
 
 ---
 
+## 29.11.2026 — Tasarım arayüzü stüdyo düzenine geçti
+- Neden: kullanıcı telefonda denedi; işlevler iyi ama arayüz metin ağırlıklı. Canva benzeri, grafik tabanlı bir arayüz istedi (masaüstü ve telefon, tasarımla ilgili bütün ekranlar).
+- Ne:
+  - `/tasarla` ve `/konfigurator` tam ekran stüdyo: koyu üst çubuk (geri al, katmanlar, indir, sepete ekle), tuval ve 3D kupa birlikte, telefonda altta simge çubuğu ve alttan panel, masaüstünde solda simge şeridi ve panel, tuvalin üstünde araç çubuğu. Bu iki sayfada site menüsü ve alt bilgi yok.
+  - Seçenekler yazı yerine resim: düzenler, yazı stilleri, desenler, şekil/filtre/kırpma/efekt/kavis küçük resimleri (müşterinin fotoğrafı ve yazısıyla), renk yuvarlakları, süs grubu simgeleri, katman küçük resimleri.
+  - Öğe seçilince simge araç çubuğu; her araç tek ayar paneli açar. Yazıya çift tıklayınca yazma paneli.
+  - Adet, not ve “tasarımım yok” sipariş penceresine taşındı; pencerede tasarımın görüntüsü var.
+- Nasıl: `components/tasarim/` yeniden kuruldu (`Studyo.tsx`, `AracCubugu.tsx`, `panel/`, `Kucuk.tsx`, `studyo.css`, Phosphor simgeleri `ikonlar.tsx`). Katman modeli, çizim, sipariş ve sunucu kuralları değişmedi. 3D sepet görseli artık ekrandaki alan boyundan bağımsız sabit ölçüde alınır (panel açıkken kupa alanı küçülebiliyor).
+- Doğrulama: 793 test, tip denetimi, lint, ayrı kopyada üretim derlemesi; sahte verili tarayıcıda 360, 390 ve 1366 piksel: düzen, yazı, yazı tipi, efekt, fotoğraf şekli ve filtresi, süs, desen, kupa rengi, katmanlar, iki yüz, sipariş penceresi, sepete ekleme, konfigüratörden tasarıma geçiş. Gerçek telefonda klavye açıkken görünüm denenmedi.
+- Açık / dikkat: telefonda panel açıkken yer kalmazsa 3D kupa gizlenir, baskı alanı kalır.
+
 ## 28.11.2026 — Tasarım ekranı yenilendi, sosyal hesap bağlantıları eklendi
 - Neden: kullanıcı sitedeki iletişim alanlarına bütün sosyal hesapları, tasarım ekranına da çok sayıda yazı tipi, yazıyı kupa üstünde baskı sınırı içinde taşıma ve yaratıcı araçlar istedi; önerilen üç paketin tamamını onayladı.
 - Ne:

@@ -27,6 +27,7 @@ export default function Cup3D({ model, color, label, design, twoSided, backDesig
   const backPhoto = useReadyPrint(twoSided ? backDesign : null);
   return (
     <Mug3D
+      compact
       model={model}
       colors={colors}
       label={label}

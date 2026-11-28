@@ -233,6 +233,14 @@ const WHITE = { body: '#E9ECEE', inner: '#E2E6E8' };
 
 const all = (c: { body: string; inner: string }): MugColors => ({ ...c, handle: c.body, band: c.body, saucer: c.body });
 
+/** Renk seçicideki yuvarlağın rengi: kupada o adla boyanan parça. */
+export function swatchColor(m: MugModel | null, name: string): string {
+  const key = name.trim().toLocaleLowerCase('tr-TR');
+  if (key === 'beyaz') return '#FFFFFF';
+  if (key === 'transparan') return '#E7E3D6';
+  return m?.colors[key] ?? PORCELAIN[key] ?? CREAMWARE[key] ?? '#FFFFFF';
+}
+
 /** Katalogdaki renk adından kupa renkleri; bilinmeyen ve "Beyaz" düz beyazdır. */
 export function mugPalette(m: MugModel, color?: string): MugColors {
   const key = (color ?? '').trim().toLocaleLowerCase('tr-TR');

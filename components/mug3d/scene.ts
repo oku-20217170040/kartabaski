@@ -11,6 +11,8 @@ const MIN_ZOOM = 0.75;
 const MAX_ZOOM = 1.6;
 const MIN_TILT = -0.05;
 const MAX_TILT = 0.75;
+const SHOT_WIDTH = 960;
+const SHOT_HEIGHT = 720;
 
 export interface View { turn: number; tilt: number }
 export const VIEWS = {
@@ -208,10 +210,26 @@ export function createMugScene(host: HTMLElement, model: MugModel) {
      * iki yüzde ön ve arka yan yana, altlarında adlarıyla.
      */
     snapshot: (background: string, twoSided = false): Promise<Blob | null> => {
+      // Ekrandaki alan küçük ya da gizli olsa da görüntü aynı boyda alınır.
+      const shown = renderer.getSize(new THREE.Vector2());
+      const ratio = renderer.getPixelRatio();
+      const aspect = camera.aspect;
+      renderer.setPixelRatio(1);
+      renderer.setSize(SHOT_WIDTH, SHOT_HEIGHT, false);
+      camera.aspect = SHOT_WIDTH / SHOT_HEIGHT;
+      camera.updateProjectionMatrix();
       const { width, height } = renderer.domElement;
+      const restore = () => {
+        renderer.setPixelRatio(ratio);
+        renderer.setSize(shown.x, shown.y, false);
+        camera.aspect = aspect;
+        camera.updateProjectionMatrix();
+        place(now, now.zoom);
+        renderer.render(scene, camera);
+      };
       const out = document.createElement('canvas');
       const ctx = out.getContext('2d');
-      if (!ctx) return Promise.resolve(null);
+      if (!ctx) { restore(); return Promise.resolve(null); }
       out.width = twoSided ? height * 2 : Math.max(width, height);
       out.height = twoSided ? height : out.width;
       ctx.fillStyle = background;
@@ -241,6 +259,7 @@ export function createMugScene(host: HTMLElement, model: MugModel) {
         ctx.drawImage(renderer.domElement, (out.width - width) / 2, (out.height - height) / 2);
       }
       applyHeat(heat);
+      restore();
       request();
       return new Promise((resolve) => out.toBlob(resolve, 'image/jpeg', 0.9));
     },

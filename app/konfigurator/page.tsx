@@ -1,6 +1,4 @@
-import type { Metadata } from 'next';
-import Navbar from '@/components/Navbar';
-import Footer from '@/components/Footer';
+import type { Metadata, Viewport } from 'next';
 import ConfiguratorClient from './ConfiguratorClient';
 
 export const metadata: Metadata = {
@@ -9,14 +7,12 @@ export const metadata: Metadata = {
   alternates: { canonical: '/konfigurator' },
 };
 
+export const viewport: Viewport = { width: 'device-width', initialScale: 1, interactiveWidget: 'resizes-content' };
+
 export default function ConfiguratorPage() {
   return (
-    <>
-      <Navbar />
-      <main id="icerik" className="kf">
-        <ConfiguratorClient />
-      </main>
-      <Footer />
-    </>
+    <main id="icerik">
+      <ConfiguratorClient />
+    </main>
   );
 }

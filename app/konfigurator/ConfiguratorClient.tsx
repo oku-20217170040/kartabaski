@@ -1,8 +1,7 @@
 'use client';
 
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { collection, getDocs, orderBy, query } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import type { ConfiguratorCup, ConfiguratorDesign } from '@/types';
@@ -12,16 +11,20 @@ import { cupToProduct } from '@/lib/configurator-lines';
 import { MAX_QTY, clampQty } from '@/lib/cart';
 import { cloudinaryUrl } from '@/lib/format';
 import { trackEvent } from '@/lib/analytics-client';
-import { CartIcon } from '@/components/cart/CartLink';
-import { CloseIcon, WhatsAppIcon } from '@/components/icons';
+import { WhatsAppIcon } from '@/components/icons';
 import { mugModelFor } from '@/lib/mug3d';
-import { useMediaQuery } from '@/lib/use-media-query';
+import { Menu, UstCubuk } from '@/components/tasarim/Studyo';
+import { ICart, IMug, IPalette, IPattern, IPencil, IPlus, IUpload, MugGlyph } from '@/components/tasarim/ikonlar';
 import { SIDES, SIDE_HINTS, SIDE_LABELS, SideId } from '@/lib/design-sides';
 import { saveDraft } from '@/lib/design-draft';
 import Cup3D from './Cup3D';
 import { WHATSAPP_BASE } from '@/lib/constants';
 import '@/components/cart/cart.css';
+import '@/components/tasarim/studyo.css';
 import './konfigurator.css';
+
+type PanelTab = 'kupa' | 'renk' | 'desen';
+const PANEL_TITLES: Record<PanelTab, string> = { kupa: 'Kupanızı seçin', renk: 'Renk', desen: 'Desen' };
 
 const CUSTOM = '__custom__';
 const ALL = 'Tümü';
@@ -49,9 +52,7 @@ export default function ConfiguratorClient() {
   const [qty, setQty] = useState(1);
   const [warning, setWarning] = useState('');
   const [no3d, setNo3d] = useState(false);
-  const [viewing, setViewing] = useState(false);
-  const dialog = useRef<HTMLDialogElement>(null);
-  const narrow = useMediaQuery('(max-width: 960px)');
+  const [tab, setTab] = useState<PanelTab>('kupa');
 
   const load = useCallback(async () => {
     setState('loading');
@@ -101,15 +102,9 @@ export default function ConfiguratorClient() {
       backDesign={backDesign?.imagePublicId}
       view={editing}
       onView={twoSided ? setSide : undefined}
-      onUnsupported={() => { setNo3d(true); setViewing(false); }}
+      onUnsupported={() => setNo3d(true)}
     />
   );
-
-  useEffect(() => {
-    const el = dialog.current;
-    if (viewing && el && !el.open) el.showModal();
-  }, [viewing]);
-  useEffect(() => { if (narrow === false) setViewing(false); }, [narrow]);
 
   const pickCup = (id: string) => {
     setWarning('');
@@ -141,171 +136,166 @@ export default function ConfiguratorClient() {
     router.push('/sepet');
   };
 
-  return (
-    <div className="wrap">
-      <header className="page-head">
-        <nav aria-label="Sayfa yolu">
-          <ol className="breadcrumb">
-            <li><Link href="/">Ana sayfa</Link></li>
-            <li aria-current="page">Kendin tasarla</li>
-          </ol>
-        </nav>
-        <h1 className="display">Kupayı ve deseni seçin.</h1>
-        <p className="lead">Hazır desenlerden birini sepete ekleyin ya da kendi fotoğrafınızı koyun.</p>
-      </header>
+  const ready3 = state === 'ready' && cups.length > 0;
+  const cupColors = cup ? variants(cup) : [];
+  const price = cup ? `${fmt(cup.price * (anyCustom ? 1 : qty))}₺` : '';
+  const subtitle = cup ? `${cupLabel} · ${designLabel ?? 'Desen seçin'}` : 'Kupa ve desen seçin';
 
-      {state === 'failed' ? (
-        <div className="kf-empty" role="alert">
-          <p>Kupalar yüklenemedi. Bağlantınızı kontrol edip tekrar deneyin.</p>
-          <button type="button" className="btn btn-primary" onClick={load}>Tekrar deneyin</button>
+  const pickTile = (c: ConfiguratorCup) => (
+    <li key={c.id}>
+      <button type="button" className="kf-tile" aria-pressed={cupId === c.id} onClick={() => pickCup(c.id)}>
+        <span className="kf-art">
+          {c.imagePublicId && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={cupImage(c.imagePublicId, 360)} alt="" loading="lazy" />
+          )}
+        </span>
+        <span className="kf-name">{c.name}</span>
+        <span className="kf-price">{fmt(c.price)}₺</span>
+      </button>
+    </li>
+  );
+
+  const panel = tab === 'kupa' ? (
+    <ul className="kf-grid" id="cups-track">{cups.map(pickTile)}</ul>
+  ) : tab === 'renk' ? (
+    cup && cupColors.length ? (
+      <div className="kf-swatches" role="group" aria-label={`${cup.name} rengi`}>
+        <button type="button" className="kf-swatch" aria-pressed={!chosenColor} onClick={() => setColor(null)}>
+          {cup.imagePublicId && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={cupImage(cup.imagePublicId, 220)} alt="" />
+          )}
+          <span>Standart</span>
+        </button>
+        {cupColors.map((c) => (
+          <button key={c.name} type="button" className="kf-swatch" aria-pressed={chosenColor?.name === c.name} onClick={() => setColor(c.name)}>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={cupImage(c.images[0], 220)} alt="" loading="lazy" />
+            <span>{c.name}</span>
+          </button>
+        ))}
+      </div>
+    ) : <p className="std-empty">{cup ? 'Bu kupanın başka rengi yok.' : 'Önce bir kupa seçin.'}</p>
+  ) : (
+    <>
+      <div className="std-sticky">
+        <div className="std-choice" role="group" aria-label="Baskı">
+          <button type="button" aria-pressed={!twoSided} onClick={() => { setWarning(''); setTwoSided(false); }}><MugGlyph face="front" size={34} /> Tek yüz</button>
+          <button type="button" aria-pressed={twoSided} onClick={() => { setWarning(''); setTwoSided(true); }}><MugGlyph face="both" size={34} /> İki yüz</button>
         </div>
-      ) : state === 'loading' ? (
-        <div className="kf-grid kf-loading" aria-label="Yükleniyor">
-          {Array.from({ length: 4 }).map((_, i) => <div key={i} className="skeleton kf-skeleton" />)}
-        </div>
-      ) : cups.length === 0 ? (
-        <div className="kf-empty">
-          <p>Şu an seçilebilir kupa yok. İstediğinizi WhatsApp’tan yazın.</p>
-          <a className="btn btn-primary" href={ASK_HREF} target="_blank" rel="noopener noreferrer"><WhatsAppIcon /> WhatsApp’tan yazın</a>
-        </div>
-      ) : (
-        <div className={`kf-layout${model ? ' has-3d' : ''}`}>
-          <div className="kf-choices">
-            <section aria-labelledby="kf-kupa">
-              <h2 id="kf-kupa" className="h3">Kupa</h2>
-              <ul className="kf-grid" id="cups-track">
-                {cups.map((c) => (
-                  <li key={c.id}>
-                    <button type="button" className="kf-tile" aria-pressed={cupId === c.id} onClick={() => pickCup(c.id)}>
-                      <span className="kf-art">
-                        {c.imagePublicId && (
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img src={cupImage(c.imagePublicId, 360)} alt="" loading="lazy" />
-                        )}
-                      </span>
-                      <span className="kf-name">{c.name}</span>
-                      <span className="kf-price">{fmt(c.price)}₺</span>
-                    </button>
-                  </li>
-                ))}
-              </ul>
-
-              {cup && variants(cup).length > 0 && (
-                <div className="kf-colors">
-                  <p id="kf-renk">{cup.name} rengi: <b>{chosenColor?.name ?? 'Standart'}</b></p>
-                  <div className="kf-swatches" role="group" aria-labelledby="kf-renk">
-                    <button type="button" className="kf-swatch" aria-pressed={!chosenColor} onClick={() => setColor(null)}>
-                      {cup.imagePublicId && (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img src={cupImage(cup.imagePublicId, 144)} alt="" />
-                      )}
-                      <span>Standart</span>
-                    </button>
-                    {variants(cup).map((c) => (
-                      <button key={c.name} type="button" className="kf-swatch" aria-pressed={chosenColor?.name === c.name} onClick={() => setColor(c.name)}>
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img src={cupImage(c.images[0], 144)} alt="" loading="lazy" />
-                        <span>{c.name}</span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </section>
-
-            <section aria-labelledby="kf-desen">
-              <h2 id="kf-desen" className="h3">Desen</h2>
-              <div className="kf-print" role="group" aria-label="Baskı">
-                <button type="button" className="kf-chip" aria-pressed={!twoSided} onClick={() => { setWarning(''); setTwoSided(false); }}>Tek yüz</button>
-                <button type="button" className="kf-chip" aria-pressed={twoSided} onClick={() => { setWarning(''); setTwoSided(true); }}>İki yüze ayrı desen</button>
-              </div>
-              {twoSided && (
-                <div className="kf-sides" role="group" aria-label="Desen seçtiğiniz yüz">
-                  {SIDES.map((id) => (
-                    <button key={id} type="button" aria-pressed={side === id} onClick={() => setSide(id)}>
-                      <b>{SIDE_LABELS[id]}</b>
-                      <span>{nameOf(picked[id]) ?? `${SIDE_HINTS[id]} · seçilmedi`}</span>
-                    </button>
-                  ))}
-                </div>
-              )}
-              {categories.length > 2 && (
-                <div className="mood-tabs kf-tabs" role="group" aria-label="Desen türü">
-                  {categories.map((c) => (
-                    <button key={c} type="button" className="mood-tab" aria-pressed={category === c} onClick={() => setCategory(c)}>{c}</button>
-                  ))}
-                </div>
-              )}
-              <ul className="kf-grid" id="designs-track">
-                {category === ALL && (
-                  <li>
-                    <button type="button" className="kf-tile is-custom" aria-pressed={isCustom} onClick={() => pickDesign(CUSTOM)}>
-                      <span className="kf-art">Fotoğraf, logo ya da yazınız</span>
-                      <span className="kf-name">Kendi Tasarımım</span>
-                    </button>
-                  </li>
-                )}
-                {shown.map((d) => (
-                  <li key={d.id}>
-                    <button type="button" className="kf-tile" aria-pressed={designId === d.id} onClick={() => pickDesign(d.id)}>
-                      <span className="kf-art is-design">
-                        {d.imagePublicId ? (
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img src={designImage(d.imagePublicId)} alt="" loading="lazy" />
-                        ) : d.code}
-                      </span>
-                      <span className="kf-name">{d.name}</span>
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            </section>
-
-            <p className="kf-ask">
-              Aradığınız desen yok mu?{' '}
-              <a href={ASK_HREF} target="_blank" rel="noopener noreferrer">WhatsApp’tan yazın</a>
-            </p>
+        {categories.length > 2 && (
+          <div className="std-chips" role="group" aria-label="Desen türü">
+            {categories.map((c) => (
+              <button key={c} type="button" className="std-chip" aria-pressed={category === c} onClick={() => setCategory(c)}>{c}</button>
+            ))}
           </div>
+        )}
+      </div>
+      <ul className="kf-grid is-designs" id="designs-track">
+        {category === ALL && (
+          <li>
+            <button type="button" className="kf-tile is-custom" aria-pressed={isCustom} onClick={() => pickDesign(CUSTOM)}>
+              <span className="kf-art"><IUpload size={36} /></span>
+              <span className="kf-name">Kendi tasarımım</span>
+            </button>
+          </li>
+        )}
+        {shown.map((d) => (
+          <li key={d.id}>
+            <button type="button" className="kf-tile" aria-pressed={designId === d.id} onClick={() => pickDesign(d.id)}>
+              <span className="kf-art is-design">
+                {d.imagePublicId ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={designImage(d.imagePublicId)} alt="" loading="lazy" />
+                ) : d.code}
+              </span>
+              <span className="kf-name">{d.name}</span>
+            </button>
+          </li>
+        ))}
+      </ul>
+      <p className="kf-ask">
+        Aradığınız desen yok mu?{' '}
+        <a href={ASK_HREF} target="_blank" rel="noopener noreferrer">WhatsApp’tan yazın</a>
+      </p>
+    </>
+  );
 
-          <aside className="kf-summary" aria-label="Seçiminiz">
-            {model && narrow === false && (
-              <div className="kf-3d">
-                {view3d}
-                <p>{cupLabel} · {designLabel ?? 'Desen seçin'}</p>
+  return (
+    <div className="std kf has-panel">
+      <UstCubuk back="/" title="Kendin tasarla" subtitle={subtitle}>
+        {price && <p className="kf-total">{price}</p>}
+        <button type="button" className="std-buy" onClick={order} data-complete={complete} disabled={!ready3}>
+          {anyCustom ? <><IPencil size={20} /> <span>Tasarla</span></> : <><ICart size={20} /> <span>Sepete ekle</span></>}
+        </button>
+      </UstCubuk>
+
+      <Menu
+        label="Seçim adımları" active={tab} onPick={setTab}
+        items={[
+          { id: 'kupa', label: 'Kupa', icon: <IMug /> },
+          { id: 'renk', label: 'Renk', icon: <IPalette /> },
+          { id: 'desen', label: 'Desen', icon: <IPattern /> },
+        ]}
+      />
+
+      <section className="std-panel" aria-label={PANEL_TITLES[tab]}>
+        <div className="std-panel-head"><h2>{PANEL_TITLES[tab]}</h2></div>
+        <div className="std-panel-body" key={tab}>
+          {state === 'loading' ? (
+            <div className="kf-grid" aria-label="Yükleniyor">
+              {Array.from({ length: 4 }).map((_, i) => <div key={i} className="skeleton kf-skeleton" />)}
+            </div>
+          ) : ready3 ? panel : null}
+        </div>
+      </section>
+
+      <div className="std-context is-idle">
+        <p className="kf-summary">{subtitle}</p>
+      </div>
+
+      <div className="std-work">
+        {state === 'failed' ? (
+          <div className="kf-empty" role="alert">
+            <p>Kupalar yüklenemedi. Bağlantınızı kontrol edip tekrar deneyin.</p>
+            <button type="button" className="btn btn-primary" onClick={load}>Tekrar deneyin</button>
+          </div>
+        ) : state === 'ready' && cups.length === 0 ? (
+          <div className="kf-empty">
+            <p>Şu an seçilebilir kupa yok. İstediğinizi WhatsApp’tan yazın.</p>
+            <a className="btn btn-primary" href={ASK_HREF} target="_blank" rel="noopener noreferrer"><WhatsAppIcon /> WhatsApp’tan yazın</a>
+          </div>
+        ) : (
+          <>
+            {twoSided && (
+              <div className="std-sides" role="group" aria-label="Desen seçtiğiniz yüz">
+                {SIDES.map((id) => (
+                  <button key={id} type="button" aria-pressed={side === id} onClick={() => { setSide(id); setTab('desen'); }} title={SIDE_HINTS[id]}>
+                    <MugGlyph face={id} size={30} /> {SIDE_LABELS[id]}
+                    <i className={picked[id] ? 'is-full' : undefined} role="img" aria-label={picked[id] ? 'seçildi' : 'seçilmedi'} />
+                  </button>
+                ))}
               </div>
             )}
-            {model && narrow && (
-              <button type="button" className="btn kf-see" onClick={() => setViewing(true)}>Kupayı görün</button>
-            )}
-            <div className={`kf-pair${twoSided ? ' is-two' : ''}`}>
-              <figure>
-                <span className="kf-art">
-                  {chosenCupImage ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={cupImage(chosenCupImage, 360)} alt="" />
-                  ) : 'Kupa'}
-                </span>
-                <figcaption>{cup ? `${cup.name}${chosenColor ? `, ${chosenColor.name}` : ''}` : 'Kupa seçin'}</figcaption>
-              </figure>
+            <div className="std-mug">
+              {model ? view3d : chosenCupImage ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img className="std-product" src={cupImage(chosenCupImage, 800)} alt={cupLabel} />
+              ) : <p className="kf-hint"><IMug size={64} />Kupa seçin</p>}
+            </div>
+            <div className="kf-bar">
               {used.map((id) => {
                 const d = find(picked[id]);
-                const custom = picked[id] === CUSTOM;
                 return (
-                  <figure key={id}>
-                    <span className="kf-art is-design">
-                      {d?.imagePublicId ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img src={designImage(d.imagePublicId)} alt="" />
-                      ) : custom ? 'Sizin tasarımınız' : d?.code ?? 'Desen'}
-                    </span>
-                    <figcaption>{twoSided ? `${SIDE_LABELS[id]}: ` : ''}{nameOf(picked[id]) ?? 'Desen seçin'}</figcaption>
-                  </figure>
+                  <button key={id} type="button" className="kf-chosen" onClick={() => { setSide(id); setTab('desen'); }} aria-label={`${SIDE_LABELS[id]} deseni: ${nameOf(picked[id]) ?? 'seçilmedi'}`}>
+                    {d?.imagePublicId ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={designImage(d.imagePublicId)} alt="" />
+                    ) : picked[id] === CUSTOM ? <IUpload size={24} /> : <IPlus size={24} />}
+                  </button>
                 );
               })}
-            </div>
-
-            <div className="kf-buy">
-              <p className="kf-total">{cup ? `${fmt(cup.price * (anyCustom ? 1 : qty))}₺` : ''}</p>
               {!anyCustom && (
                 <div className="cart-qty" role="group" aria-label="Adet">
                   <button type="button" onClick={() => setQty(clampQty(qty - 1))} disabled={qty <= 1} aria-label="Adedi azalt">−</button>
@@ -314,26 +304,12 @@ export default function ConfiguratorClient() {
                 </div>
               )}
             </div>
-
-            <p className="kf-warning" role="alert">{warning}</p>
-            <button type="button" className="btn btn-primary btn-block kf-order" onClick={order} data-complete={complete}>
-              <CartIcon size={20} /> {anyCustom ? 'Fotoğrafınızı ekleyin' : 'Sepete ekle'}
-            </button>
-            <p className="kf-note">Baskıdan önce önizleme gönderiyoruz; onayınızdan sonra 3 iş gününde kargoda.</p>
-          </aside>
+          </>
+        )}
+        <div className="std-toasts">
+          {warning && <p className="std-toast is-error" role="alert">{warning}&nbsp;</p>}
         </div>
-      )}
-
-      {model && narrow && viewing && (
-        <dialog ref={dialog} className="kf-dialog" aria-label={cupLabel} onClose={() => setViewing(false)}>
-          <div className="kf-dialog-head">
-            <p>{cupLabel}<br /><span>{designLabel ?? 'Desen seçilmedi'}</span></p>
-            <button type="button" onClick={() => dialog.current?.close()} aria-label="Kapat"><CloseIcon /></button>
-          </div>
-          {view3d}
-          <button type="button" className="btn btn-primary btn-block" onClick={() => dialog.current?.close()}>Seçime dönün</button>
-        </dialog>
-      )}
+      </div>
     </div>
   );
 }

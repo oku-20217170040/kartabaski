@@ -18,6 +18,8 @@ interface Props {
   /** `tag`: arka arkaya gelen aynı hareket geri almada tek adım olsun. */
   onChange: (id: string, patch: Partial<Layer>, tag: string) => void;
   onRemove: (id: string) => void;
+  /** Çift tıklanan öğe (yazıyı değiştirmek için). */
+  onEdit?: (id: string) => void;
   label: string;
 }
 
@@ -38,7 +40,7 @@ interface Gesture {
 const TOUCH_SLACK = 22;
 
 /** Baskı alanının düz görünümü: katmanlar burada tutulup taşınır, büyütülür ve döndürülür. */
-export default function Tahta({ sheet, background, layers, assets, geometry, selected, onSelect, onChange, onRemove, label }: Props) {
+export default function Tahta({ sheet, background, layers, assets, geometry, selected, onSelect, onChange, onRemove, onEdit, label }: Props) {
   const box = useRef<HTMLDivElement>(null);
   const canvas = useRef<HTMLCanvasElement>(null);
   const pointers = useRef(new Map<number, { x: number; y: number }>());
@@ -185,6 +187,11 @@ export default function Tahta({ sheet, background, layers, assets, geometry, sel
       onPointerMove={onPointerMove}
       onPointerUp={onPointerEnd}
       onPointerCancel={onPointerEnd}
+      onDoubleClick={(e) => {
+        const p = toSheet(e.clientX, e.clientY);
+        const hit = hitLayer(geometry, p.x, p.y);
+        if (hit) onEdit?.(hit.id);
+      }}
       onKeyDown={onKeyDown}
     >
       <canvas ref={canvas} width={sheet.width} height={sheet.height} aria-hidden="true" />
@@ -206,7 +213,7 @@ export default function Tahta({ sheet, background, layers, assets, geometry, sel
           <button type="button" className="tst-handle is-remove" data-handle="remove" aria-label="Seçili öğeyi sil" onClick={() => onRemove(current.id)}><i>×</i></button>
         </div>
       )}
-      {!layers.length && <p className="tst-empty">Yazı, fotoğraf ya da süs ekleyin; burada sürükleyip yerleştirin.</p>}
+      {!layers.length && <p className="tst-empty">Tasarımınız burada</p>}
     </div>
   );
 }

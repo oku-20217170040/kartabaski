@@ -8,3 +8,19 @@
 .m3d-buttons { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; }
 .m3d-buttons button { min-width: 44px; min-height: 44px; padding: 0 10px; border: 2px solid currentColor; border-radius: var(--radius); background: transparent; color: inherit; font: inherit; font-size: 14.5px; font-weight: 650; cursor: pointer; }
 .m3d-buttons button[aria-pressed="true"], .m3d-buttons button:hover { background: var(--ink); border-color: var(--ink); color: var(--paper); }
+
+/* Stüdyo: kupa bütün alanı kaplar, düğmeler sağ kenarda. */
+.m3d.is-compact { position: relative; display: block; justify-items: start; width: 100%; max-width: none; height: 100%; container-type: size; }
+/* Sağdaki pay: düğmeler kulpun üstüne gelmesin. */
+.m3d.is-compact .m3d-stage { width: calc(100% - 56px); height: 100%; aspect-ratio: auto; }
+.m3d.is-compact .m3d-buttons { position: absolute; top: 50%; right: 8px; transform: translateY(-50%); flex-direction: column; flex-wrap: nowrap; gap: 4px; }
+.m3d.is-compact .m3d-buttons button { display: grid; place-items: center; width: 44px; padding: 0; border: 0; background: var(--paper); color: var(--ink); }
+.m3d.is-compact .m3d-buttons button[aria-pressed="true"], .m3d.is-compact .m3d-buttons button:hover { background: var(--ink); color: var(--paper); }
+/* Alan alçaksa düğmeler iki sütuna iner; çok alçaksa gizlenir. */
+@container (max-height: 300px) {
+  .m3d.is-compact .m3d-buttons { display: grid; grid-template-columns: repeat(2, 44px); }
+  .m3d.is-compact .m3d-stage { width: calc(100% - 104px); }
+}
+@container (max-height: 150px) {
+  .m3d.is-compact .m3d-buttons { display: none; }
+}
