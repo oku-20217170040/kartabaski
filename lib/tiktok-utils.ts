@@ -7,6 +7,7 @@ export const TIKTOK_SCOPES = 'user.info.basic,video.upload';
 export const TIKTOK_TITLE_MAX = 90; // karusel başlığı
 export const TIKTOK_DESC_MAX = 4000; // karusel açıklaması
 export const TIKTOK_MAX_PHOTOS = 35;
+export const TIKTOK_MAX_TAGS = 5; // TikTok bir gönderide en fazla 5 etikete izin veriyor
 /** TikTok'un doğrulanmış URL öneki altında sunulan fotoğraf ara adresi (Content Posting PULL_FROM_URL). */
 export const TIKTOK_MEDIA_PATH = '/api/tiktok/media';
 
@@ -24,6 +25,14 @@ export function buildAuthUrl(opts: { clientKey: string; redirectUri: string; sta
 
 const cut = (s: string, max: number) => (s.length > max ? `${s.slice(0, Math.max(0, max - 1)).trimEnd()}…` : s);
 
+const TAG_RE = /[ 	]*#[^\s#]+/g;
+
+/** Metindeki ilk `max` etiketi bırakır, kalanları (önündeki boşlukla) siler. */
+export function limitHashtags(text: string, max = TIKTOK_MAX_TAGS): string {
+  let seen = 0;
+  return text.replace(TAG_RE, (tag) => (++seen <= max ? tag : ''));
+}
+
 /** Karusel başlığı: model adı ve fiyat, 90 karakteri geçmez. */
 export function tiktokTitle(title: string, priceText: string): string {
   const price = ` · ${priceText}`;
@@ -40,7 +49,7 @@ export function tiktokDescription(opts: {
   phoneDisplay: string;
 }): string {
   const header = `${opts.priceText} · ${opts.category}`;
-  const tags = socialHashtags(opts.category, ['hediye', 'kupa'], 8).join(' ');
+  const tags = socialHashtags(opts.category, ['hediye', 'kupa'], TIKTOK_MAX_TAGS).join(' ');
   const footer = `\n\nKişiye özel baskı${opts.deliveryDays ? ` · ${opts.deliveryDays} iş günü teslimat` : ''}\nWhatsApp ile sipariş: ${opts.phoneDisplay}\n${opts.url}\n${tags}`;
   const desc = opts.description.replace(/\r/g, '').trim();
   const room = TIKTOK_DESC_MAX - header.length - footer.length - 2;
@@ -55,7 +64,11 @@ export function buildPhotoDraftBody(opts: { title: string; description: string; 
   return {
     media_type: 'PHOTO',
     post_mode: 'MEDIA_UPLOAD',
-    post_info: { title: opts.title, description: opts.description },
+    // Sınır başlık + açıklama toplamı için uygulanır (metin panelden ya da elle gelebilir)
+    post_info: {
+      title: limitHashtags(opts.title),
+      description: limitHashtags(opts.description, Math.max(0, TIKTOK_MAX_TAGS - (limitHashtags(opts.title).match(TAG_RE)?.length ?? 0))),
+    },
     source_info: { source: 'PULL_FROM_URL', photo_cover_index: 0, photo_images: photos },
   };
 }
