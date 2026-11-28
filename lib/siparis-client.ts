@@ -83,10 +83,10 @@ export async function submitOrder(
         const b = d?.back;
         return {
           productId: item.productId, qty: item.qty, color: item.color, note: item.note,
-          text: d?.text, font: d?.font, placement: d?.placement, removeBg: d?.removeBg, needsDesign: d?.needsDesign,
+          text: d?.text, font: d?.font, placement: d?.placement, removeBg: d?.removeBg, layers: d?.layers, needsDesign: d?.needsDesign,
           photoCount: photos.length, hasPreview: Boolean(preview), readyId: d?.ready?.id,
           back: b && {
-            text: b.text, font: b.font, placement: b.placement, removeBg: b.removeBg,
+            text: b.text, font: b.font, placement: b.placement, removeBg: b.removeBg, layers: b.layers,
             photoCount: backPhotos.length, readyId: b.ready?.id,
           },
         };

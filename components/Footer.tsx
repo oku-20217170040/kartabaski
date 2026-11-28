@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { WHATSAPP_BASE, DEFAULT_WA_TEXT, PHONE, PHONE_DISPLAY } from '@/lib/constants';
-import { INSTAGRAM_URL } from '@/lib/site';
-import { WhatsAppIcon, InstagramIcon, PhoneIcon, MailIcon } from '@/components/icons';
+import SocialLinks from '@/components/SocialLinks';
+import { WhatsAppIcon, PhoneIcon, MailIcon } from '@/components/icons';
 
 const EMAIL = 'info@kartabaski.com';
 const WA_HREF = `${WHATSAPP_BASE}?text=${encodeURIComponent(DEFAULT_WA_TEXT)}`;
@@ -57,7 +57,9 @@ export default function Footer() {
               <li><a href={WA_HREF} target="_blank" rel="noopener noreferrer"><WhatsAppIcon size={16} /> WhatsApp</a></li>
               <li><a href={`tel:+${PHONE}`}><PhoneIcon size={16} /> {PHONE_DISPLAY}</a></li>
               <li><a href={`mailto:${EMAIL}`}><MailIcon size={16} /> {EMAIL}</a></li>
-              <li><a href={INSTAGRAM_URL} target="_blank" rel="noopener noreferrer"><InstagramIcon size={16} /> Instagram</a></li>
+            </ul>
+            <ul className="footer-social" aria-label="Sosyal hesaplarımız">
+              <SocialLinks as="li" size={16} />
             </ul>
           </div>
         </div>

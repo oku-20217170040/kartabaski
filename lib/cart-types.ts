@@ -1,5 +1,6 @@
 // Sepet tipleri — istemci ve sunucu ortak kullanır (server-only içermez).
 import type { Placement } from './photo-layout';
+import type { Layer } from './tasarim/model';
 
 export interface ReadyDesign { id: string; name: string; image?: string }
 
@@ -9,6 +10,8 @@ export interface DesignSide {
   font?: 'duz' | 'el';
   placement?: Placement;
   removeBg?: boolean;
+  /** Tasarım ekranının katmanları. Yoksa eski biçim (yazı + tek fotoğraf) geçerlidir. */
+  layers?: Layer[];
   /** Konfigüratörden seçilen hazır tasarım. */
   ready?: ReadyDesign;
   /** lib/cart-files kimlikleri. */

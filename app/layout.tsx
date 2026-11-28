@@ -8,7 +8,7 @@ import { CartProvider } from '@/lib/cart-context';
 import SiteTracker from '@/components/SiteTracker';
 import { buildRootMetadata } from '@/lib/seo-root';
 import { PHONE, SITE_NAME } from '@/lib/constants';
-import { SITE_URL, INSTAGRAM_URL, jsonLdString } from '@/lib/site';
+import { SITE_URL, SOCIAL_LINKS, jsonLdString } from '@/lib/site';
 
 
 const DESCRIPTION = 'Kişiye özel kupa baskı. Türkiye geneli hızlı kargo. Bireysel ve kurumsal siparişler. Ücretsiz tasarım desteği.';
@@ -26,7 +26,7 @@ const localBusinessSchema = {
   url: SITE_URL,
   logo: `${SITE_URL}/logo.png`,
   image: `${SITE_URL}/logo.png`,
-  sameAs: [INSTAGRAM_URL],
+  sameAs: SOCIAL_LINKS.map((s) => s.url),
   telephone: `+${PHONE}`,
   priceRange: '₺₺',
   currenciesAccepted: 'TRY',

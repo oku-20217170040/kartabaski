@@ -93,6 +93,9 @@
 .admin-layout .prn-download { justify-self: start; justify-content: center; }
 .prn-files ul { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 12px; }
 .prn-files li { display: grid; gap: 6px; align-content: start; }
+.prn-shapes { display: grid; gap: 6px; }
+.prn-shapes ul { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; }
+.prn-shapes img { display: block; }
 .prn-files img { display: block; width: 100%; aspect-ratio: 1; object-fit: contain; background: var(--paper-2); border-radius: var(--radius); }
 .admin-layout .prn-files .btn { justify-content: center; padding-inline: 8px; font-size: 13px; }
 .prn-more summary { display: flex; align-items: center; min-height: 44px; font-size: 13.5px; font-weight: 650; cursor: pointer; }

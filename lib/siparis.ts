@@ -1,5 +1,7 @@
 import 'server-only';
 
+import { DEFAULT_FONT, Layer, layersText, printableLayers, wantsCut } from './tasarim/model';
+import { isKnownFont } from './tasarim/yazi-tipleri';
 import { randomBytes, randomInt } from 'crypto';
 import { FieldValue } from 'firebase-admin/firestore';
 import { getOrder } from './orders';
@@ -90,6 +92,19 @@ export async function getCartProductInfo(ids: string[]): Promise<CartProductInfo
   }))];
 }
 
+/**
+ * Katmanlı tasarımda yazı özeti ve arka plan isteği istemciden değil katmanlardan üretilir;
+ * listede olmayan yazı tipi düz yazıya döner. Firestore `undefined` kabul etmediği için boş alanlar atılır.
+ */
+function settleSide<T extends { layers?: Layer[]; text?: string; font?: unknown; placement?: unknown; removeBg?: boolean }>(side: T): T {
+  if (!side.layers) return side;
+  const layers = printableLayers(side.layers).map((l) => {
+    const known = (l.kind === 'text' || l.kind === 'pattern') && !isKnownFont(l.font) ? { ...l, font: DEFAULT_FONT } : l;
+    return Object.fromEntries(Object.entries(known).filter(([, v]) => v !== undefined)) as Layer;
+  });
+  return { ...side, layers, text: layersText(layers) || undefined, removeBg: wantsCut(layers) || undefined, font: undefined, placement: undefined };
+}
+
 /** Siparişi "yükleniyor" olarak açar. Ad ve fiyat Firestore'dan okunur. */
 export async function createOrder(input: OrderInput): Promise<{ token: string }> {
   const products = new Map((await readProducts(input.items.map((i) => i.productId))).map((p) => [p.id, p]));
@@ -109,8 +124,8 @@ export async function createOrder(input: OrderInput): Promise<{ token: string }>
     };
     const { readyId: backReadyId, ...backSide } = back ?? { readyId: undefined };
     lines.push(compact({
-      ...line, ready: findReady(readyId), productId, slug: getSlug(p), title: displayTitle(getTitle(p)), unitPrice: getPriceMin(p) || 0, files: [],
-      back: back ? compact({ ...backSide, ready: findReady(backReadyId), files: [] }) : undefined,
+      ...settleSide(line), ready: findReady(readyId), productId, slug: getSlug(p), title: displayTitle(getTitle(p)), unitPrice: getPriceMin(p) || 0, files: [],
+      back: back ? compact({ ...settleSide(backSide), ready: findReady(backReadyId), files: [] }) : undefined,
     }));
   });
   const token = randomBytes(16).toString('hex');

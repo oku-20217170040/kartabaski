@@ -2,6 +2,8 @@
  * Kupaya basılacak düz şablon: yazı ve fotoğraf tek bir tuvale çizilir.
  * Hem düz fotoğraf önizlemesi hem üç boyutlu kupa aynı şablonu sarar.
  */
+import type { Layer } from './tasarim/model';
+import { Assets, renderLayers } from './tasarim/ciz';
 import { DEFAULT_PLACEMENT, Placement, photoRect } from './photo-layout';
 
 export type PrintFont = 'duz' | 'el';
@@ -42,10 +44,26 @@ export interface PrintContent {
   placement?: Placement;
   /** Kupa rengi verilirse zemin boyanır ve baskı üstüne çoğaltılır (beyaz mürekkep yoktur). */
   base?: string;
+  /** Tasarım ekranının katmanları; verilirse yazı, tip, fotoğraf ve yerleşim yerine bunlar çizilir. */
+  layers?: Layer[];
+  assets?: Assets;
+}
+
+const scratches = new WeakMap<HTMLCanvasElement, HTMLCanvasElement>();
+
+/** Hedef tuval başına bir kez açılan ara tuval; her çizimde temizlenir. */
+function scratch(target: HTMLCanvasElement, width: number, height: number) {
+  let canvas = scratches.get(target);
+  if (!canvas) { canvas = document.createElement('canvas'); scratches.set(target, canvas); }
+  // Boyut ataması tuvali ve çizim ayarlarını sıfırlar.
+  canvas.width = width;
+  canvas.height = height;
+  const ctx = canvas.getContext('2d');
+  return ctx ? { canvas, ctx } : null;
 }
 
 /** Şablonu verilen tuvale çizer (`base` yoksa zemin saydam kalır). */
-export function drawPrint(canvas: HTMLCanvasElement, { text, font, photo, placement = DEFAULT_PLACEMENT, base }: PrintContent) {
+export function drawPrint(canvas: HTMLCanvasElement, { text, font, photo, placement = DEFAULT_PLACEMENT, base, layers, assets }: PrintContent) {
   const ctx = canvas.getContext('2d');
   if (!ctx) return canvas;
   const { width, height } = canvas;
@@ -55,6 +73,17 @@ export function drawPrint(canvas: HTMLCanvasElement, { text, font, photo, placem
     ctx.fillStyle = base;
     ctx.fillRect(0, 0, width, height);
     ctx.globalCompositeOperation = 'multiply';
+  }
+
+  if (layers && assets) {
+    // Katmanlar önce kendi aralarında (üstteki alttakini örterek) birleşir, sonra kupa rengine basılır.
+    const sheet = base ? scratch(canvas, width, height) : null;
+    if (sheet) {
+      renderLayers(sheet.ctx, layers, { width, height }, assets);
+      ctx.drawImage(sheet.canvas, 0, 0);
+    } else renderLayers(ctx, layers, { width, height }, assets);
+    ctx.restore();
+    return canvas;
   }
 
   const lines = toLines(text);

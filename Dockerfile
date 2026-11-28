@@ -24,7 +24,8 @@ RUN addgroup -S app && adduser -S app -G app
 COPY --from=builder --chown=app:app /app/public ./public
 COPY --from=builder --chown=app:app /app/.next/standalone ./
 COPY --from=builder --chown=app:app /app/.next/static ./.next/static
-RUN mkdir -p .next/cache && chown -R app:app .next
+# yazi-tipleri: indirilen yazı tipleri bu klasörde birikir (docker-compose birimi buraya bağlanır).
+RUN mkdir -p .next/cache/yazi-tipleri && chown -R app:app .next
 USER app
 EXPOSE 3000
 HEALTHCHECK --interval=30s --timeout=5s --start-period=40s --retries=3 \

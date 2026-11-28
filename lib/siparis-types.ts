@@ -5,6 +5,7 @@ import { SITE_URL } from './site';
 import { TALEP_STATUSES, type TalepStatus } from './talep-status';
 import { SIDE_LABELS } from './design-sides';
 import { POSTAL_RE } from './address';
+import { LayerSchema, LayersSchema, MAX_SUMMARY } from './tasarim/model';
 
 export const ORDER_FOLDER = 'karta-baski/siparisler';
 export const MAX_LINE_PHOTOS = 8;
@@ -103,15 +104,21 @@ export const PlacementSchema = z.object({
 
 /** Bir baskı yüzünün biçim alanları. */
 const SideStyle = {
-  text: trimmed(MAX_TEXT).optional(),
+  /** Katmanlı tasarımda sunucu bu özeti katmanlardan üretir. */
+  text: trimmed(MAX_SUMMARY).optional(),
   font: z.enum(['duz', 'el']).optional(),
   placement: PlacementSchema.optional(),
   removeBg: z.boolean().optional(),
+  layers: LayersSchema.optional(),
 };
 const LineDesign = { ...SideStyle, needsDesign: z.boolean().optional() };
 
 const ReadyId = z.string().regex(/^[A-Za-z0-9_-]{1,60}$/).optional();
 const PhotoCount = z.number().int().min(0).max(MAX_LINE_PHOTOS);
+
+/** Fotoğraf katmanları yalnız o yüze eklenen fotoğrafları (-1: seçilen hazır deseni) gösterebilir. */
+const photosExist = (s: { layers?: z.infer<typeof LayersSchema>; photoCount: number; readyId?: string }) =>
+  (s.layers ?? []).every((l) => l.kind !== 'photo' || (l.n < 0 ? Boolean(s.readyId) : l.n < s.photoCount));
 
 const OrderItemInput = z
   .object({
@@ -128,6 +135,9 @@ const OrderItemInput = z
   })
   .refine((i) => i.photoCount + (i.back?.photoCount ?? 0) <= MAX_LINE_PHOTOS, {
     message: `Bir üründe en fazla ${MAX_LINE_PHOTOS} fotoğraf olabilir.`,
+  })
+  .refine((i) => photosExist(i) && (!i.back || photosExist(i.back)), {
+    message: 'Tasarımdaki bir fotoğraf eksik. Satırı düzenleyip yeniden kaydedin.',
   });
 
 // İstemci yalnız ürün kimliği, adet, renk ve tasarım gönderir; ad ve fiyat sunucuda okunur.
@@ -149,6 +159,13 @@ export const parseOrderInput = (data: unknown) =>
 /** Konfigüratördeki hazır tasarım (herkese açık görsel). */
 const ReadySchema = z.object({ id: z.string(), name: z.string(), image: z.string().optional() });
 
+/** Kayıtlı katmanlardan okunamayan atlanır; bozuk katman siparişi düşürmez. */
+const StoredLayers = z
+  .array(LayerSchema.nullable().catch(null))
+  .transform((list) => list.filter((l): l is NonNullable<typeof l> => l !== null))
+  .optional()
+  .catch(undefined);
+
 export const OrderLineSchema = z.object({
   productId: z.string(),
   slug: z.string(),
@@ -158,6 +175,7 @@ export const OrderLineSchema = z.object({
   color: z.string().optional(),
   note: z.string().optional(),
   ...LineDesign,
+  layers: StoredLayers,
   photoCount: z.number().catch(0),
   hasPreview: z.boolean().catch(false),
   files: z.array(z.string()).catch([]),
@@ -165,6 +183,7 @@ export const OrderLineSchema = z.object({
   ready: ReadySchema.optional(),
   back: z.object({
     ...SideStyle,
+    layers: StoredLayers,
     photoCount: z.number().catch(0),
     files: z.array(z.string()).catch([]),
     ready: ReadySchema.optional(),
@@ -195,9 +214,9 @@ export function appendImage(item: Record<string, unknown>, kind: ImageKind, id: 
 
 /** Satırın baskı yüzleri; tek yüzlü baskıda ad boştur. */
 export function lineSides(l: OrderLine) {
-  const { text, font, placement, removeBg, ready, files, back } = l;
+  const { text, font, placement, removeBg, layers, ready, files, back } = l;
   return [
-    { label: back ? SIDE_LABELS.front : '', text, font, placement, removeBg, ready, files },
+    { label: back ? SIDE_LABELS.front : '', text, font, placement, removeBg, layers, ready, files },
     ...(back ? [{ ...back, label: SIDE_LABELS.back }] : []),
   ];
 }

@@ -96,6 +96,7 @@ export function createMugScene(host: HTMLElement, model: MugModel) {
   scene.add(shadow, mug);
 
   const camera = new THREE.PerspectiveCamera(FOV, 1, 0.1, 50);
+  const raycaster = new THREE.Raycaster();
   const target = new THREE.Vector3(0, size3d.top * (model.saucer ? 0.3 : 0.4), 0);
   const now: View & { zoom: number } = { ...VIEWS.front, zoom: 1 };
   const goal = { ...now };
@@ -160,6 +161,19 @@ export function createMugScene(host: HTMLElement, model: MugModel) {
     sheets: { front: prints.front.sheet, back: prints.back.sheet },
     canvas: renderer.domElement,
     printChanged: (side: SideId) => { prints[side].texture.needsUpdate = true; request(); },
+    /**
+     * Ekran noktasının baskı alanındaki yeri (0–1, sol üstten). Nokta baskı alanında değilse
+     * ya da önünde kulp varsa null.
+     */
+    pick: (clientX: number, clientY: number): { side: SideId; u: number; v: number } | null => {
+      const r = renderer.domElement.getBoundingClientRect();
+      if (!r.width || !r.height) return null;
+      raycaster.setFromCamera(new THREE.Vector2(((clientX - r.left) / r.width) * 2 - 1, -((clientY - r.top) / r.height) * 2 + 1), camera);
+      mug.updateMatrixWorld();
+      const first = raycaster.intersectObject(mug, true).find((h) => h.object.visible);
+      const side = SIDES.find((id) => prints[id].mesh === first?.object);
+      return side && first?.uv ? { side, u: first.uv.x, v: 1 - first.uv.y } : null;
+    },
     setBackVisible: (on: boolean) => { prints.back.mesh.visible = on; request(); },
     setColors: (c: MugColors) => {
       outer.color.set(c.body);
