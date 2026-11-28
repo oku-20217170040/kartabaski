@@ -19,6 +19,13 @@ Her iş bitiminde (kod, sunucu, dış hizmet ya da yalnız araştırma) bu dosya
 
 ---
 
+## 28.11.2026 — TikTok demo videoları hazırlandı (yarım: izin ekranı görünmüyor)
+- Neden: TikTok incelemesi için kullanıcının iki ekran kaydı yüklemeye hazırlanacaktı.
+- Ne: web (28 sn) ve telefon (26 sn) videosu MP4 olarak, İngilizce adım altyazılarıyla; dosyalar kullanıcının bilgisayarında, depoda değil.
+- Nasıl: ffmpeg ile kayıt programı ve pencere geçişi kırpıldı; telefon kaydının başındaki kişisel içerik bulunan bölüm çıkarıldı; ses kaldırıldı.
+- Doğrulama: kare örnekleri gözle kontrol edildi; iki dosya hatasız çözülüyor, H.264, 2 MB altında.
+- Açık: web videosunda TikTok izin ekranı görünmüyor (hesap daha önce izin vermiş) ve yeniden bağlandıktan sonra hesap adı gösterilmiyor; izin TikTok uygulamasından kaldırılıp web kısmı yeniden çekilmeli.
+
 ## 28.11.2026 — TikTok ilk taslak gönderildi; gönderi başına en fazla 5 etiket (PR #59)
 - Neden: doğrulamadan sonra deneme taslağı gitti; kullanıcı TikTok'un 5'ten fazla etikete izin vermediğini bildirdi.
 - Ne: TikTok'a giden başlık + açıklamada toplam en fazla 5 etiket.
