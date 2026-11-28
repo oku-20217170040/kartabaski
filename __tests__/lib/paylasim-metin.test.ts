@@ -30,3 +30,9 @@ it('hikâye adresi 1080×1920, ad + 7 kademe + site katmanı içerir', () => {
   expect(url.match(/l_text:/g)).toHaveLength(9);
   expect(url.endsWith('/karta-baski/urunler/x')).toBe(true);
 });
+
+it('parantezden önceki iki nokta gösterimde atılır', () => {
+  const v = { ...u, tiers: [{ label: 'Özel Tasarım: (1 adet)', price: '300 ₺' }] };
+  expect(uzunMetin(v, '')).toContain('• Özel Tasarım (1 adet): 300 ₺');
+  expect(decodeURIComponent(hikayeUrl('demo', 'karta-baski/urunler/x', v))).toContain('Özel Tasarım (1 adet): 300 ₺');
+});

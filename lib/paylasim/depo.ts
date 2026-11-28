@@ -2,7 +2,7 @@ import 'server-only';
 import { FieldValue } from 'firebase-admin/firestore';
 import { adminDb } from '../firebase-admin';
 import type { SocialPlatform } from '../social-types';
-import { durumHesapla, type PlanSonuc } from './plan';
+import { durumHesapla, yenilenecekler, type PlanSonuc } from './plan';
 import { MAX_DENEME, VARSAYILAN_AYAR, type Ayar, type Hedef, type Paylasim } from './types';
 import type { Beyaz } from './sira';
 
@@ -76,6 +76,16 @@ export async function applyPlan(p: PlanSonuc): Promise<void> {
   for (const c of p.close) batch.update(col().doc(c.key), { status: c.status });
   for (const it of p.create) batch.set(col().doc(it.key), it);
   if (p.remove.length + p.move.length + p.cancel.length + p.close.length + p.create.length) await batch.commit();
+}
+
+/** Henüz gönderilmemiş sırayı siler; planlayıcı yeniden doldurur. */
+export async function clearPending(): Promise<void> {
+  const snap = await col().where('status', '==', 'bekliyor').get();
+  const keys = yenilenecekler(snap.docs.map((d) => d.data() as Paylasim));
+  if (!keys.length) return;
+  const batch = adminDb.batch();
+  for (const key of keys) batch.delete(col().doc(key));
+  await batch.commit();
 }
 
 export const patchItem = async (key: string, patch: Partial<Paylasim>) => { await col().doc(key).update(patch as Record<string, unknown>); };
