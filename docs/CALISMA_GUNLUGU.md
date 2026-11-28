@@ -19,6 +19,13 @@ Her iş bitiminde (kod, sunucu, dış hizmet ya da yalnız araştırma) bu dosya
 
 ---
 
+## 28.11.2026 — Paylaşım paneli: sıra yenileme ve fiyat etiketi düzeltmesi (PR #51)
+- Neden: canlıda ilk fiyat onayından sonra sıra yalnız o ürünle doldu; sonraki onaylar dolu saatlerin arkasında bekleyecekti. Fiyat satırında "(1 adet)" öncesi çift iki nokta görünüyordu.
+- Ne: önizleme modunda fiyat onayı, gönderilmemiş sırayı silip yeniden kuruyor; "Sırada" sekmesinde "Sırayı yeniden kur" düğmesi. Etiketlerdeki fazla iki nokta yalnız gösterimde atılıyor (onay bozulmuyor).
+- Nasıl: önce test, sonra `yenilenecekler` (plan.ts), `clearPending` (depo.ts), `yenileAction` (actions-paylasim.ts), `etiket` (metin.ts). Canlıda ve durdurulmuşken sıraya dokunulmuyor.
+- Doğrulama: 754 test, lint, derleme; sunucuda yedek ve imaj etiketi (`onceki-20261128-013427`), derleme 0, konteyner sağlıklı, ana sayfa 200. Canlı durum: önizleme, 1/11 onaylı, 14 bekleyen, yayınlanan 0. Düğme canlıda tıklanmadı.
+- Açık: kalan 10 ürünün fiyat onayı, sonra "Canlıya al" (kullanıcıda). Hikâyede yazının yeri ortada kaldı.
+
 ## 28.11.2026 — Paylaşım sistemi aşama 1 uygulandı ve yayına alındı (önizleme)
 - Neden: kullanıcı "plana başla" dedi.
 - Ne: `/admin/paylasim` paneli; ürün karuselleri ve fiyatlı hikâyeler için otomatik sıra, fiyat onayı, kapak seçimi, erteleme/düzenleme/iptal/hemen paylaşma, platform ve saat ayarı. Sistem önizleme modunda; "Canlıya al" kullanıcıda.
