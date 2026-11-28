@@ -68,7 +68,7 @@ async function warmImage(url: string): Promise<boolean> {
 }
 
 /** Hesapta yoksa panoyu oluşturur (ad çakışırsa yedek adla); panoyu listeye de ekler. */
-async function ensureBoard(boards: PinterestBoard[], name: string): Promise<PinterestBoard> {
+export async function ensureBoard(boards: PinterestBoard[], name: string): Promise<PinterestBoard> {
   const found = findBoard(boards, name);
   if (found) return found;
   const desc = `KAR-TA BASKI ${name}`;

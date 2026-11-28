@@ -8,10 +8,11 @@ import { runBroadcastStep } from '@/lib/social-broadcast';
 import { cleanupOrderRequests, syncClosedOrders } from '@/lib/siparis';
 import { notifyCronFailures, runBotStep } from '@/lib/bot';
 import { runIndexNowStep } from '@/lib/indexnow';
+import { runPaylasimStep } from '@/lib/paylasim/tur';
 
 // Tek otomasyon kapısı. Çağıran: sunucudaki zamanlayıcı (tools/sunucu/zamanlayici.sh, 30 dakikada bir);
 // GitHub Actions yalnız elle çalıştırma içindir. CRON_SECRET zorunlu: Authorization: Bearer <secret>.
-// Sıra: blog yayını (müşteriye görünen iş) → makine özeti/haftalık rapor → ürün fotoğrafı üretimi (tur başına 1 iş) → hızlı paylaşım kuyruğu → 6 sosyal platform → yarım kalan siparişlerin ve süresi dolan sipariş fotoğraflarının silinmesi → Telegram sabah özeti ve hatırlatmalar → değişen sayfaların IndexNow bildirimi.
+// Sıra: blog yayını (müşteriye görünen iş) → makine özeti/haftalık rapor → ürün fotoğrafı üretimi (tur başına 1 iş) → hızlı paylaşım kuyruğu → paylaşım sistemi (ürün karuseli ve hikâye) → 6 sosyal platform → yarım kalan siparişlerin ve süresi dolan sipariş fotoğraflarının silinmesi → Telegram sabah özeti ve hatırlatmalar → değişen sayfaların IndexNow bildirimi.
 // Bir adımın hatası diğerlerini engellemez.
 export const dynamic = 'force-dynamic';
 export const maxDuration = 300;
@@ -25,6 +26,7 @@ export async function GET(req: NextRequest) {
     ['machine', () => runMachineStep()],
     ['photos', () => runPhotoStep()],
     ['broadcast', () => runBroadcastStep()],
+    ['paylasim', () => runPaylasimStep()],
     ['social', () => runAllSocialCycles()],
     ['orderSync', () => syncClosedOrders()],
     ['orders', () => cleanupOrderRequests()],
