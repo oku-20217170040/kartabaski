@@ -27,7 +27,7 @@ Her iş bitiminde (kod, sunucu, dış hizmet ya da yalnız araştırma) bu dosya
   - Öğe seçilince simge araç çubuğu; her araç tek ayar paneli açar. Yazıya çift tıklayınca yazma paneli.
   - Adet, not ve “tasarımım yok” sipariş penceresine taşındı; pencerede tasarımın görüntüsü var.
 - Nasıl: `components/tasarim/` yeniden kuruldu (`Studyo.tsx`, `AracCubugu.tsx`, `panel/`, `Kucuk.tsx`, `studyo.css`, Phosphor simgeleri `ikonlar.tsx`). Katman modeli, çizim, sipariş ve sunucu kuralları değişmedi. 3D sepet görseli artık ekrandaki alan boyundan bağımsız sabit ölçüde alınır (panel açıkken kupa alanı küçülebiliyor).
-- Doğrulama: 793 test, tip denetimi, lint, ayrı kopyada üretim derlemesi; sahte verili tarayıcıda 360, 390 ve 1366 piksel: düzen, yazı, yazı tipi, efekt, fotoğraf şekli ve filtresi, süs, desen, kupa rengi, katmanlar, iki yüz, sipariş penceresi, sepete ekleme, konfigüratörden tasarıma geçiş. Gerçek telefonda klavye açıkken görünüm denenmedi.
+- Doğrulama: 793 test, tip denetimi, lint, ayrı kopyada üretim derlemesi; sahte verili tarayıcıda 360, 390 ve 1366 piksel: düzen, yazı, yazı tipi, efekt, fotoğraf şekli ve filtresi, süs, desen, kupa rengi, katmanlar, iki yüz, sipariş penceresi, sepete ekleme, konfigüratörden tasarıma geçiş. Gerçek telefonda klavye açıkken görünüm denenmedi. Yayın sonrası canlıda tasarım ekranı (390 ve 1366 piksel) ve konfigüratör açılıp hazır düzen uygulandı (PR #64).
 - Açık / dikkat: telefonda panel açıkken yer kalmazsa 3D kupa gizlenir, baskı alanı kalır.
 
 ## 28.11.2026 — Tasarım ekranı yenilendi, sosyal hesap bağlantıları eklendi
