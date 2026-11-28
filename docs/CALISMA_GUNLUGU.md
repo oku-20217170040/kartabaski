@@ -19,6 +19,13 @@ Her iş bitiminde (kod, sunucu, dış hizmet ya da yalnız araştırma) bu dosya
 
 ---
 
+## 28.11.2026 — Paylaşım sistemi aşama 1 uygulama planı (yarım: uygulama)
+- Neden: kullanıcı tasarımı onaylayıp plana geçilmesini istedi.
+- Ne: `docs/superpowers/plans/2026-11-28-paylasim-asama-1.md` (9 görev: fiyat kademeleri, kapak ve sıra, planlayıcı, metin ve hikâye görseli, depo, yayıncılar ve cron, eski otomasyonun devri, panel, yayın).
+- Nasıl: mevcut paylaşım modülleri okundu. Tasarıma göre dört küçük değişiklik planın başında yazılı (fiyat onayı açıklama satırlarının özetiyle; hikâyede 7 kademeye kadar; eski iki panel ekranı bu aşamada kalır; gönderi bağlantıları bu aşamada yok). Facebook hikâye uç noktaları resmi belgeden kontrol edildi.
+- Doğrulama: yalnız belge; plandaki kod henüz çalıştırılmadı.
+- Açık: uygulama. Sistem "önizleme" modunda yayına alınacak; canlıya almak kullanıcı onayıyla.
+
 ## 28.11.2026 — Paylaşım sistemi tasarlandı (yarım: gözden geçirme ve uygulama)
 - Neden: kullanıcı, paylaşımların tek panelden yönetilen ve müdahale edilebilen tek bir sistemde toplanmasını istedi.
 - Ne: tasarım belgesi `docs/superpowers/specs/2026-11-28-paylasim-sistemi-design.md` (ürün karuselleri, fiyatlı hikâyeler, izinli müşteri paylaşımları, sipariş rehberi, Pinterest fotoğraf akışı, tek panel).
