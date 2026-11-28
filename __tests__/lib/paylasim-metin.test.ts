@@ -1,4 +1,4 @@
-import { hikayeUrl, kisaMetin, telegramMetni, uzunMetin } from '@/lib/paylasim/metin';
+import { HIKAYE, hikayeUrl, kisaMetin, telegramMetni, uzunMetin } from '@/lib/paylasim/metin';
 import type { PaylasimUrun } from '@/lib/paylasim/types';
 
 const u: PaylasimUrun = {
@@ -26,7 +26,14 @@ it('Telegram metni HTML kaçışlı ve 1024 altındadır', () => {
 it('hikâye adresi 1080×1920, ad + 7 kademe + site katmanı içerir', () => {
   const url = hikayeUrl('demo', 'karta-baski/urunler/x', u);
   expect(url).toContain('w_1080,h_1920');
-  expect(url).toContain('l_karta-baski:urunler:x/c_fit');
+  expect(url).toContain('l_karta-baski:urunler:x/c_fit,w_1080,h_840');
+  // Yazılar fotoğrafın üstüne binmez: ad fotoğrafın üstünde, fiyatlar altında
+  expect(url).not.toMatch(/co_[^/]+\/fl_layer_apply,g_center/);
+  const textY = Array.from(url.matchAll(/l_text:[^/]+\/fl_layer_apply,g_north,y_(\d+)/g), (m) => Number(m[1]));
+  expect(textY).toHaveLength(9);
+  expect(textY[0]).toBeLessThan(HIKAYE.fotoUst - 60);
+  expect(Math.min(...textY.slice(1))).toBeGreaterThanOrEqual(HIKAYE.fotoUst + HIKAYE.fotoBoy);
+  expect(Math.max(...textY)).toBeLessThanOrEqual(1700);
   expect(url.match(/l_text:/g)).toHaveLength(9);
   expect(url.endsWith('/karta-baski/urunler/x')).toBe(true);
 });
