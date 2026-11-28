@@ -19,6 +19,13 @@ Her iş bitiminde (kod, sunucu, dış hizmet ya da yalnız araştırma) bu dosya
 
 ---
 
+## 28.11.2026 — TikTok ilk taslak gönderildi; gönderi başına en fazla 5 etiket (PR #59)
+- Neden: doğrulamadan sonra deneme taslağı gitti; kullanıcı TikTok'un 5'ten fazla etikete izin vermediğini bildirdi.
+- Ne: TikTok'a giden başlık + açıklamada toplam en fazla 5 etiket.
+- Nasıl: `lib/tiktok-utils.ts` `limitHashtags`; `buildPhotoDraftBody` içinde uygulanıyor, böylece tüm gönderim yolları kapsanıyor.
+- Doğrulama: taslak `/admin/tiktok` sayfasında "Taslak gönderildi" görünüyor (kullanıcı ekranı); 756 test ve derleme; sunucuda yedek ve imaj etiketi (`onceki-20261128-132456`), derleme 0, konteyner sağlıklı. Yeni sınırla canlıda taslak henüz gönderilmedi. Disk %78; haftalık temizlik zamanlı.
+- Açık: demo videosu, Production incelemesine gönderme; TikTok "Otomasyon açık" kapalı.
+
 ## 28.11.2026 — TikTok sandbox alan adı doğrulama dosyası yayında (PR #57)
 - Neden: ilk deneme taslağı `url_ownership_unverified` hatası verdi; sandbox, URL doğrulamasını canlı uygulamadan ayrı istiyor.
 - Ne: yeni imza dosyası `public/` altına eklendi ve yayına alındı; eski dosya duruyor.
