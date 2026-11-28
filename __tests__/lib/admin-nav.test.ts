@@ -12,7 +12,8 @@ describe('admin-nav', () => {
     for (const h of ['/admin/sanal-depo', '/admin/satis-talepleri', '/admin/sepet-talepleri', '/admin/tasarimlar', '/admin/etiketler', '/admin/yonlendirme']) {
       expect(hrefs).not.toContain(h);
     }
-    expect(SOCIAL_LINKS).toHaveLength(8);
+    expect(SOCIAL_LINKS).toHaveLength(9);
+    expect(inSocial('/admin/paylasim')).toBe(true);
     expect(SOCIAL_LINKS.map((l) => l.href)).toContain('/admin/sosyal-medya/paylas');
   });
 
