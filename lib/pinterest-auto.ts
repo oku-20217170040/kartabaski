@@ -17,6 +17,7 @@ import {
   buildQueue, pickNewBlog, pickBacklog, channelGate, manualGate, channelTodayCount, blogKey,
   CHANNEL_PER_RUN,
 } from './telegram-channel-utils';
+import { yeniSistemAktif } from './paylasim/depo';
 
 /**
  * Pinterest için otomatik paylaşım (yeni kupa modelleri + yeni blog yazıları): kota ve saat penceresi panelden ayarlanır
@@ -68,7 +69,7 @@ async function warmImage(url: string): Promise<boolean> {
 }
 
 /** Hesapta yoksa panoyu oluşturur (ad çakışırsa yedek adla); panoyu listeye de ekler. */
-async function ensureBoard(boards: PinterestBoard[], name: string): Promise<PinterestBoard> {
+export async function ensureBoard(boards: PinterestBoard[], name: string): Promise<PinterestBoard> {
   const found = findBoard(boards, name);
   if (found) return found;
   const desc = `KAR-TA BASKI ${name}`;
@@ -124,7 +125,8 @@ export async function runPinterestCycleWith(now = Date.now(), opts: { ignoreWind
     });
   }
   const room = limit - items.length;
-  if (room > 0) {
+  const devir = !opts.ignoreWindow && (await yeniSistemAktif());
+  if (room > 0 && !devir) {
     for (const r of buildQueue(products.map(toChannelRow), st.posted, startedAt, room)) {
       const p = byId.get(r.id);
       if (!p) continue;

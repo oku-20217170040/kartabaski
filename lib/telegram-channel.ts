@@ -13,6 +13,7 @@ import {
   buildQueue, pickNewBlog, pickBacklog, pickChannelUpdates, channelCaption, blogCaption, channelGate, manualGate,
   channelTodayCount, blogKey, CHANNEL_PER_RUN, UPDATES_PER_RUN, type ChannelPosted,
 } from './telegram-channel-utils';
+import { yeniSistemAktif } from './paylasim/depo';
 
 /**
  * Telegram kanalına otomatik duyuru (yeni kupa modelleri + yeni blog yazıları). Bot kanalda yönetici olmalı
@@ -139,7 +140,8 @@ export async function runTelegramCycleWith(now = Date.now(), opts: { ignoreWindo
       if (p?.coverImage) items.push({ key: blogKey(p.id), photo: imageSrc(p.coverImage), caption: blogCaptionFor(p) });
     }
     const room = limit - items.length;
-    if (room > 0) {
+    const devir = !opts.ignoreWindow && (await yeniSistemAktif());
+    if (room > 0 && !devir) {
       for (const r of buildQueue(products.map(toChannelRow), posted, startedAt, room)) {
         const p = byId.get(r.id);
         const img = p?.images?.[0];

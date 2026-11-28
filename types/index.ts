@@ -18,6 +18,8 @@ export interface Product {
   colors?: ProductColor[]; // Renk varyantları
   deliveryDays: number; // varsayılan: 3
   seoTags?: string[]; // Gizli SEO etiketleri — müşteri görmez, JSON-LD'ye gömülür
+  priceTiers?: { label: string; price: string }[]; // paylaşımlarda gösterilen onaylı fiyat satırları
+  priceTiersSource?: string; // onay anındaki açıklama fiyat satırlarının özeti
   productCode?: string; // Sadece admin panelinde görünür, ürün yönetimi için
   createdAt: number;
   updatedAt: number;

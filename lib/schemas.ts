@@ -51,6 +51,8 @@ export const ProductSchema = z.object({
   })).optional(),
   deliveryDays: z.number().default(3),
   seoTags:      z.array(z.string()).optional(),
+  priceTiers:   z.array(z.object({ label: z.string(), price: z.string() })).optional().catch(undefined),
+  priceTiersSource: z.string().optional().catch(undefined),
   productCode:  z.string().optional(), // Sadece admin panelinde görünür
   createdAt:    z.number().default(0),
   updatedAt:    z.number().default(0),

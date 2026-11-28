@@ -1,5 +1,5 @@
 import {
-  getFacebookConfig, buildPhotoParams, buildFeedParams, buildLinkParams, publishLinkToFacebookPage,
+  getFacebookConfig, buildPhotoParams, buildFeedParams, buildLinkParams, publishLinkToFacebookPage, publishFacebookStory,
 } from '@/lib/facebook-page';
 
 describe('sayfa belirteci', () => {
@@ -65,5 +65,21 @@ describe('buildLinkParams', () => {
     expect(p.get('message')).toBe('Yeni yazı');
     expect(p.get('link')).toBe('https://www.kartabaski.com/blog/x');
     expect(p.get('access_token')).toBe('tok');
+  });
+});
+
+describe('sayfa hikâyesi', () => {
+  const originalFetch = global.fetch;
+  afterEach(() => { global.fetch = originalFetch; });
+  it('yayınlanmamış fotoğraf yükleyip photo_stories çağırır', async () => {
+    const f = jest.fn()
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ access_token: 'sayfa' }) })
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ id: 'foto1' }) })
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ success: true, post_id: 'h1' }) });
+    global.fetch = f as unknown as typeof fetch;
+    await expect(publishFacebookStory('https://img/x.jpg', { pageId: '123', token: 's' })).resolves.toBe('h1');
+    expect((f.mock.calls[1][1].body as URLSearchParams).get('published')).toBe('false');
+    expect(String(f.mock.calls[2][0])).toContain('123/photo_stories');
+    expect((f.mock.calls[2][1].body as URLSearchParams).get('photo_id')).toBe('foto1');
   });
 });
