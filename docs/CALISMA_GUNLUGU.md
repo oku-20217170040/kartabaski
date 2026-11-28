@@ -19,6 +19,13 @@ Her iş bitiminde (kod, sunucu, dış hizmet ya da yalnız araştırma) bu dosya
 
 ---
 
+## 28.11.2026 — TikTok hesabı bağlandı (sandbox), profil dolduruldu
+- Neden: kullanıcı TikTok'a devam edilmesini ve profilin doldurulmasını istedi.
+- Ne: sandbox'ta hedef hesap, Login Kit (yönlendirme adresi), Content Posting API ve `user.info.basic` + `video.upload` eklendi; site `/admin/tiktok` üzerinden hesaba bağlandı. Profilde ad, logo ve biyografi (tanım, WhatsApp, site adresi) var.
+- Nasıl: geliştirici ayarlarını kullanıcı yaptı. Hatalar sırayla `non_sandbox_target` (hedef hesap yoktu) ve `redirect_uri` (Login Kit eklenmemiş/kaydedilmemişti). Web sitesi biyografiyi kaydetmedi; kullanıcı kaydetti.
+- Doğrulama: sunucuda TikTok bağlantısı ve hesap adı kayıtlı (salt okunur kontrol); profil ekran görüntüsünde biyografi görünüyor. Taslak gönderimi henüz denenmedi.
+- Açık: sandbox'ta alan adı (pull_by_url) doğrulamasının durumu, bir deneme taslağı, demo videosu, Production incelemesine gönderme. Paylaşım paneli hâlâ önizlemede; sıra yalnız iki ürün içeriyor ("Sırayı yeniden kur" basılmadı).
+
 ## 28.11.2026 — Hikâyede yazılar fotoğrafın dışında (PR #54)
 - Neden: kullanıcı yazıların kupayı ve fotoğrafı kapattığını bildirdi.
 - Ne: ad üstte, fotoğraf ortada temiz, fiyatlar ve site adresi altta.
