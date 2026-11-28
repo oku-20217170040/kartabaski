@@ -18,6 +18,7 @@ import {
   getFacebookConfig, publishToFacebookPage, publishLinkToFacebookPage, updateFacebookPostMessage,
 } from './facebook-page';
 import { listPublishedPosts } from '@/lib/posts';
+import { yeniSistemAktif } from './paylasim/depo';
 
 /**
  * Facebook sayfası için otomatik paylaşım. Durum tek belgede: `facebook_auto/main`
@@ -119,13 +120,14 @@ export async function runFacebookCycle(now = Date.now()): Promise<CycleResult> {
   const rows = await getSocialRows();
   const byId = new Map(rows.map((r) => [r.id, r]));
   const open = inWindow(s, now);
+  const devir = await yeniSistemAktif();
   const done = (kind: 'newPosted' | 'backlogPosted', id: string) => {
     (result[kind] as string[]).push(id);
     result.posted.push(id);
   };
 
   // 1) Yeni eklenen ürünler: hemen (kota dışı, yalnız paylaşım saatlerinde)
-  if (open) {
+  if (open && !devir) {
     for (const r of newArrivals(rows, st0.posted, st0.startedAt).slice(0, NEW_PER_RUN)) {
       if (!(await reserve(r.id, now, null)).ok) continue;
       const out = await shareProduct(r, now);
@@ -134,7 +136,7 @@ export async function runFacebookCycle(now = Date.now()): Promise<CycleResult> {
   }
 
   // 1b) Hatalı paylaşımlar: ürün sonradan düzenlendiyse (ör. fotoğraf eklendi) yeniden dene
-  for (const r of retryableFailures(rows, st0.posted).slice(0, NEW_PER_RUN)) {
+  for (const r of devir ? [] : retryableFailures(rows, st0.posted).slice(0, NEW_PER_RUN)) {
     if (!(await reserveRetry(r.id, now)).ok) continue;
     const out = await shareProduct(r, now);
     if (out.ok) done('newPosted', r.id); else result.errors.push(`${r.title.slice(0, 30)}: ${out.error}`);
@@ -172,7 +174,7 @@ export async function runFacebookCycle(now = Date.now()): Promise<CycleResult> {
   }
 
   // 4) Kota kuyruğu: günlük kota, saat penceresi ve gönderi arası bekleme içinde
-  const gate = canPostNow(await loadState(), s, now);
+  const gate = devir ? { ok: false, reason: 'ürün paylaşımları yeni paylaşım sisteminde' } : canPostNow(await loadState(), s, now);
   if (gate.ok) {
     const next = pickQueue(rows, (await loadState()).posted, now)[0];
     if (next && (await reserve(next.id, now, s)).ok) {

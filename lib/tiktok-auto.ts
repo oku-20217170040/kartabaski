@@ -11,6 +11,7 @@ import { sendPhotoDraft, tiktokConfigured, getTikTokState } from './tiktok';
 import { tiktokTitle, tiktokDescription, tiktokPhotoUrls, pickRandomBacklog, pendingRoom, pendingInWindow, TIKTOK_PENDING_CAP } from './tiktok-utils';
 import { getSocialProducts, toChannelRow, getPlatformGate } from './telegram-channel-data';
 import { pickNewPosts, channelGate, manualGate, channelTodayCount, CHANNEL_PER_RUN, type ChannelRow } from './telegram-channel-utils';
+import { yeniSistemAktif } from './paylasim/depo';
 
 /**
  * TikTok için günlük ürün fotoğraf TASLAKLARI (kota ve saat penceresi panelden ayarlanır: social_settings/tiktok, varsayılan kapalı;
@@ -125,6 +126,7 @@ export async function runTikTokCycleWith(now = Date.now(), opts: { ignoreWindow?
 
 /** Merkez/cron sözleşmesi: sıfır argümanlı tur. */
 export async function runTikTokCycle(): Promise<CycleResult> {
+  if (await yeniSistemAktif()) return { posted: [], errors: [], skipped: 'ürün paylaşımları yeni paylaşım sisteminde' };
   return runTikTokCycleWith();
 }
 

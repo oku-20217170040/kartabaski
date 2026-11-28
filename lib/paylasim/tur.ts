@@ -93,7 +93,7 @@ export async function runPaylasimStep(now = Date.now()) {
   if (ayar.mode !== 'canli') return { skipped: 'önizleme modu', posted, errors, planned: plan.create.length };
 
   const byId = new Map(products.map((p) => [p.id, p]));
-  for (const item of items.filter((i) => i.status === 'bekliyor' && ayar.kinds[i.kind] && isDue(i.at, now)).slice(0, 3)) {
+  for (const item of items.filter((i) => i.status === 'bekliyor' && ayar.kinds[i.kind] && isDue(i.at, now)).slice(0, 2)) {
     const u = byId.get(item.productId);
     if (!u) continue;
     await gonder(item, u, ayar, now, posted, errors);

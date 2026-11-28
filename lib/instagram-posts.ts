@@ -17,6 +17,7 @@ import {
   buildProductCaption, activeCampaign, campaignDue, pickBlogToShare, isShareable, type SocialProductRow,
 } from './social-content-utils';
 import { listPublishedPosts } from '@/lib/posts';
+import { yeniSistemAktif } from './paylasim/depo';
 
 /**
  * Günlük Instagram planı + yayın. Koleksiyon `instagram_posts` (yalnız Admin SDK), plan kilidi `instagram_plans/{gün}`.
@@ -89,6 +90,7 @@ const hhmm = (ts: number) => new Date(ts + 3 * HOUR).toISOString().slice(11, 16)
 
 /** Günde bir kez (TSİ 06:00'dan sonra) taslakları üretir. Tekrar çağrılırsa yeni üretmez. */
 export async function ensureDailyPlan(now = Date.now()): Promise<PlanResult> {
+  if (await yeniSistemAktif()) return { created: 0, skipped: 'ürün paylaşımları yeni paylaşım sisteminde' };
   if (trHour(now) < PLAN_START_HOUR) return { created: 0, skipped: 'plan saati değil' };
   const day = trDayKey(now);
   if ((await adminDb.collection(PLANS).doc(day).get()).exists) return { created: 0, skipped: 'bugünün planı zaten var' };
@@ -247,7 +249,8 @@ export async function publishPost(p: IgPost, now = Date.now()): Promise<{ ok: bo
 
 /** Zamanı gelen taslakları yayınlar (her çalışmada en fazla `max`; geç kalmışlar 12 saat içindeyse). */
 export async function publishDue(now = Date.now(), max = 2): Promise<{ published: string[]; errors: string[] }> {
-  const due = (await listPostsBetween(now - 12 * HOUR, now + 1)).filter((p) => isDue(p, now)).slice(0, max);
+  const devir = await yeniSistemAktif();
+  const due = (await listPostsBetween(now - 12 * HOUR, now + 1)).filter((p) => isDue(p, now) && (!devir || p.kind === 'blog')).slice(0, max);
   const out = { published: [] as string[], errors: [] as string[] };
   for (const p of due) {
     const r = await publishPost(p, now);

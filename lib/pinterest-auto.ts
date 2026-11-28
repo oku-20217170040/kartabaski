@@ -17,6 +17,7 @@ import {
   buildQueue, pickNewBlog, pickBacklog, channelGate, manualGate, channelTodayCount, blogKey,
   CHANNEL_PER_RUN,
 } from './telegram-channel-utils';
+import { yeniSistemAktif } from './paylasim/depo';
 
 /**
  * Pinterest için otomatik paylaşım (yeni kupa modelleri + yeni blog yazıları): kota ve saat penceresi panelden ayarlanır
@@ -124,7 +125,8 @@ export async function runPinterestCycleWith(now = Date.now(), opts: { ignoreWind
     });
   }
   const room = limit - items.length;
-  if (room > 0) {
+  const devir = !opts.ignoreWindow && (await yeniSistemAktif());
+  if (room > 0 && !devir) {
     for (const r of buildQueue(products.map(toChannelRow), st.posted, startedAt, room)) {
       const p = byId.get(r.id);
       if (!p) continue;

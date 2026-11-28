@@ -16,6 +16,7 @@ import {
 } from './threads';
 import { SITE_URL } from './site';
 import { listPublishedPosts } from '@/lib/posts';
+import { yeniSistemAktif } from './paylasim/depo';
 
 /**
  * Threads için otomatik paylaşım: günlük kota ve saat aralığı `social_settings/threads` ayarından gelir.
@@ -125,6 +126,7 @@ export async function runThreadsCycle(now = Date.now(), opts: ThreadsRunOpts = {
     const meta = await ensureSocialMeta('threads', now);
     const rows = await getSocialRows();
     const open = opts.ignoreWindow || inWindow(s, now);
+    const devir = !opts.ignoreWindow && (await yeniSistemAktif());
     let used = threadsTodayCount(st.day, st.todayCount, now);
     let lastPostAt = st.lastPostAt;
     const bump = async (n = 1) => {
@@ -135,7 +137,7 @@ export async function runThreadsCycle(now = Date.now(), opts: ThreadsRunOpts = {
     const posted = { ...st.posted };
 
     // 1) Yeni eklenen ürünler (kota dışı) + hatalı kayıtların yeniden denemesi
-    if (open && !opts.ignoreWindow) {
+    if (open && !opts.ignoreWindow && !devir) {
       const fresh = [...newArrivals(rows, posted, startedAt), ...retryableFailures(rows, posted)].slice(0, NEW_PER_RUN);
       for (const r of fresh) {
         if (await shareProduct(r, now, result.errors)) { result.posted.push(r.id); posted[r.id] = { postedAt: now, postId: 'x' }; await bump(0); }
@@ -164,6 +166,11 @@ export async function runThreadsCycle(now = Date.now(), opts: ThreadsRunOpts = {
           result.errors.push(`kampanya: ${msg(e, 160)}`);
         }
       }
+    }
+
+    if (devir) {
+      if (!result.posted.length) result.skipped = 'ürün paylaşımları yeni paylaşım sisteminde';
+      return result;
     }
 
     // 3) Kota kuyruğu
