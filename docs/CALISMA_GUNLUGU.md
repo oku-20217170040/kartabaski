@@ -19,6 +19,13 @@ Her iş bitiminde (kod, sunucu, dış hizmet ya da yalnız araştırma) bu dosya
 
 ---
 
+## 28.11.2026 — TikTok sandbox alan adı doğrulama dosyası yayında (PR #57)
+- Neden: ilk deneme taslağı `url_ownership_unverified` hatası verdi; sandbox, URL doğrulamasını canlı uygulamadan ayrı istiyor.
+- Ne: yeni imza dosyası `public/` altına eklendi ve yayına alındı; eski dosya duruyor.
+- Nasıl: URL prefix `https://www.kartabaski.com/`. Sunucuda yedek ve imaj etiketi (`onceki-20261128-130758`), `docker compose up -d --build`.
+- Doğrulama: derleme 0, konteyner sağlıklı; iki dosya ve ana sayfa canlıda 200.
+- Açık: kullanıcı TikTok'ta "Verify"e basacak, sonra `/admin/tiktok` üzerinden taslağı yeniden deneyecek. Sunucu diski %78 dolu.
+
 ## 28.11.2026 — TikTok hesabı bağlandı (sandbox), profil dolduruldu
 - Neden: kullanıcı TikTok'a devam edilmesini ve profilin doldurulmasını istedi.
 - Ne: sandbox'ta hedef hesap, Login Kit (yönlendirme adresi), Content Posting API ve `user.info.basic` + `video.upload` eklendi; site `/admin/tiktok` üzerinden hesaba bağlandı. Profilde ad, logo ve biyografi (tanım, WhatsApp, site adresi) var.
