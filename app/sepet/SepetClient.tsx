@@ -1,5 +1,6 @@
 'use client';
 
+import { countShapes } from '@/lib/tasarim/model';
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -61,6 +62,7 @@ function designSummary(item: CartItem): string[] {
     d.ready ? `Hazır tasarım: ${d.ready.name}` : '',
     d.text ? `Yazı: ${d.text}` : '',
     d.photos.length ? `${d.photos.length} fotoğraf` : '',
+    countShapes(d.layers) ? `${countShapes(d.layers)} süs` : '',
     d.removeBg ? 'Arka plan silinecek' : '',
     d.needsDesign ? 'Tasarımı biz hazırlayacağız' : '',
   ].filter(Boolean);

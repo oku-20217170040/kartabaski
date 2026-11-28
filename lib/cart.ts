@@ -1,3 +1,4 @@
+import { MAX_SUMMARY, parseLayers } from './tasarim/model';
 import type { CartDesign, CartItem, CartProductInfo, DesignSide } from './cart-types';
 import { MAX_CART_ITEMS, MAX_QTY } from './cart-schemas';
 
@@ -112,6 +113,7 @@ function parseSide(d: Record<string, unknown>, room: number): DesignSide {
   const placement = p && ['x', 'y', 'scale', 'rotate'].every((k) => typeof p[k] === 'number')
     ? { x: p.x as number, y: p.y as number, scale: p.scale as number, rotate: p.rotate as number }
     : undefined;
+  const layers = parseLayers(d.layers);
   const r = d.ready as Record<string, unknown> | undefined;
   const ready = r && typeof r.id === 'string' && /^[A-Za-z0-9_-]{1,60}$/.test(r.id) && typeof r.name === 'string'
     ? { id: r.id, name: r.name.slice(0, 120), ...(typeof r.image === 'string' ? { image: r.image } : {}) }
@@ -119,10 +121,12 @@ function parseSide(d: Record<string, unknown>, room: number): DesignSide {
   return {
     photos: photos.slice(0, room),
     ...(ready ? { ready } : {}),
-    ...(typeof d.text === 'string' && d.text.trim() ? { text: d.text.slice(0, 40) } : {}),
+    ...(typeof d.text === 'string' && d.text.trim() ? { text: d.text.slice(0, MAX_SUMMARY) } : {}),
     ...(d.font === 'el' || d.font === 'duz' ? { font: d.font } : {}),
     ...(placement ? { placement } : {}),
     ...(d.removeBg === true ? { removeBg: true } : {}),
+    // Silinen ya da sığmayan fotoğrafı gösteren katman atılır.
+    ...(layers ? { layers: layers.filter((l) => l.kind !== 'photo' || (l.n < 0 ? Boolean(ready) : l.n < Math.min(photos.length, room))) } : {}),
   };
 }
 

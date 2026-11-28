@@ -23,10 +23,19 @@ export interface Mug3DProps extends PrintContent {
   onView?: (side: SideId) => void;
   /** Üç boyut açılamazsa (eski cihaz) çağrılır; üst bileşen düz önizlemeye döner. */
   onUnsupported?: () => void;
+  /**
+   * Kupadaki baskıya dokunulunca sorulur (u, v: baskı alanında 0–1). `true` dönerse
+   * sürükleme kupayı çevirmez, `onDrag` ile öğe taşınır.
+   */
+  onGrab?: (side: SideId, u: number, v: number) => boolean;
+  /** Seçim yapmadan "burada tutulacak bir öğe var mı" sorusu (dokunmatikte kaydırmayı durdurmak için). */
+  canGrab?: (side: SideId, u: number, v: number) => boolean;
+  onDrag?: (u: number, v: number) => void;
+  onDrop?: () => void;
 }
 
 const Mug3D = forwardRef<Mug3DHandle, Mug3DProps>(function Mug3D(
-  { model, colors, label, onUnsupported, text, font, photo, placement = DEFAULT_PLACEMENT, back, view: shown, onView },
+  { model, colors, label, onUnsupported, text, font, photo, placement = DEFAULT_PLACEMENT, layers, assets, back, view: shown, onView, onGrab, canGrab, onDrag, onDrop },
   ref,
 ) {
   const host = useRef<HTMLDivElement>(null);
@@ -59,31 +68,53 @@ const Mug3D = forwardRef<Mug3DHandle, Mug3DProps>(function Mug3D(
   useEffect(() => {
     if (!scene) return;
     let cancelled = false;
-    whenFontReady(font, text, () => {
+    const paint = () => {
       if (cancelled) return;
-      drawPrint(scene.sheets.front, { text, font, photo, placement, base: colors.body });
+      drawPrint(scene.sheets.front, { text, font, photo, placement, layers, assets, base: colors.body });
       scene.printChanged('front');
-    });
+    };
+    // Katmanlı tasarımda yazı tipleri `assets` ile gelir.
+    if (layers) paint(); else whenFontReady(font, text, paint);
     return () => { cancelled = true; };
-  }, [scene, text, font, photo, placement, colors.body]);
+  }, [scene, text, font, photo, placement, layers, assets, colors.body]);
 
   const hasBack = Boolean(back);
   const backText = back?.text ?? '';
   const backFont = back?.font ?? 'duz';
   const backPhoto = back?.photo ?? null;
   const backPlacement = back?.placement ?? DEFAULT_PLACEMENT;
+  const backLayers = back?.layers;
+  const backAssets = back?.assets;
   useEffect(() => {
     if (!scene) return;
     scene.setBackVisible(hasBack);
     if (!hasBack) return;
     let cancelled = false;
-    whenFontReady(backFont, backText, () => {
+    const paint = () => {
       if (cancelled) return;
-      drawPrint(scene.sheets.back, { text: backText, font: backFont, photo: backPhoto, placement: backPlacement, base: colors.body });
+      drawPrint(scene.sheets.back, {
+        text: backText, font: backFont, photo: backPhoto, placement: backPlacement, layers: backLayers, assets: backAssets, base: colors.body,
+      });
       scene.printChanged('back');
-    });
+    };
+    if (backLayers) paint(); else whenFontReady(backFont, backText, paint);
     return () => { cancelled = true; };
-  }, [scene, hasBack, backText, backFont, backPhoto, backPlacement, colors.body]);
+  }, [scene, hasBack, backText, backFont, backPhoto, backPlacement, backLayers, backAssets, colors.body]);
+
+  // Baskıdaki bir öğe tutulursa dokunma sayfayı kaydırmasın.
+  const grabbing = useRef<{ pointer: number; side: SideId } | null>(null);
+  const grabbable = useRef(canGrab);
+  grabbable.current = canGrab;
+  useEffect(() => {
+    const node = host.current;
+    if (!node || !scene) return;
+    const guard = (e: TouchEvent) => {
+      const hit = grabbable.current && e.touches.length === 1 ? scene.pick(e.touches[0].clientX, e.touches[0].clientY) : null;
+      if (hit && grabbable.current?.(hit.side, hit.u, hit.v)) e.preventDefault();
+    };
+    node.addEventListener('touchstart', guard, { passive: false });
+    return () => node.removeEventListener('touchstart', guard);
+  }, [scene]);
 
   useEffect(() => {
     if (!shown) return;
@@ -93,10 +124,24 @@ const Mug3D = forwardRef<Mug3DHandle, Mug3DProps>(function Mug3D(
 
   const onPointerDown = (e: React.PointerEvent) => {
     e.currentTarget.setPointerCapture(e.pointerId);
-    pointers.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
     setSpinning(false);
+    if (onGrab && scene && !pointers.current.size) {
+      const hit = scene.pick(e.clientX, e.clientY);
+      if (hit && onGrab(hit.side, hit.u, hit.v)) {
+        scene.setSpinning(false);
+        grabbing.current = { pointer: e.pointerId, side: hit.side };
+        return;
+      }
+    }
+    pointers.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
   };
   const onPointerMove = (e: React.PointerEvent) => {
+    const held = grabbing.current;
+    if (held) {
+      const hit = held.pointer === e.pointerId ? scene?.pick(e.clientX, e.clientY) : null;
+      if (hit && hit.side === held.side) onDrag?.(hit.u, hit.v);
+      return;
+    }
     const before = pointers.current.get(e.pointerId);
     if (!before || !scene) return;
     const others = Array.from(pointers.current.entries()).filter(([id]) => id !== e.pointerId);
@@ -111,7 +156,10 @@ const Mug3D = forwardRef<Mug3DHandle, Mug3DProps>(function Mug3D(
     // Dokunmatikte dikey hareket sayfayı kaydırır; eğim yalnız fareyle.
     scene.turnBy((e.clientX - before.x) * 0.012, e.pointerType === 'mouse' ? (e.clientY - before.y) * 0.006 : 0);
   };
-  const onPointerEnd = (e: React.PointerEvent) => { pointers.current.delete(e.pointerId); };
+  const onPointerEnd = (e: React.PointerEvent) => {
+    if (grabbing.current?.pointer === e.pointerId) { grabbing.current = null; onDrop?.(); }
+    pointers.current.delete(e.pointerId);
+  };
 
   const onKeyDown = (e: React.KeyboardEvent) => {
     const actions: Record<string, () => void> = {
@@ -150,7 +198,7 @@ const Mug3D = forwardRef<Mug3DHandle, Mug3DProps>(function Mug3D(
         onKeyDown={onKeyDown}
       />
       <p className="m3d-hint">
-        {model.finish === 'magic' ? 'Soğukken siyah görünür; sıcak içecek koyunca baskı ortaya çıkar.' : 'Çevirmek için kupayı sürükleyin.'}
+        {model.finish === 'magic' ? 'Soğukken siyah görünür; sıcak içecek koyunca baskı ortaya çıkar.' : onGrab ? 'Yazıyı ya da süsü kupanın üstünde sürükleyin; boş yerden tutup kupayı çevirin.' : 'Çevirmek için kupayı sürükleyin.'}
       </p>
       <div className="m3d-buttons" role="group" aria-label="Kupa görünümü">
         <button type="button" onClick={() => view('front')}>Ön</button>

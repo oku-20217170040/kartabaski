@@ -8,8 +8,14 @@ services:
     env_file: .env
     environment:
       NODE_ENV: production
+    volumes:
+      # Siparişte kullanılan yazı tipleri yeni sürümde de dursun.
+      - yazi-tipleri:/app/.next/cache/yazi-tipleri
     networks:
       - web
+
+volumes:
+  yazi-tipleri:
 
 networks:
   web:

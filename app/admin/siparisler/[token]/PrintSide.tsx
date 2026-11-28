@@ -10,6 +10,8 @@ import { printFileName } from '@/lib/siparis-takip';
 import { orderImageUrl } from '@/lib/siparis-types';
 import type { lineSides } from '@/lib/siparis-types';
 import { useToast } from '@/components/admin/Toast';
+import { shapeUrl } from '@/lib/tasarim/susler';
+import { fontInfo, fontSpec, loadFont } from '@/lib/tasarim/yazi-tipleri';
 import type { SideContent } from './useSideContent';
 
 interface Props {
@@ -33,16 +35,25 @@ export default function PrintSide({ token, code, index, title, side, data, model
   const [mirrored, setMirrored] = useState(false);
   const { content, loading, cutFailed, hasContent } = data;
   const size = printSize(model, FILE_WIDTH);
-  const { text, font, photo, placement } = content;
+  const { text, font, photo, placement, layers, assets } = content;
+  const written = (side.layers ?? []).flatMap((l) => (
+    (l.kind === 'text' || l.kind === 'pattern') && l.text?.trim() ? [{ ...l, text: l.text }] : []
+  ));
+  const shapes = (side.layers ?? []).flatMap((l) => ((l.kind === 'shape' || (l.kind === 'pattern' && !l.text?.trim())) && l.set && l.name ? [{ id: l.id, set: l.set, name: l.name }] : []));
 
   useEffect(() => {
     let cancelled = false;
-    whenFontReady(font, text, () => {
+    const paint = () => {
       if (cancelled || !canvas.current) return;
-      drawPrint(canvas.current, { text, font, photo, placement });
-    });
+      drawPrint(canvas.current, { text, font, photo, placement, layers, assets });
+    };
+    if (layers) paint(); else whenFontReady(font, text, paint);
     return () => { cancelled = true; };
-  }, [text, font, photo, placement]);
+  }, [text, font, photo, placement, layers, assets]);
+
+  // Yazılar kendi tipleriyle gösterilsin.
+  const fontIds = written.map((l) => l.font).join(',');
+  useEffect(() => { fontIds.split(',').filter(Boolean).forEach((id) => { loadFont(id).catch(() => {}); }); }, [fontIds]);
 
   const copy = (value: string) =>
     navigator.clipboard.writeText(value)
@@ -81,7 +92,34 @@ export default function PrintSide({ token, code, index, title, side, data, model
         </p>
       )}
 
-      {side.text && (
+      {written.map((l) => (
+        <div className="prn-text" key={l.id}>
+          <small>{l.kind === 'pattern' ? 'Tekrarlanan yazı' : 'Basılacak yazı'} · {fontInfo(l.font).ad}</small>
+          <p style={{ fontFamily: fontSpec(l.font, l.bold).family, fontWeight: fontSpec(l.font, l.bold).weight, whiteSpace: 'pre-line' }}>{l.text}</p>
+          <button type="button" className="btn btn-secondary btn-sm" onClick={() => copy(l.text)}>Yazıyı kopyala</button>
+        </div>
+      ))}
+
+      {shapes.length > 0 && (
+        <div className="prn-shapes">
+          <small>Süsler (şablonda yerlerinde)</small>
+          <ul>
+            {shapes.map((s) => (
+              // eslint-disable-next-line @next/next/no-img-element
+              <li key={s.id}><img src={shapeUrl(s.set, s.name)} alt={s.name.replace(/-/g, ' ')} width={36} height={36} /></li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {data.failed && (
+        <p className="prn-flag" role="alert">
+          Bir yazı tipi ya da görsel yüklenemedi; baskı dosyası eksik olur.{' '}
+          <button type="button" className="btn btn-secondary btn-sm" onClick={data.retry}>Yeniden dene</button>
+        </p>
+      )}
+
+      {side.text && !side.layers && (
         <div className="prn-text">
           <small>Basılacak yazı · {side.font === 'el' ? 'el yazısı' : 'düz yazı'}</small>
           <p style={{ fontFamily: PRINT_FONTS[font].family, fontWeight: PRINT_FONTS[font].weight }}>{side.text}</p>
@@ -100,7 +138,7 @@ export default function PrintSide({ token, code, index, title, side, data, model
             <input type="checkbox" checked={mirrored} onChange={(e) => setMirrored(e.target.checked)} />
             Aynalı indir (transfer baskı)
           </label>
-          <button type="button" className="btn btn-primary btn-sm prn-download" onClick={download} disabled={loading}>Baskı dosyasını indir</button>
+          <button type="button" className="btn btn-primary btn-sm prn-download" onClick={download} disabled={loading || data.failed}>Baskı dosyasını indir</button>
         </div>
       )}
 
@@ -121,7 +159,7 @@ export default function PrintSide({ token, code, index, title, side, data, model
 
       {side.files.length > 0 && (
         <div className="prn-files">
-          <small>Müşterinin fotoğrafları ({side.files.length}){side.files.length > 1 ? ' · şablonda ilki kullanılır' : ''}</small>
+          <small>Müşterinin fotoğrafları ({side.files.length}){side.files.length > 1 && !side.layers ? ' · şablonda ilki kullanılır' : ''}</small>
           <ul>
             {side.files.map((id, i) => (
               <li key={id}>

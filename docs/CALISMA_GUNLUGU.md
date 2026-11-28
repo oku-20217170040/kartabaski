@@ -19,6 +19,20 @@ Her iş bitiminde (kod, sunucu, dış hizmet ya da yalnız araştırma) bu dosya
 
 ---
 
+## 28.11.2026 — Tasarım ekranı yenilendi, sosyal hesap bağlantıları eklendi
+- Neden: kullanıcı sitedeki iletişim alanlarına bütün sosyal hesapları, tasarım ekranına da çok sayıda yazı tipi, yazıyı kupa üstünde baskı sınırı içinde taşıma ve yaratıcı araçlar istedi; önerilen üç paketin tamamını onayladı.
+- Ne:
+  - Instagram, Facebook, TikTok, Threads, Telegram, Pinterest: sayfa altı, ana sayfa iletişim bölümü, Hakkımızda, arama verisi (`sameAs`) ve `llms.txt`.
+  - Tasarım ekranı katmanlı: 1.269 yazı tipi (hepsinde Türkçe harfler doğrulandı), birden fazla yazı, renk, kavis, çerçeve/gölge; 1.446 boyanabilir + 1.591 renkli süs (Türkçe arama); fotoğraf şekli, kırpma, renk ayarı, kenarlık, arka plan silme; kolaj; tekrarlı desen; 20 hazır düzen; geri al/yinele; yarım kalan tasarımın cihazda saklanması; bulanıklık uyarısı; görsel indirme.
+  - Öğe baskı alanında da 3D kupanın üstünde de sürüklenir; yazı ve süs alandan çıkamaz.
+- Nasıl:
+  - Model ve çizim `lib/tasarim/` (`model.ts`, `ciz.ts`); ölçüler baskı alanına oranlı, ekran, 3D, sepet görseli ve 2400 px yönetim şablonu aynı işlevle çizilir. Eski sepet ve siparişler eski yoldan çizilir; tasarım ekranında açılınca katmanlara çevrilir.
+  - Yazı tipi listesi `tools/yazi-tipi-katalogu.mjs` ile üretilir (Fontsource; her ailenin karakter tablosu okunur). Dosyalar `/api/yazi-tipi` ile kendi alan adımızdan gelir, sunucu bir kez indirip Docker biriminde saklar; ziyaretçi dış adrese bağlanmaz.
+  - Süsler Phosphor ve Fluent Emoji Flat (ikisi de MIT) npm paketlerinden derlemede `public/suslar` altına yazılır (`tools/sus-hazirla.mjs`, git'e girmez).
+  - Siparişte yazı özeti ve arka plan isteği sunucuda katmanlardan üretilir; listede olmayan tip düz yazıya döner, olmayan fotoğrafı gösteren tasarım reddedilir.
+- Doğrulama: 793 test, tip denetimi, lint, ayrı kopyada üretim derlemesi; sahte verili tarayıcı denemesi (düzen, sürükleme, yazı tipi ve süs seçimi, fotoğraf, arka plan silme, sepet, taslak, eski satır düzenleme, iki yüz, sipariş kaydı, yönetim şablonu, 360 px). Gerçek telefonda parmakla deneme yapılmadı. Yayın sonrası canlıda sayfalar, yazı tipi ve süs adresleri, tasarım ekranında hazır düzen ve yazı tipi seçici, ana sayfa vitrini denendi (PR #63).
+- Açık / dikkat: sunucudaki `yazi-tipleri` biriminde indirilen tipler birikir. Yeni süs seti ya da paket sürümü değişirse eski siparişteki adlar korunmalı. Tarayıcının gösteremediği fotoğraf (HEIC) siparişe eklenir ama şablonda yerleştirilemez.
+
 ## 28.11.2026 — TikTok uygulaması incelemeye gönderildi
 - Neden: kullanıcı hazırlanan videolarla başvurunun gönderilmesini istedi.
 - Ne: "KartaBaski" uygulamasının Production sürümü incelemede ("In review").

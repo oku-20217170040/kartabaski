@@ -11,3 +11,6 @@ tsconfig.tsbuildinfo
 
 # Derlemeden önce node_modules'tan kopyalanır (tools/copy-ort.mjs)
 public/ort/
+
+# Derlemeden önce node_modules'tan üretilir (tools/sus-hazirla.mjs)
+public/suslar/

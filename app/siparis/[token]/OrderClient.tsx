@@ -1,5 +1,6 @@
 'use client';
 
+import { countShapes } from '@/lib/tasarim/model';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
@@ -91,7 +92,8 @@ export default function OrderClient({ order, tracking }: { order: CustomerOrder;
                       // eslint-disable-next-line @next/next/no-img-element
                       <img className="ord-ready" src={cartImageSrc(s.ready.image) ?? ''} alt={`${s.label} deseni`} loading="lazy" />
                     )}
-                    {s.text && <p>Yazı: <b>{s.text}</b> ({s.font === 'el' ? 'el yazısı' : 'düz yazı'})</p>}
+                    {s.text && <p>Yazı: <b>{s.text}</b>{s.layers ? '' : ` (${s.font === 'el' ? 'el yazısı' : 'düz yazı'})`}</p>}
+                    {countShapes(s.layers) > 0 && <p>{countShapes(s.layers)} süs eklendi.</p>}
                     {s.removeBg && <p>Fotoğrafın arka planı silinecek.</p>}
                     {s.files.length > 0 && (
                       <ul className="ord-files">

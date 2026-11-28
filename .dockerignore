@@ -12,3 +12,4 @@ docs
 tsconfig.tsbuildinfo
 .env.local
 public/ort
+public/suslar

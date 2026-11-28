@@ -3,6 +3,7 @@ import Link from 'next/link';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { WhatsAppIcon } from '@/components/icons';
+import SocialLinks from '@/components/SocialLinks';
 import { WHATSAPP_BASE, DEFAULT_WA_TEXT, SITE_NAME } from '@/lib/constants';
 
 export const metadata: Metadata = {
@@ -73,6 +74,9 @@ export default function HakkimizdaPage() {
                 <WhatsAppIcon size={18} /> WhatsApp ile yazın
               </a>
               <Link className="btn btn-outline" href="/nasil-siparis-verilir">Sipariş nasıl verilir?</Link>
+            </div>
+            <div className="tabela-yollar" aria-label="Sosyal hesaplarımız">
+              <SocialLinks />
             </div>
           </div>
         </section>

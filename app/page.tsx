@@ -12,9 +12,10 @@ import HeroSection from '@/components/HeroSection';
 import PrintWall from '@/components/PrintWall';
 import { VITRIN_PRODUCT_SLUG } from '@/lib/vitrin';
 import ProductsClient from './ProductsClient';
-import { WhatsAppIcon, MailIcon, InstagramIcon, ChevronDownIcon } from '@/components/icons';
+import { WhatsAppIcon, MailIcon, ChevronDownIcon } from '@/components/icons';
 import { PHONE, PHONE_DISPLAY, WHATSAPP_BASE, DEFAULT_WA_TEXT } from '@/lib/constants';
-import { INSTAGRAM_URL, SITE_URL } from '@/lib/site';
+import { SITE_URL } from '@/lib/site';
+import SocialLinks from '@/components/SocialLinks';
 import { HOME_FAQ as FAQ } from '@/lib/faq';
 
 export const metadata: Metadata = {
@@ -122,7 +123,9 @@ export default async function HomePage() {
             <div className="tabela-yollar">
               <a href={WA_HREF} target="_blank" rel="noopener noreferrer"><WhatsAppIcon size={20} /> WhatsApp’tan yazın</a>
               <a href="mailto:info@kartabaski.com"><MailIcon size={20} /> info@kartabaski.com</a>
-              <a href={INSTAGRAM_URL} target="_blank" rel="noopener noreferrer"><InstagramIcon size={20} /> @kartabaskii</a>
+            </div>
+            <div className="tabela-yollar tabela-sosyal">
+              <SocialLinks />
             </div>
           </div>
         </section>

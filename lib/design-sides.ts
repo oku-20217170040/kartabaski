@@ -1,5 +1,6 @@
 // Kupanın baskı yüzleri: istemci ve sunucu ortak (saf).
 import type { DesignSide } from './cart-types';
+import { countShapes } from './tasarim/model';
 
 export type SideId = 'front' | 'back';
 
@@ -14,6 +15,7 @@ export function sideSummary(s: DesignSide): string {
     s.ready ? `hazır tasarım: ${s.ready.name}` : '',
     s.text ? `yazı: ${s.text}` : '',
     s.photos.length ? `${s.photos.length} fotoğraf` : '',
+    countShapes(s.layers) ? `${countShapes(s.layers)} süs` : '',
     s.removeBg ? 'arka plan silinecek' : '',
   ].filter(Boolean).join(' · ');
 }

@@ -5,7 +5,7 @@ import { displayTitle, formatPriceRange } from '@/lib/format';
 import { getActive, getDescription, getPriceMax, getPriceMin, getShortDesc, getSlug, getTitle } from '@/lib/product-utils';
 import { plainText } from '@/lib/seo-text';
 import { PHONE, PHONE_DISPLAY, SITE_NAME } from '@/lib/constants';
-import { INSTAGRAM_URL, SITE_URL } from '@/lib/site';
+import { SITE_URL, SOCIAL_LINKS } from '@/lib/site';
 
 // Yapay zekâ asistanları için sitenin özeti (llmstxt.org). Yalnız sitedeki gerçek bilgiler yazılır.
 export const revalidate = 3600;
@@ -30,7 +30,7 @@ export async function GET() {
     `- [Kurumsal ve toplu sipariş](${SITE_URL}/kurumsal)`,
     `- [Sipariş takibi](${SITE_URL}/siparis-takip)`,
     `- Telefon ve WhatsApp: ${PHONE_DISPLAY} (+${PHONE})`,
-    `- Instagram: ${INSTAGRAM_URL}`,
+    ...SOCIAL_LINKS.map((s) => `- ${s.name}: ${s.url}`),
     '',
     '## Sık sorulan sorular',
     ...HOME_FAQ.flatMap((f) => [`### ${f.q}`, f.a, '']),

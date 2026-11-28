@@ -5,6 +5,8 @@ import type { VitrinMug } from '@/lib/vitrin';
 import { Placement, DEFAULT_PLACEMENT } from '@/lib/photo-layout';
 import { PrintFont, drawPrint, whenFontReady } from '@/lib/mug-print';
 import { usePlacementDrag } from '@/lib/use-placement-drag';
+import type { Assets } from '@/lib/tasarim/ciz';
+import { Layer, layersText } from '@/lib/tasarim/model';
 
 export { toLines } from '@/lib/mug-print';
 export type { PrintFont } from '@/lib/mug-print';
@@ -19,6 +21,9 @@ interface Props {
   onPlacementChange?: (next: Placement) => void;
   /** Arka yüz: kupa fotoğrafı aynalanır (kulp solda), baskı düz kalır. */
   mirrored?: boolean;
+  /** Tasarım ekranının katmanları (verilirse yazı ve fotoğraf yerine). */
+  layers?: Layer[];
+  assets?: Assets;
 }
 
 export interface MugPreviewHandle {
@@ -41,7 +46,7 @@ function sheetSize(mug: VitrinMug) {
 
 /** Gerçek kupa fotoğrafı; üstüne yazılan yazı ve eklenen fotoğraf silindire sarılarak basılır. */
 const MugPreview = forwardRef<MugPreviewHandle, Props>(function MugPreview(
-  { mug, text, font, photo, placement = DEFAULT_PLACEMENT, onPlacementChange, mirrored },
+  { mug, text, font, photo, placement = DEFAULT_PLACEMENT, onPlacementChange, mirrored, layers, assets },
   ref,
 ) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -92,7 +97,7 @@ const MugPreview = forwardRef<MugPreviewHandle, Props>(function MugPreview(
       const sheet = document.createElement('canvas');
       sheet.width = sheetW;
       sheet.height = sheetH;
-      drawPrint(sheet, { text, font, photo, placement });
+      drawPrint(sheet, { text, font, photo, placement, layers, assets });
       /* Fotoğraf hafif yukarıdan çekildiği için yatay çizgiler ortada aşağı sarkar. */
       const sag = mug.sag * H;
       const half = Math.round(radius * Math.sin(WRAP_ANGLE));
@@ -107,9 +112,9 @@ const MugPreview = forwardRef<MugPreviewHandle, Props>(function MugPreview(
       }
     };
 
-    whenFontReady(font, text, paint);
+    if (layers) paint(); else whenFontReady(font, text, paint);
     return () => { cancelled = true; };
-  }, [mug, text, font, photo, placement, mirrored]);
+  }, [mug, text, font, photo, placement, mirrored, layers, assets]);
 
   /** Ekran pikselini baskı alanı oranına çevirir. */
   const drag = usePlacementDrag(placement, onPlacementChange, (dx, dy) => {
@@ -120,8 +125,9 @@ const MugPreview = forwardRef<MugPreviewHandle, Props>(function MugPreview(
     return { x: (dx * ratio) / width, y: (dy * ratio) / height };
   });
 
-  const label = text.trim()
-    ? `${mug.color} kulplu kupa, üzerinde "${text.trim()}" yazıyor`
+  const written = layers ? layersText(layers) : text.trim();
+  const label = written
+    ? `${mug.color} kulplu kupa, üzerinde "${written}" yazıyor`
     : `${mug.color} kulplu kupa`;
 
   return (
