@@ -19,6 +19,13 @@ Her iş bitiminde (kod, sunucu, dış hizmet ya da yalnız araştırma) bu dosya
 
 ---
 
+## 28.11.2026 — Paylaşım fiyat onayları tamamlandı (11/11)
+- Neden: canlıda yalnız bir ürün onaylı görünüyordu; kullanıcı gösterilen fiyat tablosunu onaylayıp kalan 10 ürünün onaylanmasını istedi.
+- Ne: 10 ürüne `priceTiers` ve `priceTiersSource` yazıldı.
+- Nasıl: kademeler canlı açıklamalardan uygulamanın ayrıştırıcısıyla üretildi; sunucuda yalnız onaysız ve açıklaması değişmemiş ürüne, işlem (transaction) içinde yazıldı. `updatedAt` değiştirilmedi (eski otomasyon yeniden denemesin).
+- Doğrulama: yazım sonrası 11 aktif ürünün 11'i onaylı. Sıra henüz yeniden kurulmadı.
+- Açık: kullanıcı panelde "Sırayı yeniden kur" deyip sırayı kontrol edecek, sonra "Canlıya al". Tabaklı Kahve Fincanı'nda 45+ kademesi yok (açıklamada da yok).
+
 ## 28.11.2026 — Paylaşım paneli: sıra yenileme ve fiyat etiketi düzeltmesi (PR #51)
 - Neden: canlıda ilk fiyat onayından sonra sıra yalnız o ürünle doldu; sonraki onaylar dolu saatlerin arkasında bekleyecekti. Fiyat satırında "(1 adet)" öncesi çift iki nokta görünüyordu.
 - Ne: önizleme modunda fiyat onayı, gönderilmemiş sırayı silip yeniden kuruyor; "Sırada" sekmesinde "Sırayı yeniden kur" düğmesi. Etiketlerdeki fazla iki nokta yalnız gösterimde atılıyor (onay bozulmuyor).
