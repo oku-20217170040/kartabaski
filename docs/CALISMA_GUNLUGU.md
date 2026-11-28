@@ -19,6 +19,13 @@ Her iş bitiminde (kod, sunucu, dış hizmet ya da yalnız araştırma) bu dosya
 
 ---
 
+## 28.11.2026 — Paylaşım sistemi tasarlandı (yarım: gözden geçirme ve uygulama)
+- Neden: kullanıcı, paylaşımların tek panelden yönetilen ve müdahale edilebilen tek bir sistemde toplanmasını istedi.
+- Ne: tasarım belgesi `docs/superpowers/specs/2026-11-28-paylasim-sistemi-design.md` (ürün karuselleri, fiyatlı hikâyeler, izinli müşteri paylaşımları, sipariş rehberi, Pinterest fotoğraf akışı, tek panel).
+- Nasıl: sorularla sohbette netleştirildi ve onaylandı; mevcut paylaşım modülleri okunarak yazıldı. Canlı ürün sayfalarında 11 ürün, 77 renk sayıldı; ürünlerin çoğunda ana görsel tek, diğer fotoğraflar renklerin altında. Fiyat satırları ürünler arasında farklı biçimde yazılmış.
+- Doğrulama: yalnız belge; kod ve canlı ayar değişmedi.
+- Açık: kullanıcının belgeyi gözden geçirmesi, uygulama planı, aşama aşama kurulum. Mevcut otomasyon bu sürede olduğu gibi çalışıyor.
+
 ## 28.11.2026 — TikTok sandbox ve doğrulama (yarım: hedef kullanıcı, kapsamlar, demo videosu)
 - Neden: TikTok incelemesi demo videosu istiyor; onaysız uygulama sandbox'ta gösterilir.
 - Ne: alan adı doğrulaması (URL prefix, imza dosyası `public/`) yayında ve doğrulandı. Sandbox oluşturuldu, sunucuya sandbox client key yazıldı (`TIKTOK-KAYDEDILDI`).
