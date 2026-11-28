@@ -1,8 +1,7 @@
 import {
   buildAuthUrl, tiktokTitle, tiktokDescription, buildPhotoDraftBody, isAllowedMediaId, mediaIdToPath, pathToMediaId, proxyPhotoUrl,
   parseMediaPath, pendingInWindow, pendingRoom, tiktokPhotoUrls, pickRandomBacklog, shuffleBy,
-  TIKTOK_TITLE_MAX, TIKTOK_DESC_MAX, TIKTOK_PENDING_CAP, TIKTOK_MAX_PHOTOS,
-} from '@/lib/tiktok-utils';
+  TIKTOK_TITLE_MAX, TIKTOK_DESC_MAX, TIKTOK_PENDING_CAP, TIKTOK_MAX_PHOTOS, limitHashtags } from '@/lib/tiktok-utils';
 import type { ChannelRow } from '@/lib/telegram-channel-utils';
 
 const ID = 'karta-baski/urunler/abc123_X';
@@ -31,6 +30,7 @@ describe('tiktokTitle / tiktokDescription', () => {
     expect(d).toContain(url);
     expect(d).toContain('WhatsApp ile sipariş: 0545 826 65 08');
     expect(d).toContain('#sihirlikupa');
+    expect(d.match(/#[^\s#]+/g)!.length).toBeLessThanOrEqual(5);
     expect(d).not.toMatch(/Ümit|Esenyurt|nakliye/i);
   });
 });
@@ -114,5 +114,17 @@ describe('pickRandomBacklog / shuffleBy', () => {
     const out = shuffleBy(src, 's', (x) => x);
     expect(src).toEqual(['a', 'b', 'c', 'd']);
     expect([...out].sort()).toEqual(src);
+  });
+});
+
+describe('etiket sınırı', () => {
+  const tags = (s: string) => s.match(/#[^\s#]+/g) ?? [];
+  it('ilk 5 etiket kalır, fazlası ve boşlukları silinir', () => {
+    expect(limitHashtags('Kupa #a #b #c\n#d #e #f #g son', 5)).toBe('Kupa #a #b #c\n#d #e son');
+    expect(limitHashtags('etiketsiz metin', 5)).toBe('etiketsiz metin');
+  });
+  it('gönderilen taslakta başlık ve açıklama toplamı 5 etiketi geçmez', () => {
+    const body = buildPhotoDraftBody({ title: 'Kupa #bir #iki', description: 'x #1a #2b #3c #4d #5e', photoUrls: ['https://x.test/1.jpg'] });
+    expect(tags(`${body.post_info.title} ${body.post_info.description}`)).toEqual(['#bir', '#iki', '#1a', '#2b', '#3c']);
   });
 });
